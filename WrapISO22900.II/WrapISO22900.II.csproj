@@ -17,6 +17,10 @@
 	<PackageTags>ISO22900-2;D-PDU-API;VCI;alternativeTo;PassThru;J2534</PackageTags>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	<Company>Joerg Frank</Company>
+	<PackageProjectUrl>https://github.com/DiagProf/ISO22900.II</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/DiagProf/ISO22900.II/tree/master/WrapISO22900.II</RepositoryUrl>
+	<PackageReadmeFile>READMEForNuGet.md</PackageReadmeFile>
+	<PackageReleaseNotes>beta (works and will be expanded with additional functions soon)</PackageReleaseNotes>
    </PropertyGroup>
 
 	<ItemGroup>
@@ -27,6 +31,13 @@
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>$(AssemblyName).Test</_Parameter1>
 		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="READMEForNuGet.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 	
 </Project>

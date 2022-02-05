@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>warnings</Nullable>
+		<RootNamespace>$(MSBuildProjectName.Replace("Wrap", "").Replace(" ", "_"))</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\WrapISO22900.II\WrapISO22900.II.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -21,8 +21,14 @@ namespace ISO22900.II
         {
             if (eventHandler == null)
             {
-                _callbackfncs.TryRemove(((ulong)moduleHandle << 32) | comLogicalLinkHandle, out var callback);
-                CheckResultThrowException(PDURegisterEventCallback(moduleHandle, comLogicalLinkHandle, null));
+                try
+                {
+                    CheckResultThrowException(PDURegisterEventCallback(moduleHandle, comLogicalLinkHandle, null));
+                }
+                finally
+                {
+                    _callbackfncs.TryRemove(((ulong)moduleHandle << 32) | comLogicalLinkHandle, out var callback);
+                }
             }
             else
             {
@@ -31,11 +37,11 @@ namespace ISO22900.II
                     var localCopyEventHandler = eventHandler;
                     uint cllTag = 0;
                     //if (pCllTag != IntPtr.Zero)
-                    cllTag = (uint) pCllTag.ToInt64();
+                    cllTag = (uint) pCllTag.ToInt32();
 
                     uint apiTag = 0;
                     //if (pApiTag != IntPtr.Zero)
-                    apiTag = (uint) pApiTag.ToInt64();
+                    apiTag = (uint) pApiTag.ToInt32();
 
                     localCopyEventHandler(eventType, hMod, hCll, cllTag, apiTag);
 

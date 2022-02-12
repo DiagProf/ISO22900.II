@@ -57,11 +57,11 @@ namespace ISO22900.II.Demo
                 using ( var vci = api.ConnectVci(AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                 {
                     //Define the protocol behavior
-                    var dlcPinData = cllConfigPorscheKline.LogicalLinkSettingPcm().DlcPinData;
-                    var busTypeName = cllConfigPorscheKline.LogicalLinkSettingPcm().BusTypeName;
+                    var dlcPinData = cllConfigPorscheKline.DlcPinData;
+                    var busTypeName = cllConfigPorscheKline.BusTypeName;
                     //var busTypeName = "ISO_9141_2_UART";  //e.g. Softing
                     //var busTypeName = "ISO_14230_1_UART"; //e.g. Samtec
-                    var protocolName = cllConfigPorscheKline.LogicalLinkSettingPcm().ProtocolName;
+                    var protocolName = cllConfigPorscheKline.ProtocolName;
 
                     using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )
                     {

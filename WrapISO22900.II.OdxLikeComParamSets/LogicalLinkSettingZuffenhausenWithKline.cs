@@ -42,18 +42,18 @@ namespace ISO22900.II.OdxLikeComParamSets
 
         public LogicalLinkSettingZuffenhausenWithKline(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo = null) : base(HashAlgo)
         {
+            BusTypeName = BusTypeNameDefault;
+            ProtocolName = ProtocolNameNameDefault;
             InitializeAllComParams();
         }
 
         private new void InitializeAllComParams()
         {
             base.InitializeAllComParams();
+            DlcPinData = DlcPinDataDefault;
             //settings specific to this manufacturer for all ECUs
             //e.g. TesterPresent behavior or TesterAddress
             //or the functional addresses
-            BusTypeName = BusTypeNameDefault;
-            ProtocolName = ProtocolNameNameDefault;
-            DlcPinData = DlcPinDataDefault;
         }
 
         public LogicalLinkSettingZuffenhausenWithKline LogicalLinkSettingPcm()
@@ -75,7 +75,7 @@ namespace ISO22900.II.OdxLikeComParamSets
             //ECU specific
             Tpl.CP_EcuRespSourceAddress = 0x00000018;
             Tpl.CP_PhysReqTargetAddr = 0x00000018;
-            Tpl.CP_ECULayerShortName = "TransmissionControllModule";
+            Tpl.CP_ECULayerShortName = "TransmissionControlModule";
 
             return this;
         }

@@ -42,6 +42,7 @@ namespace ISO22900.II.Demo
                 new Option("Use case sharing vci instance", () => program.NavigateTo<PageUseCaseSharingVciInstance>()),
                 new Option("Use case simple send and receive", () => program.NavigateTo<PageUseCaseSimpleSendAndReceive>()),
                 new Option("Use case simple send and receive use K-Line", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveKline>()),
+                new Option("Use case simple send and receive use TP2.0 (SAE J2819)", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveTP20>()),
                 new Option("Use case simple send and receive with option string", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveWithOptionString>()),
                 new Option("Use case simple send and receive with event all over", () => program.NavigateTo<PageUseCaseEventAllOver>()),
                 new Option("Use case ECU simulator", () => program.NavigateTo < PageUseCaseEcuSimulator>()),

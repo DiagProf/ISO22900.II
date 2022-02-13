@@ -73,10 +73,10 @@ namespace ISO22900.II.Demo
 
                         var errorString = string.Empty;
                         //Use StartComm to start tester present behavior (is a must for the TP2.0)
-                        using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM)) 
+                        using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM))
                         {
                             var result = copStartComm.WaitForCopResult();
-                            
+
                             if (result.PduEventItemErrors().Count > 0)
                             {
                                 foreach (var error in result.PduEventItemErrors())
@@ -133,6 +133,22 @@ namespace ISO22900.II.Demo
                                     }
 
                                     AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
+                                }
+                            }
+
+
+                            using (var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM))
+                            {
+                                var result = copStopComm.WaitForCopResult();
+
+                                if (result.PduEventItemErrors().Count > 0)
+                                {
+                                    foreach (var error in result.PduEventItemErrors())
+                                    {
+                                        errorString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                    }
+                                    errorString = "Error: " + errorString;
+                                    AnsiConsole.WriteLine($"{errorString}");
                                 }
                             }
                         }

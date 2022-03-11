@@ -8,7 +8,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	<PackageId>ISO22900.II-Sharp</PackageId>
 	<Description>ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-2 spec library (also called D-PDU-API) and lets you deal with the important stuff.</Description>
-	<VersionPrefix>0.0.1</VersionPrefix>
+	<VersionPrefix>0.0.2</VersionPrefix>
 	<VersionSuffix>beta</VersionSuffix>
 	<InformationalVersion>This is a prerelease package</InformationalVersion>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>

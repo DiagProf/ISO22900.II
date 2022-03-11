@@ -583,33 +583,6 @@ namespace ISO22900.II
                 
             }
 
-
-
-
-            //var linkStatus = Status().Status;
-            //if (linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED)
-            //{
-            //    _logger.LogError("Forgot to put the ComLogicLink in the offline state with Disconnect()?");
-            //    Vci.DiagPduApiOneSysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
-            //}
-            ////First the event because we need valid handles for native PduRegisterEventCallback function
-            //Vci.DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
-
-            ////Bosch D-PDU API shows this behavior.
-            ////If the ComlogicalLink goes offline due to a VCI lost,
-            ////there is an error if you want to clear it away again with PduDestroyComLogicalLink
-            //try
-            //{
-            //    Vci.DiagPduApiOneSysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
-            //}
-            //catch ( Iso22900IIException e )
-            //{
-            //    if ( linkStatus != PduStatus.PDU_CLLST_OFFLINE )
-            //    {
-            //        throw e;
-            //    }
-            //}
-            
         }
 
         protected override void FreeManagedResources()

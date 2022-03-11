@@ -33,17 +33,17 @@ namespace ISO22900.II.OdxLikeComParamSets
     public class LogicalLinkSettingZuffenhausenWithKline : ISO_14230_3_on_ISO_14230_2_on_ISO_9141_2_UART
     {
         private const string BusTypeNameDefault = "ISO_9141_2_UART";
-        private const string ProtocolNameNameDefault = "ISO_14230_3_on_ISO_14230_2";
+        private const string ProtocolNameDefault = "ISO_14230_3_on_ISO_14230_2";
         private static readonly Dictionary<uint, string> DlcPinDataDefault = new() { { 7, "K" } /*, { 15, "L" }*/ };
         public string BusTypeName { get; private set; } = BusTypeNameDefault;
-        public string ProtocolName { get; private set; } = ProtocolNameNameDefault;
+        public string ProtocolName { get; private set; } = ProtocolNameDefault;
         public Dictionary<uint, string> DlcPinData { get; private set; } = DlcPinDataDefault;
 
 
         public LogicalLinkSettingZuffenhausenWithKline(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo = null) : base(HashAlgo)
         {
             BusTypeName = BusTypeNameDefault;
-            ProtocolName = ProtocolNameNameDefault;
+            ProtocolName = ProtocolNameDefault;
             InitializeAllComParams();
         }
 

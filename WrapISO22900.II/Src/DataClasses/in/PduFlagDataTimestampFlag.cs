@@ -31,28 +31,35 @@ namespace ISO22900.II
 {
     public class PduFlagDataTimestampFlag
     {
-        public byte[] FlagData { get; } 
+        public byte[] FlagData { get; } = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
 
-        public bool TxMsgDoneTimestampIndicator()
-        {
-            return (FlagData[0] & 0x80) != 0;
-        }
+        /// <summary>
+        ///     Transmit Done Timestamp Indicator. Indication that the Transmit Done Timestamp value in the PDU_RESULT_DATA
+        ///     structure is valid.
+        ///     false = Not Valid
+        ///     true = Valid
+        /// </summary>
+        public bool TxMsgDoneTimestampIndicator => (FlagData[0] & 0x80) != 0;
 
-        public bool StartMsgTimestampIndicator()
-        {
-            return (FlagData[0] & 0x40) != 0;
-        }
+        /// <summary>
+        ///     Start Message Timestamp Indicator. Indication. Indication that the Start Message Timestamp value in the
+        ///     PDU_RESULT_DATA structure is valid.
+        ///     false = Not Valid
+        ///     true = Valid
+        /// </summary>
+        public bool StartMsgTimestampIndicator => (FlagData[0] & 0x40) != 0;
 
         internal PduFlagDataTimestampFlag(byte[] flagData)
         {
-            if (flagData.Length > 0)
+            //Old Samtec D-PDU-API has length == 0
+            //in this case we use initial value
+            //to avoid later out of bounds exceptions
+            if ( flagData.Length < 1 )
             {
-                FlagData = flagData;
+                return;
             }
-            else
-            {
-                FlagData = new byte[4] { 0x00, 0x00, 0x00, 0x00 };
-            }
+
+            FlagData = flagData;
         }
     }
 }

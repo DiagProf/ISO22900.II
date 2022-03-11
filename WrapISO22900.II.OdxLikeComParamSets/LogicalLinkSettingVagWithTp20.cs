@@ -33,17 +33,17 @@ namespace ISO22900.II.OdxLikeComParamSets
     public class LogicalLinkSettingVagWithTp20 : MSP_VW2000LP_CAN_on_TP20_on_ISO_11898_2_DWCAN
     {
         private const string BusTypeNameDefault = "ISO_11898_2_DWCAN";
-        private const string ProtocolNameNameDefault = "MSP_VW2000LP_on_TP20";
+        private const string ProtocolNameDefault = "MSP_VW2000LP_on_TP20";
         private static readonly Dictionary<uint, string> DlcPinDataDefault = new() { { 6, "HI" }, { 14, "LOW" } };
         public string BusTypeName { get; private set; } = BusTypeNameDefault;
-        public string ProtocolName { get; private set; } = ProtocolNameNameDefault;
+        public string ProtocolName { get; private set; } = ProtocolNameDefault;
         public Dictionary<uint, string> DlcPinData { get; private set; } = DlcPinDataDefault;
 
 
         public LogicalLinkSettingVagWithTp20(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo = null) : base(HashAlgo)
         {
             BusTypeName = BusTypeNameDefault;
-            ProtocolName = ProtocolNameNameDefault;
+            ProtocolName = ProtocolNameDefault;
             InitializeAllComParams();
         }
 

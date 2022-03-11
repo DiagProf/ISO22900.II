@@ -54,14 +54,14 @@ namespace ISO22900.II
             var all = RawQueue.Where(e => e.PduItemType == PduIt.PDU_IT_RESULT).Cast<PduEventItemResult>().ToList();
             if ( all.Count > 0 )
             {
-                if ( all.First().ResultData.TimestampFlags.TxMsgDoneTimestampIndicator() &
-                     all.Last().ResultData.TimestampFlags.StartMsgTimestampIndicator() )
+                if ( all.First().ResultData.TimestampFlags.TxMsgDoneTimestampIndicator &
+                     all.Last().ResultData.TimestampFlags.StartMsgTimestampIndicator )
                 {
                     return all.Last().ResultData.StartMsgTimestamp - all.First().ResultData.TxMsgDoneTimestamp;
                 }
 
-                if ( all.First().ResultData.TimestampFlags.TxMsgDoneTimestampIndicator() &
-                     !all.Last().ResultData.TimestampFlags.StartMsgTimestampIndicator() )
+                if ( all.First().ResultData.TimestampFlags.TxMsgDoneTimestampIndicator &
+                     !all.Last().ResultData.TimestampFlags.StartMsgTimestampIndicator )
                 {
                     return all.Last().Timestamp - all.First().ResultData.TxMsgDoneTimestamp;
                 }

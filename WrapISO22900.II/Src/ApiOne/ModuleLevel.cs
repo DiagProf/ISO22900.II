@@ -59,6 +59,11 @@ namespace ISO22900.II
 
         internal ComLogicalLinkLevel OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
         {
+            return OpenComLogicalLink(busTypeName,protocolName,dlcPinToTypeNamePairs, new PduFlagDataCllCreateFlag());
+        }
+
+        internal ComLogicalLinkLevel OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs, PduFlagDataCllCreateFlag cllCreateFlag)
+        {
             var busTypId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, busTypeName);
             var protocolTypId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_PROTOCOL, protocolName);
             var dlcPinToTypeIdPairs = DiagPduApiOneSysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
@@ -66,7 +71,7 @@ namespace ISO22900.II
             var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
             var comLogicalLinkHandle = DiagPduApiOneSysLevel.Nwa.PduCreateComLogicalLink(ModuleHandle, pduResourceData,
                 PduConst.PDU_ID_UNDEF,
-                0, new PduFlagDataCllCreateFlag());
+                0, cllCreateFlag);
 
 
             var cll = new ComLogicalLinkLevel(this, comLogicalLinkHandle);

@@ -33,6 +33,33 @@ If you look at the around 29 functions from ISO22900-2 it is initially difficult
 5. Now i built the functionality with this wrapper and called it ApiOne. And that's what I meant above, you could now use the wrapper and build another API. But the next thoughts relate to ApiOne.
 6. The ApiOne is divided into 4 levels. System-Level, Module-Level, ComLogicalLink-Level and ComPrimitive-Level. These different levels encapsulate the respective functionality and of course also hide the handles that exist in the original C API.
 
+
+
+For the next things we need a bit more ‘why’ first: For the mechanic in the workshop with hands like a bear and muscles like a lion, a VCI is just one tool of many like a hammer. And that's why they expect the diagnostic tester, VCI and the connection between both is robust like a hammer. Some developers do not understand this when they touch the VCI at their desks with velvet gloves. And that's why some software developers also believe that a loss of connection between the diagnostic tester and the VCI is an edge case. But in the real world, it's pretty much a common use case. ISO22900-2 also describes what should happen during VCI lost. But there are big differences between the API vendors. You could also say at this point "That separates the wheat from the chaff". But back how the ApiOne takes this point into account. 
+
+In a more sophisticated application it looks something like this:
+
+- The API from a vendor and a VCI behind it are set somewhere in the setting.
+- Somewhere later in the application elsewhere in the code you establish a connection to the API and the VCI.
+- One or more instances of com logical links are then opened on this VCI instance.  And these com logical links are then passed around in the application.
+- At the point in the application where you use the com logical link, you usually no longer have direct access to the VCI instance. Unless you passed the VCI instance around which is usually ugly.
+
+The use case is now you are doing something with the com logical link(s)  e.g. read live data or  read out the vehicle ignition status or vehicle battery voltage from the VCI directly. And now it comes to a VCI lost. Because, for example, the VCI was disconnected from OBDII connector or the USB, LAN, Wifi or Bluetooth connection to the VCI was interrupted. Now the ISO22900-II says in this case the com logical links and the VCI are no longer valid (in a nutshell). Which also means instances of VCI and com logical link are also no longer valid. But the biggest problem at this point is. If I want to make a new connection attempt to the VCI. I need to go back to the point in the code where I have an instance of the API. To avoid these twists the ApiOne have the internal classes ModuleLevel, ComLogicalLinkLevel, ComPrimitiveLevel represents real instances but the user of the ApiOne only has access to instances of Module, ComLogicalLink, ComPrimitive which are like wrappers. The trick is now… if there is a VCI lost and an exception is thrown somewhere you can catch the exception (evaluate it a bit more if you like) and then use TryToRecover to let the ApiOne try to establish a new connection. Under the hood, the ApiOne destroys/dispose the old instances and when the connection is back, new instances are created. However, the ApiOne user does not notice this because he is working on the wrapper instances and these are retained.
+
+The [SophisticatedExample](## Usage sophisticated example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
+
+
+
+7. Following point number 6 and the explanation, there is an internal representation for Module, ComLogicalLink and ComPrimitive and one that is passed to the outside. 
+   
+   | internal            | outside        |
+   | ------------------- | -------------- |
+   | ModuleLevel         | Module         |
+   | ComLogicalLinkLevel | ComLogicalLink |
+   | ComPrimitiveLevel   | ComPrimitive   |
+   
+   Of course, this does not exist for the System-Level, since the connection to the dll (or so) is not lost. Therefore, there is for the System-Level only the class DiagPduApiOneSysLevel.
+
 ## TODO's
 
 - write more...
@@ -115,5 +142,248 @@ public static async Task Main(string[] args)
     Console.ReadKey();
 }
 }
+}
+```
+
+## Usage sophisticated example
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ISO22900.II;
+
+namespace ISO22900.II.SophisticatedExample
+{
+    public static class UserPreferencesStore
+    {
+        public static string ApiShortName { get; set; } = "";
+        public static string VciName { get; set; } = "";
+    }
+
+    public class Program
+    {
+
+        public static async Task Main(string[] args)
+        {
+            using (var factory = new DiagPduApiOneFactory())
+            {
+                await Run();
+            }// here, Dispose runs and cleans everything up
+
+            Console.WriteLine("Finish press a key.");
+            Console.ReadKey();
+        }
+
+
+        static async Task Run()
+        {
+            Settings();
+            var vci = ConnectVci();
+            var cts = new CancellationTokenSource();
+            var vBatTask = ReadBatteryVoltage(vci, cts.Token);
+            vBatTask.Start();
+            var linkEcuOne = OpenComLogicalLinkForEcuOne(vci);
+            await DoSomethingWithEcu(linkEcuOne);
+            linkEcuOne.DestroyComLogicalLink(); //or Dispose() how you like;
+            cts.Cancel();
+            await vBatTask;
+            vci.Disconnect(); //or Dispose() how you like;
+        }
+
+
+        static void Settings()
+        {
+            //Discover Api and VCI e.g. inside the application settings
+            var apiGroupedVciList = DiscoverApiVci();
+            //this is the list for the user
+            foreach (var eachApi in apiGroupedVciList)
+            {
+                Console.WriteLine($"API: {eachApi.Key}");
+                foreach (var vci in eachApi.Items)
+                {
+                    Console.WriteLine($"\tVCI: {vci.VciName}");
+                }
+            }
+
+            //here we simulate user selection and saving the settings
+            //select first vci from first api
+            UserPreferencesStore.ApiShortName = apiGroupedVciList[0].Items[0].ApiShortName;
+            UserPreferencesStore.VciName = apiGroupedVciList[0].Items[0].VciName;
+        }
+
+        static Module ConnectVci()
+        {
+            //Use this if you have a VCI that cannot read voltage or ignition status. 
+            //var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(UserPreferencesStore.ApiShortName),ApiModifications.VOLTAGE_FIX|ApiModifications.IGNITION_FIX);
+            var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(UserPreferencesStore.ApiShortName));
+            return api.ConnectVci(UserPreferencesStore.VciName);
+        }
+
+        static Task ReadBatteryVoltage(Module vci, CancellationToken ct)
+        {
+            return new Task(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    string ignitionState;
+                    string vBat; //VBATT means Vehicle Battery Voltage
+                    try
+                    {
+                        vBat = $"VBATT: {(float)(vci.MeasureBatteryVoltage() / 1000.0):00.00}";
+                        var temp = vci.IsIgnitionOn() ? "Yes" : "No";
+                        ignitionState = $"Ignition on: {temp}";
+                    }
+                    catch (Iso22900IIException)
+                    {
+                        // eat all Exceptions
+                        vBat = "VBATT: ---";
+                        ignitionState = "Ignition on: ---";
+                        continue; //comment "continue" out if you want to see it more or less parallel to what's happening around TryTpRcover
+                    }
+
+                    Console.WriteLine($"{vBat}");
+                    Console.WriteLine($"{ignitionState}");
+                    Thread.Sleep(1000); //Reading these values faster usually makes no sense
+                }
+
+            }, ct, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        static ComLogicalLink OpenComLogicalLinkForEcuOne(Module vci)
+        {
+            var dlcPinData = new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } };
+            var busTypeName = "ISO_11898_2_DWCAN";
+            var protocolName = "ISO_15765_3_on_ISO_15765_2";
+
+            var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList());
+
+            //Set UniqueId ComParam's
+            uint pageOneId = 815; //give page one a ID  
+            link.SetUniqueRespIdTablePageOneUniqueRespIdentifier(pageOneId);
+            link.SetUniqueIdComParamValue(pageOneId, "CP_CanPhysReqId", 0x7E0);
+            link.SetUniqueIdComParamValue(pageOneId, "CP_CanRespUSDTId", 0x7E8);
+
+            //Set normal ComParam's
+            link.SetComParamValueViaGet("CP_P2Max", 500000);
+            return link;
+        }
+
+        static async Task DoSomethingWithEcu(ComLogicalLink link)
+        {
+            link.Connect();
+
+            //Use StartComm to start tester present behavior
+            using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM))
+            {
+                await copStartComm.WaitForCopResultAsync();
+            }
+
+            //while this loop is running... disconnect e.g. USB connection to see what happens
+            for (byte i = 0x80; i < 0xB0; i++)
+            {
+                try
+                {
+                    var request = new byte[] { 0x22, 0xF1, i };
+
+                    using (var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, 1, request))
+                    {
+                        var result = await cop.WaitForCopResultAsync();
+
+                        var responseString = string.Empty;
+                        uint responseTime = 0;
+                        if (result.DataMsgQueue().Count > 0)
+                        {
+                            responseString = string.Join(",",
+                                result.DataMsgQueue().ConvertAll(bytes => { return BitConverter.ToString(bytes); }));
+                            responseTime = result.ResponseTime();
+                        }
+                        else if (result.PduEventItemErrors().Count > 0)
+                        {
+                            foreach (var error in result.PduEventItemErrors())
+                            {
+                               responseString += $"{error.ErrorCodeId}";
+                               //+ $"(InfoId: {error.ExtraErrorInfoId} (to decode this code supplier spezifische MDF-File needed))";
+                            }
+
+                            responseString = "Error: " + responseString;
+                        }
+                        Console.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
+                    }
+                }
+                catch (Iso22900IIException e)
+                {
+                    //These are the typical errors at VCI lost (you can trigger it with e.g. disconnecting the USB connection)
+                    //Only Actia unfortunately does the very general "PDU_ERR_FCT_FAILED" with some VCI
+                    //I hope Actia improves this
+                    if (e.PduError == PduError.PDU_ERR_MODULE_NOT_CONNECTED ||
+                         e.PduError == PduError.PDU_ERR_COMM_PC_TO_VCI_FAILED ||
+                         e.PduError == PduError.PDU_ERR_FCT_FAILED)
+                    {
+                        Console.WriteLine("Error VCI lost. Check the connection to the VCI.");
+                        Console.WriteLine("Press [Enter] to start TryToRecover function or [any] other key to exit");
+                        if (Console.ReadKey().Key != ConsoleKey.Enter)
+                        {
+                            Console.WriteLine("Exit");
+                            return;
+                        }
+                        else
+                        {
+                            //this sleep only makes sense if the user presses enter very quickly (after he has repaired the connection, of course)
+                            //Windows also needs some time to recognize a reconnected device
+                            //The time between "the mechanical connection is okay again" and "the operating system noticed it too" is difficult to determine
+                            Thread.Sleep(1000); //gives some time to e.g. reconnect the USB plug
+                            if (!link.TryToRecover(out var msg))
+                            {
+                                Console.WriteLine($"Recovering failed: {msg}");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            link.Disconnect();
+        }
+
+        public static List<Grouping<string, ApiVci>> DiscoverApiVci()
+        {
+            List<ApiVci> ApiVciList = new List<ApiVci>();
+
+            foreach (var rootFileItem in DiagPduApiHelper.InstalledMvciPduApiDetails())
+            {
+                using (var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(rootFileItem.ShortName)))
+                {
+                    foreach (var vciBehindApi in api.PduModuleDataSets)
+                    {
+                        ApiVciList.Add(new ApiVci { ApiShortName = rootFileItem.ShortName, VciName = vciBehindApi.VendorModuleName });
+                    }
+                }
+            }
+            return (from apiVci in ApiVciList
+                    group apiVci by apiVci.ApiShortName into apiGroup
+                    select new Grouping<string, ApiVci>(apiGroup.Key, apiGroup)).ToList<Grouping<string, ApiVci>>();
+        }
+
+    }
+
+    public class ApiVci
+    {
+        public string ApiShortName { get; set; }
+        public string VciName { get; set; }
+    }
+
+    // Grouping of items by key 
+    public class Grouping<TKey, TItem> : List<TItem>
+    {
+        public TKey Key { get; }
+
+        public IList<TItem> Items => base.AsReadOnly();
+
+        public Grouping(TKey key, IEnumerable<TItem> items)
+        {
+            Key = key;
+            AddRange(items);
+        }
+    }
 }
 ```

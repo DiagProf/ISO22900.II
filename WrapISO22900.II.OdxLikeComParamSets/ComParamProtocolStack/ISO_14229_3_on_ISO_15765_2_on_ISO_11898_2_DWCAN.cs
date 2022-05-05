@@ -112,7 +112,7 @@ namespace ISO22900.II.OdxLikeComParamSets
             App.CP_TesterPresentTime = 2000000; //0-30000000us Time interval
 
             // NegativeResponse Handling:
-            App.CP_RCByteOffset = 0x3; //0-FFFFFFFF Position of the error type in negResp, 1 = 1st byte,
+            App.CP_RCByteOffset = 2; //0-FFFFFFFF Position of the error type in negResp, 1 = 1st byte first byte after!! the ServiceId byte (0x7F),
                                        //0xFFFFFFFF = last byte   //0xFFFFFFFF is a workaround for shit ECUs
             App.CP_RepeatReqCountApp = 0; //0-127500  Repetition if there is no response, number of repetitions!
             App.CP_RC78Handling = 1; //Switches Neg.Resp78 Handling (0 = off, 1 = until TimeOut, 2 = infinite)

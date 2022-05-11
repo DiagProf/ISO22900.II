@@ -50,17 +50,7 @@ namespace ISO22900.II
             return new PduIoCtlDataUnum32(uInt32);
         }
 
-        protected override PduIoCtlData CreatePduIoCtlDataProgVoltage()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override PduIoCtlData CreatePduIoCtlDataByteArray()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override PduIoCtlData CreatePduIoCtlDataFilter()
+        protected override PduIoCtlData CreatePduIoCtlEntityStatus()
         {
             throw new System.NotImplementedException();
         }

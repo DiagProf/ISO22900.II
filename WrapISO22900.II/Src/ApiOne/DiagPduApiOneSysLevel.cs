@@ -267,6 +267,12 @@ namespace ISO22900.II
             return Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
+        //public PduIoCtl(string ioCtlShortName)
+        //{
+        //    var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+        //    return Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+        //}
+
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {
             DataLost?.Invoke(this, eventArgs);

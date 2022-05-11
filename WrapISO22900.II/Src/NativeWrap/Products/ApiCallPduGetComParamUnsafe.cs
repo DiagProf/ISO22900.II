@@ -28,7 +28,6 @@
 #endregion
 
 using System;
-using Microsoft.Extensions.Logging;
 
 // ReSharper disable BuiltInTypeReferenceStyle
 

@@ -176,6 +176,19 @@ namespace ISO22900.II
             return DiagPduApiOneSysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
+
+        public void IoCtlGeneral(string ioCtlShortName)
+        {
+            var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+            if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+            {
+                DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+            }
+        }
+
+        public void IoCtlReset() => IoCtlGeneral("PDU_IOCTL_RESET");
+
+
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {
             DataLost?.Invoke(this, eventArgs);

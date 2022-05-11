@@ -397,6 +397,28 @@ namespace ISO22900.II
             return Vci.IsIgnitionOn(dlcPinNumber);
         }
 
+        public void IoCtlGeneral(string ioCtlShortName)
+        {
+            var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+            if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
+            {
+                Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+            }
+        }
+
+        public void IoCtlClearTxQueue() => IoCtlGeneral("PDU_IOCTL_CLEAR_TX_QUEUE");
+
+        public void IoCtlSuspendTxQueue() => IoCtlGeneral("PDU_IOCTL_SUSPEND_TX_QUEUE");
+
+        public void IoCtlResumeTxQueue() => IoCtlGeneral("PDU_IOCTL_RESUME_TX_QUEUE");
+
+        public void IoCtlClearRxQueue() => IoCtlGeneral("PDU_IOCTL_CLEAR_RX_QUEUE");
+
+        public void IoCtlClearMsgFilter() => IoCtlGeneral("PDU_IOCTL_CLEAR_MSG_FILTER");
+
+        public void IoCtlSendBreak() => IoCtlGeneral("PDU_IOCTL_SEND_BREAK");
+
+
         public PduExStatusData Status()
         {
             return Vci.DiagPduApiOneSysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);

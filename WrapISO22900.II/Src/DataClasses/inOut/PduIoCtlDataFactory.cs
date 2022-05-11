@@ -31,6 +31,9 @@ using System;
 
 namespace ISO22900.II
 {
+    /// <summary>
+    /// Only for the types that can exist as OutputData.
+    /// </summary>
     internal abstract class PduIoCtlDataFactory
     {
         protected PduIoCtlData PduIoCtlDataFromItemType(PduIt pduIt)
@@ -38,20 +41,14 @@ namespace ISO22900.II
             return pduIt switch
             {
                 PduIt.PDU_IT_IO_UNUM32 => CreatePduIoCtlDataUnum32(),
-                PduIt.PDU_IT_IO_PROG_VOLTAGE => CreatePduIoCtlDataProgVoltage(),
-                PduIt.PDU_IT_IO_BYTEARRAY => CreatePduIoCtlDataByteArray(),
-                PduIt.PDU_IT_IO_FILTER => CreatePduIoCtlDataFilter(),
+                PduIt.PDU_IT_IO_ENTITY_STATUS => CreatePduIoCtlEntityStatus(),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
 
         protected abstract PduIoCtlData CreatePduIoCtlDataUnum32();
-        
-        protected abstract PduIoCtlData CreatePduIoCtlDataProgVoltage();
 
-        protected abstract PduIoCtlData CreatePduIoCtlDataByteArray();
-        
-        protected abstract PduIoCtlData CreatePduIoCtlDataFilter();
+        protected abstract PduIoCtlData CreatePduIoCtlEntityStatus();
 
     }
 }

@@ -263,8 +263,7 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             _cpBs = (PduComParamOfTypeUint)CreateCp("CP_Bs", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpCanFillerByte = (PduComParamOfTypeUint)CreateCp("CP_CanFillerByte", 0x55, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFillerByteHandling = (PduComParamOfTypeUint)CreateCp("CP_CanFillerByteHandling", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpCanFirstConsecutiveFrameValue =
-                (PduComParamOfTypeUint)CreateCp("CP_CanFirstConsecutiveFrameValue", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpCanFirstConsecutiveFrameValue = (PduComParamOfTypeUint)CreateCp("CP_CanFirstConsecutiveFrameValue", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqExtAddr = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqFormat = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqFormat", 5, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqId = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqId", 0x7DF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);

@@ -133,27 +133,17 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             UniqueRespIdTables.Add(new CpIso134002UniqueRespIdTable("", HashAlgo));
 
             _cpRepeatReqCountTrans = (PduComParamOfTypeUint)CreateCp("CP_RepeatReqCountTrans", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
-            CpList.Add(_cpRepeatReqCountTrans);
             _cpRequestAddrMode = (PduComParamOfTypeUint)CreateCp("CP_RequestAddrMode", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpRequestAddrMode);
             _cpDoIPLogicalGatewayAddress = (PduComParamOfTypeUint)CreateCp("CP_DoIPLogicalGatewayAddress", 0x1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpDoIPLogicalGatewayAddress);
             _cpDoIPLogicalTesterAddress = (PduComParamOfTypeUint)CreateCp("CP_DoIPLogicalTesterAddress", 0xE00, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpDoIPLogicalTesterAddress);
             _cpDoIPLogicalFunctionalAddress = (PduComParamOfTypeUint)CreateCp("CP_DoIPLogicalFunctionalAddress", 0xE400, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpDoIPLogicalFunctionalAddress);
             _cpDoIPNumberOfRetries = (PduComParamOfTypeUint)CreateCp("CP_DoIPNumberOfRetries", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpDoIPNumberOfRetries);
             _cpDoIPDiagnosticAckTimeout = (PduComParamOfTypeUint)CreateCp("CP_DoIPDiagnosticAckTimeout", 2000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            CpList.Add(_cpDoIPDiagnosticAckTimeout);
             _cpDoIPRetryPeriod = (PduComParamOfTypeUint)CreateCp("CP_DoIPRetryPeriod", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            CpList.Add(_cpDoIPRetryPeriod);
             _cpDoIPProcessingTime = (PduComParamOfTypeUint)CreateCp("CP_DoIPProcessingTime", 2000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            CpList.Add(_cpDoIPProcessingTime);
             _cpDoIPRoutingActivationType = (PduComParamOfTypeUint)CreateCp("CP_DoIPRoutingActivationType", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            CpList.Add(_cpDoIPRoutingActivationType);
             _cpDoIPRoutingActivationTimeout = (PduComParamOfTypeUint)CreateCp("CP_DoIPRoutingActivationTimeout", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            CpList.Add(_cpDoIPRoutingActivationTimeout);
+           
 
             CpList = new List<PduComParam>
             {

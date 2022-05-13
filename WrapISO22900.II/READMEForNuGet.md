@@ -27,7 +27,7 @@ public static async Task Main(string[] args)
         //take the first API
         var apiShortName = allInstalledPduApis.First().ShortName;
         using ( var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper
-                   .FullyQualifiedLibraryFileNameFormShortName(apiShortName)) )
+                   .FullLibraryPathFormApiShortName(apiShortName)) )
         {
             //without parameters means the first VCI that is found
             using ( var vci = api.ConnectVci() )

@@ -397,26 +397,54 @@ namespace ISO22900.II
             return Vci.IsIgnitionOn(dlcPinNumber);
         }
 
-        public void IoCtlGeneral(string ioCtlShortName)
+        /// <summary>
+        ///     For IoCtl which takes only the name and as parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName)
         {
-            var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-            if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
+            try
             {
-                Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                    return true;
+                }
             }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
         }
 
-        public void IoCtlClearTxQueue() => IoCtlGeneral("PDU_IOCTL_CLEAR_TX_QUEUE");
+        /// <summary>
+        ///     For IoCtl which takes the name and a uint as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint value)
+        {
+            try
+            {
+                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlDataUnum32(value));
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
 
-        public void IoCtlSuspendTxQueue() => IoCtlGeneral("PDU_IOCTL_SUSPEND_TX_QUEUE");
-
-        public void IoCtlResumeTxQueue() => IoCtlGeneral("PDU_IOCTL_RESUME_TX_QUEUE");
-
-        public void IoCtlClearRxQueue() => IoCtlGeneral("PDU_IOCTL_CLEAR_RX_QUEUE");
-
-        public void IoCtlClearMsgFilter() => IoCtlGeneral("PDU_IOCTL_CLEAR_MSG_FILTER");
-
-        public void IoCtlSendBreak() => IoCtlGeneral("PDU_IOCTL_SEND_BREAK");
+            return false;
+        }
 
 
         public PduExStatusData Status()

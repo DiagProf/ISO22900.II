@@ -426,6 +426,98 @@ namespace ISO22900.II
             }
         }
 
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl where the name is the only one parameter
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName)
+        {
+            lock (_sync)
+            {
+                return _cll.TryIoCtlGeneral(ioCtlShortName);
+            }
+        }
+
+        /// <summary>
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlClearTxQueue() => TryIoCtlGeneral("PDU_IOCTL_CLEAR_TX_QUEUE");
+
+        /// <summary>
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlSuspendTxQueue() => TryIoCtlGeneral("PDU_IOCTL_SUSPEND_TX_QUEUE");
+
+        /// <summary>
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlResumeTxQueue() => TryIoCtlGeneral("PDU_IOCTL_RESUME_TX_QUEUE");
+
+        /// <summary>
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlClearRxQueue() => TryIoCtlGeneral("PDU_IOCTL_CLEAR_RX_QUEUE");
+
+        /// <summary>
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlClearMsgFilter() => TryIoCtlGeneral("PDU_IOCTL_CLEAR_MSG_FILTER");
+
+        /// <summary>
+        /// For SAE J1850 VPW
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <returns></returns>
+        public bool TryIoCtlSendBreak() => TryIoCtlGeneral("PDU_IOCTL_SEND_BREAK");
+
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl which takes the name and a uint as parameters
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint value)
+        {
+            lock (_sync)
+            {
+                return _cll.TryIoCtlGeneral(ioCtlShortName, value);
+            }
+        }
+
+        /// <summary>
+        /// Sets the maximum buffer size of the received PDU on a ComLogicalLink
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <param name="value">maximum sizeof a received PDU for the ComLogicalLink</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlSetBufferSize(uint value) => TryIoCtlGeneral("PDU_IOCTL_SET_BUFFER_SIZE", value);
+
+
+        /// <summary>
+        /// Stops the specified filter, based on filter number
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <param name="value">Filter number to stop</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlStopMsgFilter(uint value) => TryIoCtlGeneral("PDU_IOCTL_STOP_MSG_FILTER", value);
+
+
+
+
         /// <summary>
         ///     Attempts to restore the status of the ComLogicalLink
         ///     Catch all "Iso22900IIException" exceptions

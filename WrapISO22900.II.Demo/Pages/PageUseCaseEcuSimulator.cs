@@ -54,7 +54,7 @@ namespace ISO22900.II.Demo
             {
                 AnsiConsole.WriteLine("MainThread:    Load D-PDU API...");
                 using ( var pduapi = DiagPduApiOneFactory.GetApi(
-                           DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api")
+                           DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api")
                                .Value), AbstractPageControl.LoggerFactory) )
                 {
                     // Connect VCI

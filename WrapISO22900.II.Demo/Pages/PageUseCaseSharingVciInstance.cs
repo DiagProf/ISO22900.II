@@ -58,7 +58,7 @@ namespace ISO22900.II.Demo
             {
                 using ( var api =
                     DiagPduApiOneFactory.GetApi(
-                        DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value)) )
+                        DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value)) )
                 {
                     using ( var vci = api.ConnectVci(AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                     {

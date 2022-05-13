@@ -33,8 +33,7 @@ namespace ISO22900.II
     {
         public uint Value { get; }
 
-        public PduIoCtlDataUnum32(uint value ) : base(
-            PduIt.PDU_IT_IO_UNUM32)
+        public PduIoCtlDataUnum32(uint value ) : base(PduIt.PDU_IT_IO_UNUM32)
         {
             Value = value;
         }

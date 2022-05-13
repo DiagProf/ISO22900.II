@@ -76,7 +76,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow(tableEvent);
 
             using ( var api = DiagPduApiOneFactory.GetApi(
-                       DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
+                       DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
                        AbstractPageControl.LoggerFactory, ApiModifications.IGNITION_FIX | ApiModifications.VOLTAGE_FIX) )
             {
                 api.EventFired += EventHandlerOnSysLevel;

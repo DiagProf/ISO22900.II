@@ -62,6 +62,7 @@ namespace ISO22900.II.Demo
             AddPage(new PageUseCaseRecoverComLogicalLinkAfterVciLost(this));
             AddPage(new PageUseCaseRecoverComLogicalLinkAfterVciLostKline(this));
             AddPage(new PageUseCaseRecoverComPrimitiveAfterVciLost(this));
+            AddPage(new PageUseCaseCable(this));
             SetPage<MainPage>();
 
             _logger = loggerFactory.CreateLogger<ConsoleHeart>();

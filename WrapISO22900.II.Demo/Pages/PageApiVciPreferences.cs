@@ -145,7 +145,7 @@ namespace ISO22900.II.Demo
                 HighlightStyle = new Style(Color.DeepSkyBlue1)
             };
 
-            var path = DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(apiShortName);
+            var path = DiagPduApiHelper.FullLibraryPathFormApiShortName(apiShortName);
 
             List<PduModuleData> pduModuleDatas = null;
             AnsiConsole.Status()

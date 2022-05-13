@@ -54,7 +54,7 @@ namespace ISO22900.II.Demo
 
             using ( var api =
                 DiagPduApiOneFactory.GetApi(
-                    DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
+                    DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
                     AbstractPageControl.LoggerFactory) )
             {
                 var i = 0x0;

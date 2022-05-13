@@ -61,7 +61,7 @@ namespace ISO22900.II.Demo
                 var lessImportantTask = new Task(  () =>
                 {
                     var vci = DiagPduApiOneFactory.GetVci(
-                        DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value), AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value);
+                        DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value), AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value);
                     while ( !ct.IsCancellationRequested )
                     {
                         string ignitionState;
@@ -90,7 +90,7 @@ namespace ISO22900.II.Demo
 
                 //The main use
                 using ( var cll = DiagPduApiOneFactory.GetCll(
-                    DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
+                    DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
                     AbstractPageControl.LoggerFactory, "", AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                 {
                     cll.Connect();

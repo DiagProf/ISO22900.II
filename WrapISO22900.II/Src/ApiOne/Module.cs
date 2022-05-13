@@ -174,6 +174,120 @@ namespace ISO22900.II
             }
         }
 
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl where the name is the only one parameter
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral(ioCtlShortName);
+            }
+        }
+
+        /// <summary>
+        /// Only VCI developers could use this function.
+        /// A good application with a good VCI should not use the function.
+        /// </summary>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlReset() => TryIoCtlGeneral("PDU_IOCTL_RESET");
+
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl where the name is the only one parameter and you get uint result
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, out uint value)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral(ioCtlShortName, out value);
+            }
+        }
+
+        /// <summary>
+        /// The pure version. Better is convenience function MeasureBatteryVoltage
+        /// </summary>
+        /// <param name="value">vehicle battery in mV</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlReadVbatt(out uint value) => TryIoCtlGeneral("PDU_IOCTL_READ_VBATT", out value);
+
+        /// <summary>
+        /// read out the set programming voltage
+        /// generally only very, very old ECUs need this
+        /// </summary>
+        /// <param name="value">programming voltage in mV</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlReadProgVoltage(out uint value) => TryIoCtlGeneral("PDU_IOCTL_READ_PROG_VOLTAGE", out value);
+
+        /// <summary>
+        /// Let the application know which cable is currently connected to an MVCI protocol module
+        /// </summary>
+        /// <param name="value">Cable Id  -> use CDF File for more Info based on Id</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGetCableId(out uint value) => TryIoCtlGeneral("PDU_IOCTL_GET_CABLE_ID", out value);
+
+
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl which takes the name and a uint as parameters and you get uint result
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn, out uint valueOut)
+        {
+            lock ( _sync )
+            {
+                return _vci.TryIoCtlGeneral(ioCtlShortName, valueIn, out valueOut);
+            }
+        }
+
+        /// <summary>
+        /// ISO 13400-3 defines different Ethernet pin layout options for the OBDII connector, e.g. Option 1 and Option 2.
+        /// The IOCTL command PDU_IOCTL_GET_ETH_PIN_OPTION is used to determine the Ethernet option.
+        /// For  this determination, the Ethernet activation pin on the DLC connector is used.
+        /// </summary>
+        /// <param name="valueIn">pin 8 of the dlc is usually used</param>
+        /// <param name="valueOut">
+        ///     Evaluated option of Ethernet pinout on the vehicle.
+        ///     0 = non Ethernet vehicle 
+        ///     1 = Ethernet Option 1 
+        ///     2 = Ethernet Option 2 
+        ///     3 and above reserved for future us
+        /// </param>
+        /// <returns></returns>
+        public bool TryIoCtlGetEthPinOption(uint valueIn, out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_GET_ETH_PIN_OPTION", valueIn, out valueOut);
+        //default pin 8 of the dlc is usually used
+        public bool TryIoCtlGetEthPinOption(out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_GET_ETH_PIN_OPTION", 8, out valueOut);
+
+        /// <summary>
+        /// The pure version. Better is convenience function IsIgnitionOn
+        /// </summary>
+        /// <param name="valueIn"></param>
+        /// <param name="valueOut">
+        ///     0 = Ignition OFF
+        ///     1 = Ignition ON
+        /// </param>
+        /// <returns></returns>
+        public bool TryIoCtlReadIgnitionSenseState(uint valueIn, out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_READ_IGNITION_SENSE_STATE", valueIn, out valueOut);
+
+
+
         /// <summary>
         ///     Attempts to restore the status of the VCI
         ///     Catch all "Iso22900IIException" exceptions

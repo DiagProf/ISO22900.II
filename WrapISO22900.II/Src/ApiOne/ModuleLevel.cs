@@ -83,12 +83,12 @@ namespace ISO22900.II
         ///     Current time (hardware clock) from an MVCI protocol module
         /// </summary>
         /// <returns>timestamp in microseconds</returns>
-        public uint Timestamp()
+        internal uint Timestamp()
         {
             return DiagPduApiOneSysLevel.Nwa.PduGetTimestamp(ModuleHandle);
         }
 
-        public PduVersionData VersionData()
+        internal PduVersionData VersionData()
         {
             return DiagPduApiOneSysLevel.Nwa.PduGetVersionData(ModuleHandle);
         }
@@ -171,22 +171,86 @@ namespace ISO22900.II
             return true;
         }
 
-        public PduExStatusData Status()
+        internal PduExStatusData Status()
         {
             return DiagPduApiOneSysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
-
-        public void IoCtlGeneral(string ioCtlShortName)
+        /// <summary>
+        ///     For IoCtl which takes only the name and as parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName)
         {
-            var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-            if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+            try
             {
-                DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
+                {
+                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                    return true;
+                }
             }
+            catch ( Iso22900IIException e )
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
         }
 
-        public void IoCtlReset() => IoCtlGeneral("PDU_IOCTL_RESET");
+        /// <summary>
+        ///     For IoCtl which takes the name and a uint as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn, out uint valueOut)
+        {
+            try
+            {
+                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    valueOut = ((PduIoCtlDataUnum32)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlDataUnum32(valueIn))).Value;
+                    return true;
+                }
+            }
+            catch ( Iso22900IIException e )
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+            valueOut = default;
+            return false;
+        }
+
+
+        /// <summary>
+        ///     For IoCtl which takes the name and a uint as in parameters and uint as out
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, out uint value)
+        {
+            try
+            {
+                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    value = ((PduIoCtlDataUnum32)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null)).Value;
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+            value = default;
+            return false;
+        }
+
 
 
         protected void OnDataLost(CallbackEventArgs eventArgs)

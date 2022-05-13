@@ -90,11 +90,22 @@ namespace ISO22900.II
         }
 
         /// <summary>
-        /// get the dll-Path from Shortname
+        /// Get the dll-Path (or so-Path) from API-ShortName
         /// </summary>
         /// <param name="shortName"></param>
         /// <returns></returns>
+        [Obsolete("Method1 is deprecated, please use FullLibraryPathFormApiShortName instead.")]
         public static string FullyQualifiedLibraryFileNameFormShortName(string shortName)
+        {
+            return FullLibraryPathFormApiShortName(shortName);
+        }
+
+        /// <summary>
+        /// Get the dll-Path (or so-Path) from API-ShortName
+        /// </summary>
+        /// <param name="apiShortName"></param>
+        /// <returns></returns>
+        public static string FullLibraryPathFormApiShortName(string apiShortName)
         {
             var libraryFile = string.Empty;
             var path = FullyQualifiedRootFilePath();
@@ -107,13 +118,72 @@ namespace ISO22900.II
             var xPath = new XPathDocument(path);
             var navigator = xPath.CreateNavigator();
             var nodeIterator = navigator.SelectSingleNode(
-                "MVCI_PDU_API_ROOT/MVCI_PDU_API/SHORT_NAME[normalize-space(text()) = '" + shortName + "']/.." +
+                "MVCI_PDU_API_ROOT/MVCI_PDU_API/SHORT_NAME[normalize-space(text()) = '" + apiShortName + "']/.." +
                 "/LIBRARY_FILE/@URI");
             if (nodeIterator != null)
                 libraryFile = new Uri(nodeIterator.Value, UriKind.Absolute).LocalPath;
 
             return libraryFile;
         }
+
+        /// <summary>
+        /// Get the module description file (MDF)-Path from API-ShortName
+        /// This API wrapper is made to work without this file.
+        /// But sometimes it can be useful to read in the file for additional information (descriptions).
+        /// In this case this function is useful to get the file path
+        /// </summary>
+        /// <param name="apiShortName"></param>
+        /// <returns></returns>
+        public static string FullMdfPathFormApiShortName(string apiShortName)
+        {
+            var moduleDescriptionFile = string.Empty;
+            var path = FullyQualifiedRootFilePath();
+            if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                return moduleDescriptionFile;
+            }
+
+            //Load the file and create a navigator object. 
+            var xPath = new XPathDocument(path);
+            var navigator = xPath.CreateNavigator();
+            var nodeIterator = navigator.SelectSingleNode(
+                "MVCI_PDU_API_ROOT/MVCI_PDU_API/SHORT_NAME[normalize-space(text()) = '" + apiShortName + "']/.." +
+                "/MODULE_DESCRIPTION_FILE/@URI");
+            if (nodeIterator != null)
+                moduleDescriptionFile = new Uri(nodeIterator.Value, UriKind.Absolute).LocalPath;
+
+            return moduleDescriptionFile;
+        }
+
+        /// <summary>
+        /// Get the cable description file (CDF)-Path from API-ShortName
+        /// This API wrapper is made to work without this file.
+        /// But sometimes it can be useful to read in the file for additional information (descriptions).
+        /// In this case this function is useful to get the file path
+        /// </summary>
+        /// <param name="apiShortName"></param>
+        /// <returns></returns>
+        public static string FullCdfPathFormApiShortName(string apiShortName)
+        {
+            var cableDescriptionFile = string.Empty;
+            var path = FullyQualifiedRootFilePath();
+            if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                return cableDescriptionFile;
+            }
+
+            //Load the file and create a navigator object. 
+            var xPath = new XPathDocument(path);
+            var navigator = xPath.CreateNavigator();
+            var nodeIterator = navigator.SelectSingleNode(
+                "MVCI_PDU_API_ROOT/MVCI_PDU_API/SHORT_NAME[normalize-space(text()) = '" + apiShortName + "']/.." +
+                "/CABLE_DESCRIPTION_FILE/@URI");
+            if (nodeIterator != null)
+                cableDescriptionFile = new Uri(nodeIterator.Value, UriKind.Absolute).LocalPath;
+
+            return cableDescriptionFile;
+        }
+
 
         public struct MvciPduApiDetail
         {

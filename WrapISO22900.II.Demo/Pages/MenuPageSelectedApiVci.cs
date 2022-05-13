@@ -51,7 +51,8 @@ namespace ISO22900.II.Demo
                 new Option("Use case recover VCI after VCI lost", () => program.NavigateTo<PageUseCaseRecoverVciAfterVciLost>()),
                 new Option("Use case recover ComLogicalLink after VCI lost", () => program.NavigateTo<PageUseCaseRecoverComLogicalLinkAfterVciLost>()),
                 new Option("Use case recover ComLogicalLink after VCI lost (K-Line)", () => program.NavigateTo<PageUseCaseRecoverComLogicalLinkAfterVciLostKline>()),
-                new Option("Use case recover ComPrimitive after VCI lost", () => program.NavigateTo<PageUseCaseRecoverComPrimitiveAfterVciLost>())
+                new Option("Use case recover ComPrimitive after VCI lost", () => program.NavigateTo<PageUseCaseRecoverComPrimitiveAfterVciLost>()),
+                new Option("Use case detecting the diagnostic cable", () => program.NavigateTo<PageUseCaseCable>())
             )
         {
         }

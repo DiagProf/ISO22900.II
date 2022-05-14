@@ -45,47 +45,47 @@ namespace ISO22900.II
 
     internal class ApiCallPduIoCtlUnsafe : ApiCallPduIoCtl
     {
-        private readonly PduIoCtlDataUnsafeFactory _pduIoCtlDataUnsafeFactory;
-        private readonly VisitorPduIoCtlDataMemorySizeUnsafe _memorySizeVisitor;
-        private readonly VisitorPduIoCtlDataToUnmanagedMemoryUnsafe _visitorPduIoCtlData;
+        private readonly PduIoCtlUnsafeFactory _pduIoCtlUnsafeFactory;
+        private readonly VisitorPduIoCtlMemorySizeUnsafe _memorySizeVisitor;
+        private readonly VisitorPduIoCtlToUnmanagedMemoryUnsafe _visitorPduIoCtl;
 
-        internal override unsafe PduIoCtlData PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle,
-            uint ioCtlCommandId, PduIoCtlData input)
+        internal override unsafe PduIoCtl PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle,
+            uint ioCtlCommandId, PduIoCtl input)
         {
-            void* pComParamDataOnStack = null;
+            void* pIoCtlDataOnStack = null;
             if (input != null)
             {
                 _memorySizeVisitor.MemorySize = 0;
                 input.Accept(_memorySizeVisitor);
                 var p = stackalloc byte[_memorySizeVisitor.MemorySize];
-                pComParamDataOnStack = p;
-                _visitorPduIoCtlData.PointerForIoCtlData = pComParamDataOnStack;
-                input.Accept(_visitorPduIoCtlData);
+                pIoCtlDataOnStack = p;
+                _visitorPduIoCtl.PointerForIoCtlData = pIoCtlDataOnStack;
+                input.Accept(_visitorPduIoCtl);
             }
 
-            PduIoCtlData output = null;
+            PduIoCtl pduIoCtlDataResult = null;
             PDU_DATA_ITEM* pOutputData = null;
             try
             {
                 CheckResultThrowException(PDUIoCtl(moduleHandle, comLogicalLinkHandle, ioCtlCommandId,
-                    (PDU_DATA_ITEM*)pComParamDataOnStack, &pOutputData));
+                    (PDU_DATA_ITEM*)pIoCtlDataOnStack, &pOutputData));
             }
             finally
             {
                 if (pOutputData != null)
                 {
-                    output = _pduIoCtlDataUnsafeFactory.GetPduIoCtlDataFromIoCtlDataItemPointer(pOutputData);
+                    pduIoCtlDataResult = _pduIoCtlUnsafeFactory.GetPduIoCtlFromIoCtlItemPointer(pOutputData);
                     CheckResultThrowException(PDUDestroyItem((PDU_ITEM*)pOutputData));
                 }
             }
-            return output;
+            return pduIoCtlDataResult;
         }
 
         internal ApiCallPduIoCtlUnsafe(IntPtr handleToLoadedNativeLibrary) : base(handleToLoadedNativeLibrary)
         {
-            _pduIoCtlDataUnsafeFactory = new PduIoCtlDataUnsafeFactory();
-            _memorySizeVisitor = new VisitorPduIoCtlDataMemorySizeUnsafe();
-            _visitorPduIoCtlData = new VisitorPduIoCtlDataToUnmanagedMemoryUnsafe();
+            _pduIoCtlUnsafeFactory = new PduIoCtlUnsafeFactory();
+            _memorySizeVisitor = new VisitorPduIoCtlMemorySizeUnsafe();
+            _visitorPduIoCtl = new VisitorPduIoCtlToUnmanagedMemoryUnsafe();
         }
 
         //should look like the C function as much as possible.

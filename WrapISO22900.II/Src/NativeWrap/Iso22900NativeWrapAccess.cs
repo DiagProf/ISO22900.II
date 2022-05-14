@@ -328,7 +328,7 @@ namespace ISO22900.II
             }
         }
 
-        public PduIoCtlData PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle, uint ioCtlCommandId, PduIoCtlData pduIoCtlData)
+        public PduIoCtl PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle, uint ioCtlCommandId, PduIoCtl pduIoCtlData)
         {
             lock ( sync )
             {

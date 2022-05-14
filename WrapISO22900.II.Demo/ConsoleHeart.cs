@@ -52,6 +52,7 @@ namespace ISO22900.II.Demo
             AddPage(new PageUseCaseSimpleSendAndReceive(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveKline(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveTP20(this));
+            AddPage(new PageUseCaseSimpleSendAndReceiveDoIp(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveWithOptionString(this));
             AddPage(new PageUseCaseEventAllOver(this));
             AddPage(new PagePlayground(this));

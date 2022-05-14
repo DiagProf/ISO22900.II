@@ -306,26 +306,20 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             _cp5BaudAddressFunc = (PduComParamOfTypeUint)CreateCp("CP_5BaudAddressFunc", 0x33, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cp5BaudAddressPhys = (PduComParamOfTypeUint)CreateCp("CP_5BaudAddressPhys", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cp5BaudMode = (PduComParamOfTypeUint)CreateCp("CP_5BaudMode", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_INIT);
-            _cpAccessTimingOverride = (PduComParamOfTypeStructField)CreateCp("CP_AccessTimingOverride",
-                new PduParamStructFieldData(PduCpSt.PDU_CPST_ACCESS_TIMING, new PduParamStructData[] {}, 8), PduPt.PDU_PT_STRUCTFIELD,
-                PduPc.PDU_PC_TIMING);
-            _cpExtendedTiming = (PduComParamOfTypeStructField)CreateCp("CP_ExtendedTiming",
-                new PduParamStructFieldData(PduCpSt.PDU_CPST_ACCESS_TIMING, new PduParamStructData[] {}, 1), PduPt.PDU_PT_STRUCTFIELD,
-                PduPc.PDU_PC_TIMING);
+            _cpAccessTimingOverride = (PduComParamOfTypeStructField)CreateCp("CP_AccessTimingOverride", new PduParamStructFieldData(new PduParamStructAccessTiming[] {}, 8), PduPt.PDU_PT_STRUCTFIELD, PduPc.PDU_PC_TIMING);
+            _cpExtendedTiming = (PduComParamOfTypeStructField)CreateCp("CP_ExtendedTiming", new PduParamStructFieldData(new PduParamStructAccessTiming[] {}, 1), PduPt.PDU_PT_STRUCTFIELD, PduPc.PDU_PC_TIMING);
             _cpFillerByte = (PduComParamOfTypeUint)CreateCp("CP_FillerByte", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpFillerByteHandling = (PduComParamOfTypeUint)CreateCp("CP_FillerByteHandling", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpFillerByteLength = (PduComParamOfTypeUint)CreateCp("CP_FillerByteLength", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpEnableConcatenation = (PduComParamOfTypeUint)CreateCp("CP_EnableConcatenation", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpFuncReqFormatPriorityType =
-                (PduComParamOfTypeUint)CreateCp("CP_FuncReqFormatPriorityType", 0xC0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpFuncReqFormatPriorityType = (PduComParamOfTypeUint)CreateCp("CP_FuncReqFormatPriorityType", 0xC0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpFuncReqTargetAddr = (PduComParamOfTypeUint)CreateCp("CP_FuncReqTargetAddr", 51, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpHeaderFormatKW = (PduComParamOfTypeUint)CreateCp("CP_HeaderFormatKW", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpInitializationSettings = (PduComParamOfTypeUint)CreateCp("CP_InitializationSettings", 2, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_INIT);
             _cpP1Max = (PduComParamOfTypeUint)CreateCp("CP_P1Max", 20000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpP4Max = (PduComParamOfTypeUint)CreateCp("CP_P4Max", 20000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpP4Min = (PduComParamOfTypeUint)CreateCp("CP_P4Min", 5000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            _cpPhysReqFormatPriorityType =
-                (PduComParamOfTypeUint)CreateCp("CP_PhysReqFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpPhysReqFormatPriorityType = (PduComParamOfTypeUint)CreateCp("CP_PhysReqFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpPhysReqTargetAddr = (PduComParamOfTypeUint)CreateCp("CP_PhysReqTargetAddr", 0x10, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpRequestAddrMode = (PduComParamOfTypeUint)CreateCp("CP_RequestAddrMode", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpTesterSourceAddress = (PduComParamOfTypeUint)CreateCp("CP_TesterSourceAddress", 0xF1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);

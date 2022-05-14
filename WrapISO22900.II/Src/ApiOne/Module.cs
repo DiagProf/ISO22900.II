@@ -287,6 +287,72 @@ namespace ISO22900.II
         public bool TryIoCtlReadIgnitionSenseState(uint valueIn, out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_READ_IGNITION_SENSE_STATE", valueIn, out valueOut);
 
 
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl which takes the name and a byteField as parameters
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, byte[] value)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral(ioCtlShortName, value);
+            }
+        }
+
+        /// <summary>
+        /// Stops the specified filter, based on filter number
+        /// Usually you don't need to change anything with this method
+        /// </summary>
+        /// <param name="value">Filter number to stop</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneric(byte[] value) => TryIoCtlGeneral("PDU_IOCTL_GENERIC", value);
+
+        /// <summary>
+        /// Set the programmable voltage on the specified pin/resource of the DLC
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlSetProgVoltage(PduIoCtlOfTypeProgVoltage value)
+        {
+            lock ( _sync )
+            {
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_SET_PROG_VOLTAGE", value);
+            }
+        }
+
+
+        /// <summary>
+        /// Set Ethernet switch state  
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlSetEthSwitchState(PduExEthernetActivationPin ethernetActivationPin, uint ethernetActDlcPinNumber = 8)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_SET_ETH_SWITCH_STATE", ethernetActivationPin, ethernetActDlcPinNumber);
+            }
+        }
+
+
+        /// <summary>
+        /// "PDU_IOCTL_VEHICLE_ID_REQUEST 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlVehicleIdRequest(PduIoCtlVehicleIdRequestData vehicleIdRequestData)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_VEHICLE_ID_REQUEST", vehicleIdRequestData);
+            }
+        }
+
 
         /// <summary>
         ///     Attempts to restore the status of the VCI

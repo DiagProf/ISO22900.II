@@ -516,6 +516,18 @@ namespace ISO22900.II
         public bool TryIoCtlStopMsgFilter(uint value) => TryIoCtlGeneral("PDU_IOCTL_STOP_MSG_FILTER", value);
 
 
+        /// <summary>
+        ///  Starts filtering of incoming messages for the specified ComLogicalLink.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlStartMsgFilter(PduIoCtlOfTypeFilterList value)
+        {
+            lock (_sync)
+            {
+                return _cll.TryIoCtlGeneral("PDU_IOCTL_START_MSG_FILTER", value);
+            }
+        }
 
 
         /// <summary>

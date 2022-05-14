@@ -91,15 +91,21 @@ namespace ISO22900.II
             var paramActEntries = pComParamData->ParamActEntries;
             var pointerStructArray = pComParamData->pStructArray;
 
-            PduParamStructData[] dataArray;
+           
+            PduParamStructFieldData comParamData;
             if (paramStructType == PduCpSt.PDU_CPST_SESSION_TIMING)
-                dataArray = CreatePduParamStructSessionTimingField(paramMaxEntries, paramActEntries,
+            {
+                var dataArray = CreatePduParamStructSessionTimingField(paramMaxEntries, paramActEntries,
                     (PDU_PARAM_STRUCT_SESS_TIMING*) pointerStructArray);
+                comParamData = new PduParamStructFieldData(dataArray, paramMaxEntries);
+            }
             else
-                dataArray = CreatePduParamStructAccessTimingField(paramMaxEntries, paramActEntries,
+            {
+               var dataArray = CreatePduParamStructAccessTimingField(paramMaxEntries, paramActEntries,
                     (PDU_PARAM_STRUCT_ACCESS_TIMING*) pointerStructArray);
+               comParamData = new PduParamStructFieldData(dataArray, paramMaxEntries);
+            }
 
-            var comParamData = new PduParamStructFieldData(paramStructType, dataArray, paramMaxEntries);
             return new PduComParamOfTypeStructField(ComParamId, ComParamClass, comParamData);
         }
 

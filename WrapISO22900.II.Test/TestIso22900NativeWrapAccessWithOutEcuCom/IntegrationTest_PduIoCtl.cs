@@ -16,7 +16,7 @@ namespace ISO22900.II.Test
             Assert.AreEqual(PduIt.PDU_IT_IO_UNUM32, pduIoCtlData.PduItemType);
             if (pduIoCtlData.PduItemType == PduIt.PDU_IT_IO_UNUM32)
             {
-                if (pduIoCtlData is PduIoCtlDataUnum32 ctlDataUnum32) 
+                if (pduIoCtlData is PduIoCtlOfTypeUint ctlDataUnum32) 
                     Assert.GreaterOrEqual(ctlDataUnum32.Value, 0);
             }
         }
@@ -28,13 +28,13 @@ namespace ISO22900.II.Test
             //Then something goes wrong here, of course
             var ioCtlCommandId = _dPduApi.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, "PDU_IOCTL_READ_IGNITION_SENSE_STATE");
 
-            var input = new PduIoCtlDataUnum32(1);
+            var input = new PduIoCtlOfTypeUint(1);
 
             var output = _dPduApi.PduIoCtl(_moduleOne, PduConst.PDU_HANDLE_UNDEF, ioCtlCommandId, input);
             Assert.AreEqual(PduIt.PDU_IT_IO_UNUM32, output.PduItemType);
             if (output.PduItemType == PduIt.PDU_IT_IO_UNUM32)
             {
-                if (output is PduIoCtlDataUnum32 ctlDataUnum32)
+                if (output is PduIoCtlOfTypeUint ctlDataUnum32)
                     Assert.GreaterOrEqual(ctlDataUnum32.Value, 0);
             }
         }

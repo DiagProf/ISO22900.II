@@ -27,24 +27,22 @@
 
 #endregion
 
+using System;
+
 namespace ISO22900.II
 {
-    internal class VisitorPduIoCtlDataMemorySizeUnsafe : IVisitorPduIoCtlData
+    public abstract class PduIoCtl
     {
-        internal int MemorySize { get; set; }
+        /// <summary>
+        /// all with PDU_IT_IO_..
+        /// </summary>
+        public PduIt PduItemType { get; }
 
-        #region UsedInsidePduIoCtl
-
-        public void VisitConcretePduIoCtlDataOfTypeUnum32(PduIoCtlDataUnum32 cd)
+        protected PduIoCtl(PduIt pduItemType)
         {
-            MemorySize += CalculateSizeOfPduIoCtlDataBase() + sizeof(uint);
+            PduItemType = pduItemType;
         }
 
-        #endregion
-
-        protected static unsafe int CalculateSizeOfPduIoCtlDataBase()
-        {
-            return sizeof(PDU_DATA_ITEM);
-        }
+        internal abstract void Accept(IVisitorPduIoCtl visitorPduIoCtl);
     }
 }

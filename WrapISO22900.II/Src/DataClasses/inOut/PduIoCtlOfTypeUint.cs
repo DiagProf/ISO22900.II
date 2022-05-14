@@ -29,30 +29,21 @@
 
 namespace ISO22900.II
 {
-    internal class PduIoCtlDataUnsafeFactory : PduIoCtlDataFactory
+    /// <summary>
+    /// internal is ok here because the user just uses it as a uint
+    /// </summary>
+    internal class PduIoCtlOfTypeUint : PduIoCtl
     {
-        private unsafe PDU_DATA_ITEM* _pointerPduDataItem;
+        internal uint Value { get; }
 
-        internal unsafe PduIoCtlData GetPduIoCtlDataFromIoCtlDataItemPointer(PDU_DATA_ITEM* pduDataItem)
+        internal PduIoCtlOfTypeUint(uint value ) : base(PduIt.PDU_IT_IO_UNUM32)
         {
-            _pointerPduDataItem = pduDataItem;
-            return PduIoCtlDataFromItemType(pduDataItem->ItemType);
+            Value = value;
         }
 
-        protected unsafe void* PointerToStartOfData()
+        internal override void Accept(IVisitorPduIoCtl visitorPduIoCtl)
         {
-            return _pointerPduDataItem->pData;
-        }
-
-        protected override unsafe PduIoCtlDataUnum32 CreatePduIoCtlDataUnum32()
-        {
-            var uInt32 = *(uint*)PointerToStartOfData();
-            return new PduIoCtlDataUnum32(uInt32);
-        }
-
-        protected override PduIoCtlData CreatePduIoCtlEntityStatus()
-        {
-            throw new System.NotImplementedException();
+            visitorPduIoCtl.VisitConcretePduIoCtlOfTypeUint(this);
         }
     }
 }

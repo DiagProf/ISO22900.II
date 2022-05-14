@@ -29,18 +29,23 @@
 
 namespace ISO22900.II
 {
-    public class PduIoCtlDataUnum32 : PduIoCtlData
+    internal interface IVisitorPduIoCtl
     {
-        public uint Value { get; }
+        void VisitConcretePduIoCtlOfTypeUint(PduIoCtlOfTypeUint cd);
+        void VisitConcretePduIoCtlOfTypeByteField(PduIoCtlOfTypeByteField cd);
+        void VisitConcretePduIoCtlOfTypeProgVoltage(PduIoCtlOfTypeProgVoltage cd);
 
-        public PduIoCtlDataUnum32(uint value ) : base(PduIt.PDU_IT_IO_UNUM32)
-        {
-            Value = value;
-        }
+        void VisitConcretePduIoCtlOfTypeFilterList(PduIoCtlOfTypeFilterList cd);
+        void VisitConcretePduIoCtlFilterListData(PduIoCtlFilterListData cd);
+        void VisitConcretePduIoCtlFilterData(PduIoCtlFilterData cd);
 
-        internal override void Accept(IVisitorPduIoCtlData visitorPduIoCtlData)
-        {
-            visitorPduIoCtlData.VisitConcretePduIoCtlDataOfTypeUnum32(this);
-        }
+        void VisitConcretePduIoCtlOfTypeVehicleIdRequest(PduIoCtlOfTypeVehicleIdRequest cd);
+        void VisitConcretePduIoCtlVehicleIdRequestData(PduIoCtlVehicleIdRequestData cd);
+        void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd);
+
+
+        void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeSetEthSwitchState cd);
+
+
     }
 }

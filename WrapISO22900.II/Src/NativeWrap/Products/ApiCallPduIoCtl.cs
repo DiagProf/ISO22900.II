@@ -35,7 +35,7 @@ namespace ISO22900.II
 {
     internal abstract class ApiCallPduIoCtl : ApiCallPduDestroyItem
     {
-        internal abstract PduIoCtlData PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle, uint ioCtlCommandId, PduIoCtlData input);
+        internal abstract PduIoCtl PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle, uint ioCtlCommandId, PduIoCtl input);
 
         protected ApiCallPduIoCtl(IntPtr handleToLoadedNativeLibrary) : base(handleToLoadedNativeLibrary)
         {

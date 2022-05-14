@@ -27,11 +27,28 @@
 
 #endregion
 
+using System;
+
 namespace ISO22900.II
 {
-    internal interface IVisitorPduIoCtlData
+    /// <summary>
+    /// Only for the types that can exist as OutputData.
+    /// </summary>
+    internal abstract class PduIoCtlFactory
     {
-        void VisitConcretePduIoCtlDataOfTypeUnum32(PduIoCtlDataUnum32 cd);
-        //void VisitConcretePduIoCtlDataOfTypeByteField(PduIoCtlData pduIoCtlData);
+        protected PduIoCtl PduIoCtlFromItemType(PduIt pduIt)
+        {
+            return pduIt switch
+            {
+                PduIt.PDU_IT_IO_UNUM32 => CreatePduIoCtlUint(),
+                PduIt.PDU_IT_IO_ENTITY_STATUS => CreatePduIoCtlEntityStatus(),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        protected abstract PduIoCtl CreatePduIoCtlUint();
+
+        protected abstract PduIoCtl CreatePduIoCtlEntityStatus();
+
     }
 }

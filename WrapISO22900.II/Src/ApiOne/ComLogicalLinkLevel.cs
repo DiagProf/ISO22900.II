@@ -434,7 +434,7 @@ namespace ISO22900.II
                 var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlDataUnum32(value));
+                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeUint(value));
                     return true;
                 }
             }
@@ -445,6 +445,33 @@ namespace ISO22900.II
 
             return false;
         }
+
+
+        /// <summary>
+        ///     For IoCtl which takes the name and a PduIoCtlOfTypeFilterList as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlOfTypeFilterList value)
+        {
+            try
+            {
+                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, value);
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
+        }
+
 
 
         public PduExStatusData Status()

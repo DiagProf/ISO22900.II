@@ -61,10 +61,23 @@ namespace ISO22900.II
             visitorPduComParamAndUniqueRespIdTable.VisitConcretePduParamStructFieldData(this);
         }
 
-        public PduParamStructFieldData(PduCpSt comParamStructType, PduParamStructData[] structField,
-            uint paramMaxEntries)
+        private PduParamStructFieldData(PduCpSt comParamStructType, PduParamStructData[] structField, uint paramMaxEntries)
         {
             ComParamStructType = comParamStructType;
+            ParamMaxEntries = paramMaxEntries;
+            _structArray = structField;
+        }
+
+        public PduParamStructFieldData( PduParamStructAccessTiming[] structField, uint paramMaxEntries)
+        {
+            ComParamStructType = PduCpSt.PDU_CPST_ACCESS_TIMING;
+            ParamMaxEntries = paramMaxEntries;
+            _structArray = structField;
+        }
+
+        public PduParamStructFieldData(PduParamStructSessionTiming[] structField, uint paramMaxEntries)
+        {
+            ComParamStructType = PduCpSt.PDU_CPST_SESSION_TIMING;
             ParamMaxEntries = paramMaxEntries;
             _structArray = structField;
         }

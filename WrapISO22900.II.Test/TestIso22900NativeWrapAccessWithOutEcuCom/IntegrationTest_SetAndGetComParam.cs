@@ -121,7 +121,7 @@ namespace ISO22900.II.Test
             if (maxLen > testValue.Length)
             {
                 //Write the test value
-                var newField = new PduParamStructFieldData(PduCpSt.PDU_CPST_SESSION_TIMING, testValue, maxLen);
+                var newField = new PduParamStructFieldData(testValue, maxLen);
                 var cpSessionTimingOverrideNew =
                     new PduComParamOfTypeStructField(cpSessionTimingOverrideId, cpClass, newField);
                 _dPduApi.PduSetComParam(_moduleOne, _cll, cpSessionTimingOverrideNew);

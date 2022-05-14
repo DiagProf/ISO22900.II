@@ -27,22 +27,32 @@
 
 #endregion
 
-using System;
-
 namespace ISO22900.II
 {
-    public abstract class PduIoCtlData
+    internal class PduIoCtlUnsafeFactory : PduIoCtlFactory
     {
-        /// <summary>
-        /// all with PDU_IT_IO_..
-        /// </summary>
-        public PduIt PduItemType { get; }
+        private unsafe PDU_DATA_ITEM* _pointerPduDataItem;
 
-        protected PduIoCtlData(PduIt pduItemType)
+        internal unsafe PduIoCtl GetPduIoCtlFromIoCtlItemPointer(PDU_DATA_ITEM* pduDataItem)
         {
-            PduItemType = pduItemType;
+            _pointerPduDataItem = pduDataItem;
+            return PduIoCtlFromItemType(pduDataItem->ItemType);
         }
 
-        internal abstract void Accept(IVisitorPduIoCtlData visitorPduIoCtlData);
+        protected unsafe void* PointerToStartOfData()
+        {
+            return _pointerPduDataItem->pData;
+        }
+
+        protected override unsafe PduIoCtlOfTypeUint CreatePduIoCtlUint()
+        {
+            var uInt32 = *(uint*)PointerToStartOfData();
+            return new PduIoCtlOfTypeUint(uInt32);
+        }
+
+        protected override PduIoCtl CreatePduIoCtlEntityStatus()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

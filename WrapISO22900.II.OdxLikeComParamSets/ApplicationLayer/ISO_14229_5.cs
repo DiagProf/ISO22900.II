@@ -97,7 +97,7 @@ namespace ISO22900.II.OdxLikeComParamSets.ApplicationLayer
             CpList.Add(_cpRCByteOffset);
             _cpRepeatReqCountApp = (PduComParamOfTypeUint)CreateCp("CP_RepeatReqCountApp", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             CpList.Add(_cpRepeatReqCountApp);
-            _cpSessionTimingOverride = (PduComParamOfTypeStructField)CreateCp("CP_SessionTimingOverride", new PduParamStructFieldData(PduCpSt.PDU_CPST_SESSION_TIMING, new PduParamStructData[] { }, 255), PduPt.PDU_PT_STRUCTFIELD, PduPc.PDU_PC_TIMING);
+            _cpSessionTimingOverride = (PduComParamOfTypeStructField)CreateCp("CP_SessionTimingOverride", new PduParamStructFieldData(new PduParamStructSessionTiming[] { }, 255), PduPt.PDU_PT_STRUCTFIELD, PduPc.PDU_PC_TIMING);
             CpList.Add(_cpSessionTimingOverride);
             _cpSuspendQueueOnError = (PduComParamOfTypeUint)CreateCp("CP_SuspendQueueOnError", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             CpList.Add(_cpSuspendQueueOnError);

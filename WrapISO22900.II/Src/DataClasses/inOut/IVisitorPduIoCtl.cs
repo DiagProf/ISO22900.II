@@ -44,8 +44,10 @@ namespace ISO22900.II
         void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd);
 
 
-        void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeSetEthSwitchState cd);
+        void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd);
 
+
+        void VisitConcretePduIoCtlOfTypeEntityAddress(PduIoCtlOfTypeEntityAddress cd);
 
     }
 }

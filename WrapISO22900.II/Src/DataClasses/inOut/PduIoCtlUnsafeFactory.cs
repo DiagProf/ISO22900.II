@@ -50,9 +50,11 @@ namespace ISO22900.II
             return new PduIoCtlOfTypeUint(uInt32);
         }
 
-        protected override PduIoCtl CreatePduIoCtlEntityStatus()
+        protected override unsafe PduIoCtlOfTypeEntityStatus CreatePduIoCtlEntityStatus()
         {
-            throw new System.NotImplementedException();
+            var eStatusData = *(PDU_IO_ENTITY_STATUS_DATA*)PointerToStartOfData();
+            return new PduIoCtlOfTypeEntityStatus(new PduIoCtlEntityStatusData(entityType: eStatusData.EntityType, tcpClients: eStatusData.TcpClients,
+                tcpClientsMax: eStatusData.TcpClientsMax, maxDataSize: eStatusData.MaxDataSize));
         }
     }
 }

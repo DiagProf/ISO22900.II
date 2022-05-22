@@ -84,14 +84,18 @@ namespace ISO22900.II.Demo
 
 
                         //Test Dummy
-                        var test = new PduIoCtlVehicleIdRequestData(2, "Hallo", 3, 1000,
+                        var test = new PduIoCtlVehicleIdRequestData(0, "", 3, 5000,
                             new[]
                             {
-                                new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 1, 2, 3, 4 }),
+                                new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 169, 245, 123, 17 }),
                             }
                         );
 
-                        var ret = vci.TryIoCtlVehicleIdRequest(test);
+                        if ( !vci.TryIoCtlVehicleIdRequest(test) )
+                        {
+                            AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest not possible.");
+                        }
+
                     }
 
                     using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )

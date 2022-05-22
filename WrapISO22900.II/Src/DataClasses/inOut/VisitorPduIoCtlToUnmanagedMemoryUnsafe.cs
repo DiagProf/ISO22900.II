@@ -162,13 +162,22 @@ namespace ISO22900.II
             _pointerSpecialData = (byte*)_pointerSpecialData + cd.Address.Length;
         }
 
-        public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeSetEthSwitchState cd)
+        public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd)
         {
             PduCopCtrlDataGeneralDataUnmanagedMemory(cd);
             var pIoEthSwitchState = (PDU_IO_ETH_SWITCH_STATE*)_pointerSpecialData;
             _pointerSpecialData = (byte*)_pointerSpecialData + sizeof(PDU_IO_ETH_SWITCH_STATE);
             pIoEthSwitchState->EthernetActivationPin = cd.EthernetActivationPin;
             pIoEthSwitchState->EthernetActPinNumber = cd.EthernetActDlcPinNumber;
+        }
+
+        public unsafe void VisitConcretePduIoCtlOfTypeEntityAddress(PduIoCtlOfTypeEntityAddress cd)
+        {
+            PduCopCtrlDataGeneralDataUnmanagedMemory(cd);
+            var pduIoEntityAddressData = (PDU_IO_ENTITY_ADDRESS_DATA*)_pointerSpecialData;
+            _pointerSpecialData = (byte*)_pointerSpecialData + sizeof(PDU_IO_ENTITY_ADDRESS_DATA);
+            pduIoEntityAddressData->LogicalAddress = cd.LogicalAddress;
+            pduIoEntityAddressData->DoIPCtrlTimeout = cd.DoIpCtrlTimeout;
         }
 
 

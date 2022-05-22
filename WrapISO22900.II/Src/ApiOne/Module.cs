@@ -355,6 +355,37 @@ namespace ISO22900.II
 
 
         /// <summary>
+        /// PDU_IOCTL_GET_DIAGNOSTIC_POWER_MODE
+        /// </summary>
+        /// <param name="doIpCtrlTimeout"></param>
+        /// <param name="logicalAddress"></param>
+        /// <param name="valueOut"></param>
+        ///  <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlGetDiagnosticPowerMode(uint logicalAddress, uint doIpCtrlTimeout, out uint valueOut)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_GET_DIAGNOSTIC_POWER_MODE", logicalAddress, doIpCtrlTimeout, out valueOut);
+            }
+        }
+
+        /// <summary>
+        /// PDU_IOCTL_GET_ENTITY_STATUS
+        /// </summary>
+        /// <param name="logicalAddress"></param>
+        /// <param name="doIpCtrlTimeout"></param
+        /// <param name="valueOut"></param>
+        /// <returns></returns>
+        public bool TryIoCtlGetEntityStatus(uint logicalAddress, uint doIpCtrlTimeout, out PduIoCtlEntityStatusData valueOut)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_GET_ENTITY_STATUS", logicalAddress, doIpCtrlTimeout, out valueOut);
+            }
+        }
+
+        /// <summary>
         ///     Attempts to restore the status of the VCI
         ///     Catch all "Iso22900IIException" exceptions
         /// </summary>

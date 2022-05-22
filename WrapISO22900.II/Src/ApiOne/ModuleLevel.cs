@@ -315,7 +315,7 @@ namespace ISO22900.II
                 var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeSetEthSwitchState(ethernetActivationPin, ethernetActDlcPinNumber));
+                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEthSwitchState(ethernetActivationPin, ethernetActDlcPinNumber));
                     return true;
                 }
             }
@@ -332,7 +332,7 @@ namespace ISO22900.II
         ///     For IoCtl which takes the name and PduIoCtlOfTypeVehicleIdRequest as parameters
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value"></param>
+        /// <param name="vehicleIdRequestData"></param>
         /// <returns>true or false</returns>
         internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlVehicleIdRequestData vehicleIdRequestData)
         {
@@ -350,6 +350,63 @@ namespace ISO22900.II
                 _logger.LogWarning(e, ioCtlShortName);
             }
 
+            return false;
+        }
+
+
+        /// <summary>
+        ///     For IoCtl which takes the name and PduIoCtlOfTypeEntityAddress (logicalAddress and doIpCtrlTimeout) as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="logicalAddress"></param>
+        /// <param name="doIpCtrlTimeout"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint logicalAddress, uint doIpCtrlTimeout, out uint value)
+        {
+            try
+            {
+                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
+                {
+                    value = ((PduIoCtlOfTypeUint)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
+                    return true;
+                }
+            }
+            catch ( Iso22900IIException e )
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            value = default;
+            return false;
+        }
+
+        /// <summary>
+        ///     For IoCtl which takes the name and PduIoCtlOfTypeEntityAddress as parameters PduIoCtlEntityStatusData
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="logicalAddress"></param>
+        /// <param name="doIpCtrlTimeout"></param>
+        /// <param name="value">PduIoCtlEntityStatusData</param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint logicalAddress, uint doIpCtrlTimeout, out PduIoCtlEntityStatusData value)
+        {
+            try
+            {
+                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    value = ((PduIoCtlOfTypeEntityStatus)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            value = default;
             return false;
         }
 

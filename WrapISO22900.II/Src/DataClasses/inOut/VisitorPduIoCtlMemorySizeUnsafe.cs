@@ -92,10 +92,16 @@ namespace ISO22900.II
             MemorySize += sizeof(PDU_IP_ADDR_INFO) + cd.Address.Length;
         }
 
-        public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeSetEthSwitchState cd)
+        public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd)
         {
             MemorySize += CalculateSizeOfPduIoCtlDataBase() + sizeof(PDU_IO_ETH_SWITCH_STATE);
         }
+
+        public unsafe void VisitConcretePduIoCtlOfTypeEntityAddress(PduIoCtlOfTypeEntityAddress cd)
+        {
+            MemorySize += CalculateSizeOfPduIoCtlDataBase() + sizeof(PDU_IO_ENTITY_ADDRESS_DATA);
+        }
+
 
         #endregion
 

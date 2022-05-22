@@ -27,14 +27,25 @@
 
 namespace ISO22900.II
 {
-    /// <summary>
-    ///     I am not a enum from ISO 22900.
-    ///     That is why my name start with PduEx (Ex -> Extension).
-    ///     I am used inside PDU_IO_ETH_SWITCH_STATE
-    /// </summary>
-    public enum PduExEthernetActivationPin : uint //ENUM are also treated as a 32-bit value under 64-bit OS, this is more or less a reminder
+    public class PduIoCtlEntityStatusData
     {
-        Off = 0, //Ethernet activation pin off
-        On = 1 //Ethernet activation pin on
+        public PduExEntityType EntityType { get; }
+        public uint TcpClientsMax { get; }
+        public uint TcpClients { get; }
+        public uint MaxDataSize { get; }
+
+        internal void Accept(IVisitorPduIoCtl visitorPduIoCtl)
+        {
+            //At the moment there is no reason because the value only comes from the API but does not have to go to the API
+            //visitorPduIoCtl.VisitConcretePduIoCtlEntityStatusData(this);
+        }
+
+        public PduIoCtlEntityStatusData(PduExEntityType entityType, uint tcpClientsMax, uint tcpClients, uint maxDataSize)
+        {
+            EntityType = entityType;
+            TcpClientsMax = tcpClientsMax;
+            TcpClients = tcpClients;
+            MaxDataSize = maxDataSize;
+        }
     }
 }

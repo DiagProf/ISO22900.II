@@ -27,22 +27,14 @@
 
 namespace ISO22900.II
 {
-    public class PduIoCtlOfTypeSetEthSwitchState : PduIoCtl
+    /// <summary>
+    ///     I am not a enum from ISO 22900.
+    ///     That is why my name start with PduEx (Ex -> Extension).
+    ///     I am used inside PDU_IO_ENTITY_STATUS_DATA
+    /// </summary>
+    public enum PduExEntityType : uint //ENUM are also treated as a 32-bit value under 64-bit OS, this is more or less a reminder
     {
-        public PduExEthernetActivationPin EthernetActivationPin { get; set; }
-
-        public uint EthernetActDlcPinNumber { get; set; }
-      
-
-        public PduIoCtlOfTypeSetEthSwitchState(PduExEthernetActivationPin ethernetActivationPin, uint ethernetActDlcPinNumber = 8) : base(PduIt.PDU_IT_IO_ETH_SWITCH_STATE)
-        {
-            EthernetActDlcPinNumber = ethernetActDlcPinNumber;
-            EthernetActivationPin = ethernetActivationPin;
-        }
-
-        internal override void Accept(IVisitorPduIoCtl visitorPduIoCtl)
-        {
-            visitorPduIoCtl.VisitConcretePduIoCtlOfTypeEthSwitchState(this);
-        }
+        Gateway = 0,
+        Note = 1
     }
 }

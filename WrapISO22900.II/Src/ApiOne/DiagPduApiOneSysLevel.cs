@@ -267,11 +267,41 @@ namespace ISO22900.II
             return Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
-        //public PduIoCtl(string ioCtlShortName)
-        //{
-        //    var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-        //    return Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
-        //}
+
+        /// <summary>
+        /// "PDU_IOCTL_VEHICLE_ID_REQUEST 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool TryIoCtlVehicleIdRequest(PduIoCtlVehicleIdRequestData vehicleIdRequestData)
+        {
+            return TryIoCtlGeneral("PDU_IOCTL_VEHICLE_ID_REQUEST", vehicleIdRequestData);
+        }
+
+        /// <summary>
+        ///     For IoCtl which takes the name and PduIoCtlOfTypeVehicleIdRequest as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlVehicleIdRequestData vehicleIdRequestData)
+        {
+            try
+            {
+                var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                   Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeVehicleIdRequest(vehicleIdRequestData));
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
+        }
 
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {

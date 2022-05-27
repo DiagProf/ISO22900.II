@@ -11,7 +11,7 @@ namespace ISO22900.II
         PDU_ERR_RESERVED_1 = 0x00000010,   /* Reserved by ISO22900-2 */
         PDU_ERR_COMM_PC_TO_VCI_FAILED = 0x00000011,   /* Communication between host and MVCI Protocol Module failed */
         PDU_ERR_PDUAPI_NOT_CONSTRUCTED = 0x00000020,   /* The D-PDU API has not yet been constructed */
-        PDU_ERR_SHARING_VIOLATION = 0x00000021,   /* A PDUestruct was not called before another PDUConstruct */
+        PDU_ERR_SHARING_VIOLATION = 0x00000021,   /* A PDUDestruct was not called before another PDUConstruct */
         PDU_ERR_RESOURCE_BUSY = 0x00000030,   /* The requested resource is already in use */
         PDU_ERR_RESOURCE_TABLE_CHANGED = 0x00000031,   /* Not used by the D-PDU API */
         PDU_ERR_RESOURCE_ERROR = 0x00000032,   /* Not used by the D-PDU API */

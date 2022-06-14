@@ -32,25 +32,15 @@ using System.Runtime.InteropServices;
 // ReSharper disable BuiltInTypeReferenceStyle
 // ReSharper disable IdentifierTypo
 
-namespace ISO22900.II.UnSafeCStructs
+namespace ISO22900.II.SafeCStructs
 {
-    // Basic data types used in ISO22900-2
-    // C# using alias directive     //C typedef...
-    using UNUM8 = System.Byte;      //typedef unsigned char UNUM8;      // Unsigned numeric 8 bits
-    using SNUM8 = System.SByte;     //typedef signed char SNUM8;        // Signed numeric 8 bits
-    using UNUM16 = System.UInt16;   //typedef unsigned short UNUM16;    // Unsigned numeric 16 bits
-    using SNUM16 = System.Int16;    //typedef signed short SNUM16;      // Signed numeric 16 bits
-    using UNUM32 = System.UInt32;   //typedef unsigned long UNUM32;     // Unsigned numeric 32 bits
-    using SNUM32 = System.Int32;    //typedef signed long SNUM32;       // Signed numeric 32 bits
-    using CHAR8 = System.Byte;      //typedef char CHAR8;               // ASCII-coded 8-bit character value (ISO8859-1 (Latin 1))
-    
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct PDU_PARAM_LONGFIELD_DATA
+    internal struct PDU_PARAM_BYTEFIELD_DATA
     {
-        internal UNUM32 ParamMaxLen;   /* Contains the maximum number of bytes the ComParam can contain in
-                               pDataArray. This is also the amount of memory the D-PDU API allocates prior to a
-                               call of PDUGetComParam. */
-        internal UNUM32 ParamActLen;   /* Contains the actual number of UNUM32 entries in pDataArray */
-        internal UNUM32* pDataArray;   /* Pointer to an array of UNUM32 values */
+        internal uint ParamMaxLen;        /* Contains the maximum number of bytes, the ComParam can contain in pDataArray.
+                                   This is also the amount of memory the D-PDU API allocates prior to a call of
+                                   PDUGetComParam. */
+        internal uint ParamActLen;        /* Contains the actual number of UNUM8 bytes in pDataArray */
+        internal byte[] pDataArray;        /* Pointer to an array of UNUM8 values */
     }
 }

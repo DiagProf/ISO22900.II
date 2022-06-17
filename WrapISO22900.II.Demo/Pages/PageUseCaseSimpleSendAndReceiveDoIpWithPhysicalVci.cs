@@ -128,9 +128,9 @@ namespace ISO22900.II.Demo
                             //    }
 
                             //}
-                            //Softing
+                            
                             Dictionary<uint, string> DlcPinDataDefault = new() { { 1, "TX" }, { 3, "RX" } };
-                            //VW pdx
+                            
                             //Dictionary<uint, string> DlcPinDataDefault = new() { { 3, "RX" }, { 12, "TX" } };
 
                             using (var link = doIpVci.OpenComLogicalLink(busTypeName, protocolName, DlcPinDataDefault.ToList()))

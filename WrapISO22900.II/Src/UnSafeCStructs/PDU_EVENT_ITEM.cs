@@ -1,9 +1,10 @@
 ﻿using System.Runtime.InteropServices;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable BuiltInTypeReferenceStyle
 // ReSharper disable IdentifierTypo
 
-namespace ISO22900.II
+namespace ISO22900.II.UnSafeCStructs
 {
     // Basic data types used in ISO22900-2
     // C# using alias directive     //C typedef...
@@ -13,7 +14,8 @@ namespace ISO22900.II
     //using SNUM16 = System.Int16;    //typedef signed short SNUM16;      // Signed numeric 16 bits
     using UNUM32 = System.UInt32;   //typedef unsigned long UNUM32;     // Unsigned numeric 32 bits
     //using SNUM32 = System.Int32;    //typedef signed long SNUM32;       // Signed numeric 32 bits
-    using CHAR8 = System.Byte;      //typedef char CHAR8;               // ASCII-coded 8-bit character value (ISO8859-1 (Latin 1))
+
+    //typedef char CHAR8;               // ASCII-coded 8-bit character value (ISO8859-1 (Latin 1))
 
 
     /* Status code information. See section D.1.4 to D.1.6*/

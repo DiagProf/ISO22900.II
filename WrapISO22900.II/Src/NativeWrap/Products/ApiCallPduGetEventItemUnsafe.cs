@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using ISO22900.II.UnSafeCStructs;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II

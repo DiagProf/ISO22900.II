@@ -29,6 +29,7 @@
 
 using System;
 using System.Xml.Schema;
+using ISO22900.II.UnSafeCStructs;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable BuiltInTypeReferenceStyle

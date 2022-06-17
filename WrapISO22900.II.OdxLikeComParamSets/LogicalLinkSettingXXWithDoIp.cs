@@ -60,12 +60,22 @@ namespace ISO22900.II.OdxLikeComParamSets
         public LogicalLinkSettingXXWithDoIp LogicalLinkSettingPcm()
         {
             InitializeAllComParams();
-            //ECU specific
-           // Tpl.CPM_VWTP_DestAddr = 0x01;
             Tpl.CP_ECULayerShortName = "PowertrainControlModule";
             return this;
         }
 
+        public LogicalLinkSettingXXWithDoIp LogicalLinkSettingGateway()
+        {
+            //e.g. for Golf8
+            InitializeAllComParams();
+            Tpl.CP_DoIPLogicalGatewayAddress = 0x1010;
+            Tpl.CP_DoIPLogicalTesterAddress = 0x0E80;
+            Tpl.CP_DoIPLogicalEcuAddress = 0x1010;
+            App.CP_P6Max = 6_500_000; //0-125000000us Timeout for the client to wait  after the successful transmission of a request message for the complete reception of thecorresponding response message
+            App.CP_P6Star = 11_450_000; //0-655350000us Enhanced timeout for the client to wait after the reception of a negative response message with negative response code 0x78
+            Tpl.CP_ECULayerShortName = "Gateway";
+            return this;
+        }
 
         //ToDo an implementation that shows the real idea
         private static uint HashAlgo(string cpeculayershortname)

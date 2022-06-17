@@ -28,6 +28,7 @@
 #endregion
 
 using System.Text;
+using ISO22900.II.UnSafeCStructs;
 
 namespace ISO22900.II
 {
@@ -120,7 +121,7 @@ namespace ISO22900.II
         public void VisitConcretePduIoCtlOfTypeVehicleIdRequest(PduIoCtlOfTypeVehicleIdRequest cd)
         {
             PduCopCtrlDataGeneralDataUnmanagedMemory(cd);
-            cd.Accept(this);
+            cd.VehicleIdRequest.Accept(this);
         }
 
         public unsafe void VisitConcretePduIoCtlVehicleIdRequestData(PduIoCtlVehicleIdRequestData cd)
@@ -131,26 +132,43 @@ namespace ISO22900.II
            
             pIoVehicleIdRequest->CombinationMode = cd.CombinationMode;
             pIoVehicleIdRequest->VehicleDiscoveryTime = cd.VehicleDiscoveryTime;
-            pIoVehicleIdRequest->pDestinationAddresses = (PDU_IP_ADDR_INFO*)_pointerSpecialData;
 
 
-            for (var index = 0; index < cd.DestinationAddresses.Length; index++)
+            if (cd.DestinationAddresses.Length == 0)
             {
-                cd.Accept(this);
+                pIoVehicleIdRequest->NumDestinationAddresses = 0;
+                pIoVehicleIdRequest->pDestinationAddresses = null;
+            }
+            else
+            {
+                pIoVehicleIdRequest->NumDestinationAddresses = (uint)cd.DestinationAddresses.Length;
+                pIoVehicleIdRequest->pDestinationAddresses = (PDU_IP_ADDR_INFO*)_pointerSpecialData;
+                foreach (var ipAddrInfo in cd.DestinationAddresses)
+                {
+                    ipAddrInfo.Accept(this);
+                }
             }
 
-            pIoVehicleIdRequest->PreselectionValue = (byte*)_pointerSpecialData;
-
-            var asciiString = Encoding.ASCII.GetBytes(cd.PreselectionValue + char.MinValue /*Add null terminator*/);
-            for (var i = 0; i < asciiString.Length; i++)
+            if (string.IsNullOrWhiteSpace(cd.PreselectionValue))
             {
-                pIoVehicleIdRequest->PreselectionValue[i] = asciiString[i];
+                pIoVehicleIdRequest->PreselectionValue = null;
+            }
+            else
+            {
+                pIoVehicleIdRequest->PreselectionValue = (byte*)_pointerSpecialData;
+
+                var asciiString = Encoding.ASCII.GetBytes(cd.PreselectionValue + char.MinValue /*Add null terminator*/);
+                for (var i = 0; i < asciiString.Length; i++)
+                {
+                    pIoVehicleIdRequest->PreselectionValue[i] = asciiString[i];
+                }
+                _pointerSpecialData = (byte*)_pointerSpecialData + asciiString.Length;
             }
         }
 
         public unsafe void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd)
         {
-            var pIpAddrInfo= (PDU_IP_ADDR_INFO*)_pointerSpecialData;
+            var pIpAddrInfo = (PDU_IP_ADDR_INFO*)_pointerSpecialData;
             _pointerSpecialData = (byte*)_pointerSpecialData + sizeof(PDU_IP_ADDR_INFO);
             pIpAddrInfo->IpVersion = cd.IpVersion;
             pIpAddrInfo->pAddress = (byte*)_pointerSpecialData;

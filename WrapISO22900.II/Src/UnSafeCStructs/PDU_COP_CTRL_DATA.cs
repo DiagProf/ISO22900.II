@@ -1,10 +1,11 @@
 ﻿
 using System.Runtime.InteropServices;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable BuiltInTypeReferenceStyle
 // ReSharper disable IdentifierTypo
 
-namespace ISO22900.II
+namespace ISO22900.II.UnSafeCStructs
 {
     // Basic data types used in ISO22900-2
     // C# using alias directive     //C typedef...

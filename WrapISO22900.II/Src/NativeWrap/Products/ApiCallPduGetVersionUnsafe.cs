@@ -28,6 +28,7 @@
 #endregion
 
 using System;
+using ISO22900.II.UnSafeCStructs;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable BuiltInTypeReferenceStyle

@@ -28,6 +28,7 @@
 #endregion
 
 using System.Text;
+using ISO22900.II.UnSafeCStructs;
 
 namespace ISO22900.II
 {
@@ -72,15 +73,16 @@ namespace ISO22900.II
             MemorySize += sizeof(PDU_IO_FILTER_DATA);
         }
 
-        public void VisitConcretePduIoCtlOfTypeVehicleIdRequest(PduIoCtlOfTypeVehicleIdRequest cd)
+        public unsafe void VisitConcretePduIoCtlOfTypeVehicleIdRequest(PduIoCtlOfTypeVehicleIdRequest cd)
         {
             MemorySize += CalculateSizeOfPduIoCtlDataBase();
-            cd.Accept(this);
+            cd.VehicleIdRequest.Accept(this);
         }
 
         public unsafe void VisitConcretePduIoCtlVehicleIdRequestData(PduIoCtlVehicleIdRequestData cd)
         {
-            MemorySize += sizeof(PDU_IO_VEHICLE_ID_REQUEST) + Encoding.ASCII.GetBytes(cd.PreselectionValue + char.MinValue /*Add null terminator*/).Length;
+            MemorySize += sizeof(PDU_IO_VEHICLE_ID_REQUEST);
+            MemorySize += Encoding.ASCII.GetBytes(cd.PreselectionValue + char.MinValue /*Add null terminator*/).Length;
             foreach (var ipAddrInfo in cd.DestinationAddresses)
             {
                 ipAddrInfo.Accept(this);

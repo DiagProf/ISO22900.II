@@ -27,6 +27,8 @@
 
 #endregion
 
+using ISO22900.II.UnSafeCStructs;
+
 namespace ISO22900.II
 {
     internal class VisitorPduComParamAndUniqueRespIdTableMemorySizeUnsafe : IVisitorPduComParamAndUniqueRespIdTable

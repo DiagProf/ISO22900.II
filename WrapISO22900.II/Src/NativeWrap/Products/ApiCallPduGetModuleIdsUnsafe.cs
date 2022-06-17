@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using ISO22900.II.UnSafeCStructs;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II

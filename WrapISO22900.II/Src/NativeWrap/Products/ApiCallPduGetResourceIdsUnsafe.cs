@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using ISO22900.II.UnSafeCStructs;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II

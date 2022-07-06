@@ -91,15 +91,15 @@ namespace ISO22900.II.OdxLikeComParamSets.ApplicationLayer
             _cpRC23RequestTime = (PduComParamOfTypeUint)CreateCp("CP_RC23RequestTime", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             _cpRC78CompletionTimeout = (PduComParamOfTypeUint)CreateCp("CP_RC78CompletionTimeout", 25000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             _cpRC78Handling = (PduComParamOfTypeUint)CreateCp("CP_RC78Handling", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
-            _cpRCByteOffset = (PduComParamOfTypeUint)CreateCp("CP_RCByteOffset", 4294967295, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
+            _cpRCByteOffset = (PduComParamOfTypeUint)CreateCp("CP_RCByteOffset", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             _cpRepeatReqCountApp = (PduComParamOfTypeUint)CreateCp("CP_RepeatReqCountApp", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             _cpStartMsgIndEnable = (PduComParamOfTypeUint)CreateCp("CP_StartMsgIndEnable", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpSuspendQueueOnError = (PduComParamOfTypeUint)CreateCp("CP_SuspendQueueOnError", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
             //_cpSwCan_HighVoltage = (PduComParamOfTypeUint)CreateCp("CP_SwCan_HighVoltage", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpTesterPresentHandling = (PduComParamOfTypeUint)CreateCp("CP_TesterPresentHandling", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentAddrMode = (PduComParamOfTypeUint)CreateCp("CP_TesterPresentAddrMode", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentExpPosResp = (PduComParamOfTypeByteField)CreateCp("CP_TesterPresentExpPosResp", new byte[] { 0x7E }, PduPt.PDU_PT_BYTEFIELD, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentExpNegResp = (PduComParamOfTypeByteField)CreateCp("CP_TesterPresentExpNegResp", new byte[] {0x7F, 0x3E }, PduPt.PDU_PT_BYTEFIELD, PduPc.PDU_PC_TESTER_PRESENT);
-            _cpTesterPresentHandling = (PduComParamOfTypeUint)CreateCp("CP_TesterPresentHandling", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentMessage = (PduComParamOfTypeByteField)CreateCp("CP_TesterPresentMessage", new byte[] { 0x3E }, PduPt.PDU_PT_BYTEFIELD, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentReqRsp = (PduComParamOfTypeUint)CreateCp("CP_TesterPresentReqRsp", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TESTER_PRESENT);
             _cpTesterPresentSendType = (PduComParamOfTypeUint)CreateCp("CP_TesterPresentSendType", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TESTER_PRESENT);

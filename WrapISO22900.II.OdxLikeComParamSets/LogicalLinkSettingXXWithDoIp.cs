@@ -77,6 +77,18 @@ namespace ISO22900.II.OdxLikeComParamSets
             return this;
         }
 
+
+        public LogicalLinkSettingXXWithDoIp LogicalLinkSettingHueMb()
+        {
+            //e.g. HUE213
+            InitializeAllComParams();
+           
+            Tpl.CP_DoIPLogicalTesterAddress = 0x0EF0;
+            Tpl.CP_DoIPLogicalEcuAddress = 0x2001;
+            Tpl.CP_ECULayerShortName = "HeadunitEntry";
+            return this;
+        }
+
         //ToDo an implementation that shows the real idea
         private static uint HashAlgo(string cpeculayershortname)
         {

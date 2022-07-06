@@ -45,6 +45,7 @@ namespace ISO22900.II.Demo
             AddPage(new MenuPageSelectedApiVci(this));
             AddPage(new PageInstalledApiVciOverview(this));
             AddPage(new PageApiVciPreferences(this));
+            AddPage(new PageApiOnlyPreference(this));
             AddPage(new PageNoteOfThanks(this));
             AddPage(new PageConsoleInfo(this));
             AddPage(new PageUseCaseSharingUserPreference(this));
@@ -54,6 +55,7 @@ namespace ISO22900.II.Demo
             AddPage(new PageUseCaseSimpleSendAndReceiveTP20(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveDoIpWithPhysicalVci(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci(this));
+            AddPage(new PageUseCaseSimpleSendAndReceiveObd2OverCan(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveWithOptionString(this));
             AddPage(new PageUseCaseEventAllOver(this));
             AddPage(new PagePlayground(this));

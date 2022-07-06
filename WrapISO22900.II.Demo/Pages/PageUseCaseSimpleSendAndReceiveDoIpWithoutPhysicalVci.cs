@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.XPath;
 using ISO22900.II.OdxLikeComParamSets;
 using Spectre.Console;
 
@@ -61,7 +62,7 @@ namespace ISO22900.II.Demo
                 var ctlVehicleIdRequestData = new PduIoCtlVehicleIdRequestData(0, "", 1, 5000,
                     new[]
                     {
-                        new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255, 255, 255, 255 }), //you can reduce the range with e.g. 169, 254, 255,255
+                        new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255, 255, 255, 255 }), // 255, 255, 255, 255 you can reduce the range with e.g. 169, 254, 255,255 , 169,254,123,17
                     }
                 );
 
@@ -88,10 +89,50 @@ namespace ISO22900.II.Demo
                         var busTypeName = cllSettingXxWithDoIp.BusTypeName;
                         var protocolName = cllSettingXxWithDoIp.ProtocolName;
 
+                        //this is only do see pinout
+                        if (doIpVci.TryIoCtlGetCableId(out var cableId))
+                        {
+                            AnsiConsole.WriteLine();
+                            var grid = new Grid()
+                                .AddColumn(new GridColumn().NoWrap().PadRight(4))
+                                .AddColumn()
+                                .AddRow("[b]Cable Id[/]", $"{cableId}");
+
+                            //here is just an idea. You could get more out of the cdf file.
+                            var fullCdfPath =
+                                DiagPduApiHelper.FullCdfPathFormApiShortName((AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value));
+                            if (fullCdfPath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                            {
+                                ////Load the file and create a navigator object. 
+                                var xPath = new XPathDocument(fullCdfPath);
+                                var navigator = xPath.CreateNavigator();
+                                var nodeIterator = navigator.SelectSingleNode(
+                                    "MVCI_CABLE_DESCRIPTION/CABLE/CABLE_IDENTIFICATION/CABLE_ID[normalize-space(text()) = '" + $"{cableId}" + "']/../.." +
+                                    "/DESCRIPTION");
+                                if (nodeIterator != null)
+                                {
+                                    grid.AddRow("[b]Cable description[/]", $"{nodeIterator.Value}");
+                                }
+                            }
+
+                            AnsiConsole.Write(
+                                new Panel(grid)
+                                    .Header("Information"));
+                            AnsiConsole.WriteLine();
+                        }
+                        else
+                        {
+                            AnsiConsole.WriteLine("It is not possible to detect the diagnostic cable");
+                        }
+
+
                         //play with the pins a bit. this is done very differently from API to API
                         Dictionary<uint, string> DlcPinDataDefault = new() { { 1, "TX" }, { 3, "RX" } };
                         
                         //Dictionary<uint, string> DlcPinDataDefault = new() { { 3, "RX" }, { 12, "TX" } };
+
+
+
 
                         using ( var link = doIpVci.OpenComLogicalLink(busTypeName, protocolName, DlcPinDataDefault.ToList()) )
                         {

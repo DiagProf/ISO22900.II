@@ -38,6 +38,7 @@ namespace ISO22900.II.Demo
                 new Option("Overview of installed D-PDU APIs and VCIs that can be reached via the corresponding API",
                     () => program.NavigateTo<PageInstalledApiVciOverview>()),
                 new Option("Set API/VCI preferences", () => program.NavigateTo<PageApiVciPreferences>()),
+                new Option("Set API preference only (for DoIP without VCI)", () => program.NavigateTo<PageApiOnlyPreference>()),
                 new Option("Play with the selected API/VCI", () => program.NavigateTo<MenuPageSelectedApiVci>()),
                 new Option("Console info", () => program.NavigateTo<PageConsoleInfo>()),
                 new Option("Note of thanks", () => program.NavigateTo<PageNoteOfThanks>()),

@@ -46,6 +46,7 @@ namespace ISO22900.II.Demo
                 new Option("Use case simple send and receive use DoIP with physical Vci[[does not work yet!!]]", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveDoIpWithPhysicalVci>()),
                 new Option("Use case simple send and receive use DoIP without physical Vci", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci>()),
                 new Option("Use case simple send and receive with option string", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveWithOptionString>()),
+                new Option("Use case simple send and receive OBD2 over CAN", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveObd2OverCan>()),
                 new Option("Use case simple send and receive with event all over", () => program.NavigateTo<PageUseCaseEventAllOver>()),
                 new Option("Use case ECU simulator", () => program.NavigateTo < PageUseCaseEcuSimulator>()),
                 new Option("Use case read battery voltage and ignition state from selected VCI", () => program.NavigateTo<PageUseCaseReadIgnitionAndUbat>()),

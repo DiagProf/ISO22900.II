@@ -284,7 +284,7 @@ namespace ISO22900.II
         /// <param name="ioCtlShortName"></param>
         /// <param name="value"></param>
         /// <returns>true or false</returns>
-        internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlVehicleIdRequestData vehicleIdRequestData)
+        public bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlVehicleIdRequestData vehicleIdRequestData)
         {
             try
             {

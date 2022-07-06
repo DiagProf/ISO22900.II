@@ -67,35 +67,52 @@ namespace ISO22900.II.Demo
 
 
 
+                    ////Test Dummy
+                    //var test = new PduIoCtlVehicleIdRequestData(0, "", 3, 5000,
+                    //    new[]
+                    //    {
+                    //            new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255,255,255,255 }),
+                    //    }
+                    //);
+
                     //Test Dummy
-                    var test = new PduIoCtlVehicleIdRequestData(0, "", 1, 5000,
-                        new[]
-                        {
-                                new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255,255,255,255 }),
-                        }
-                    );
+                    //var test = new PduIoCtlVehicleIdRequestData(0, "", 3, 5000,
+                    //    new[]
+                    //    {
+                    //        new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255,255,255,255 }),
+                    //    }
+                    //);
+                    //PDU_IOCTL_MS_VIR_WITH_
+                            ////if (!api.TryIoCtlGeneral("PDU_IOCTL_MS_VIR_V1", test))
+                            ////{
+                            ////    AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
+                            ////}
+                            //if (!api.TryIoCtlVehicleIdRequest( test))
+                            //{
+                            //    AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
+                            //}
 
 
-                    if (!api.TryIoCtlVehicleIdRequest(test))
-                    {
-                        AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
+                            //if (!vci.TryIoCtlVehicleIdRequest(test))
+                            //{
+                            //    AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on VCI not possible.");
 
-                        if (!vci.TryIoCtlVehicleIdRequest(test))
-                        {
-                            AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on VCI not possible.");
-                        }
-                    }
+                            //    if (!api.TryIoCtlVehicleIdRequest(test))
+                            //    {
+                            //        AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
+                            //    }
+                            //}
 
 
-                    List<PduModuleData> doipVCIs = (List<PduModuleData>)api.PduModuleDataSets.FindAll(e => e.VendorModuleName.Contains("MVCI_ISO_13400_DoIP"));
+                            //List<PduModuleData> doipVCIs = (List<PduModuleData>)api.PduModuleDataSets.FindAll(e => e.VendorModuleName.Contains("MVCI_ISO_13400_DoIP"));
 
-                    if (doipVCIs.Any())
-                    {
-                        AnsiConsole.WriteLine($"VendorModuleName: {doipVCIs.First().VendorModuleName}");
-                        AnsiConsole.WriteLine($"VendorAdditionalInfo: {doipVCIs.First().VendorAdditionalInfo}");
+                            //if (doipVCIs.Any())
+                            //{
+                            //AnsiConsole.WriteLine($"VendorModuleName: {doipVCIs.First().VendorModuleName}");
+                            //AnsiConsole.WriteLine($"VendorAdditionalInfo: {doipVCIs.First().VendorAdditionalInfo}");
 
-                        using (var doIpVci = api.ConnectVci(doipVCIs.First().VendorModuleName))
-                        {
+                            //using (var doIpVci = api.ConnectVci(doipVCIs.First().VendorModuleName))
+                            //{
                             //vci = api.ConnectVci(b.VendorModuleName);
 
                             //Define the protocol behavior
@@ -133,7 +150,7 @@ namespace ISO22900.II.Demo
                             
                             //Dictionary<uint, string> DlcPinDataDefault = new() { { 3, "RX" }, { 12, "TX" } };
 
-                            using (var link = doIpVci.OpenComLogicalLink(busTypeName, protocolName, DlcPinDataDefault.ToList()))
+                            using (var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()))
                             {
 
                                 cllSettingXxWithDoIp.LogicalLinkSettingGateway().SetUpLogicalLink(link);
@@ -224,8 +241,8 @@ namespace ISO22900.II.Demo
 
                                 link.Disconnect();
                             }
-                        }
-                    }
+                    //    }
+                    //}
                 }
             }
 

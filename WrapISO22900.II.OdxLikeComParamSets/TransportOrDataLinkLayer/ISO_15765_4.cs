@@ -1,36 +1,35 @@
 ﻿#region License
 
-// MIT License
-// 
-// Copyright (c) 2022 Joerg Frank
-// 
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// // MIT License
+// //
+// // Copyright (c) 2022 Joerg Frank
+// // http://www.diagprof.com/
+// //
+// // Permission is hereby granted, free of charge, to any person obtaining a copy
+// // of this software and associated documentation files (the "Software"), to deal
+// // in the Software without restriction, including without limitation the rights
+// // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// // copies of the Software, and to permit persons to whom the Software is
+// // furnished to do so, subject to the following conditions:
+// //
+// // The above copyright notice and this permission notice shall be included in all
+// // copies or substantial portions of the Software.
+// //
+// // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// // SOFTWARE.
 
 #endregion
-
 
 using System.Collections.Generic;
 
 namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
 {
-    public partial class ISO_15765_2 : AbstractTransportOrDataLinkLayer
+    public partial class ISO_15765_4 : AbstractTransportOrDataLinkLayer
     {
         private readonly PduComParamOfTypeUint _cpAr;
         private readonly PduComParamOfTypeUint _cpAs;
@@ -56,10 +55,10 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
         private readonly PduComParamOfTypeUint _cpStMin;
         private readonly PduComParamOfTypeUint _cpStMinOverride;
 
-        protected sealed override CpIso157652UniqueRespIdTables UniqueRespIdTables { get; }
-        public IIso157652CpUniqueRespIdTables CP_UniqueRespIdTable => UniqueRespIdTables;
+        protected sealed override ISO_15765_4.CpIso157654UniqueRespIdTables UniqueRespIdTables { get; }
+        public ISO_15765_4.IIso157654CpUniqueRespIdTables CP_UniqueRespIdTable => UniqueRespIdTables;
 
-        //these are comfort functions to be able to access Iso157652CpUniqueRespIdTable[0] directly.This is the 90% use case
+        //these are comfort functions to be able to access Iso157654CpUniqueRespIdTable[0] directly.This is the 90% use case
         public string CP_ECULayerShortName
         {
             get => UniqueRespIdTables[0].CP_ECULayerShortName;
@@ -175,7 +174,7 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             get => _cpCanDataSizeOffset.ComParamData;
             set => _cpCanDataSizeOffset.ComParamData = value;
         }
-
+        
         public uint CP_CanFillerByte
         {
             get => _cpCanFillerByte.ComParamData;
@@ -260,33 +259,33 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             set => _cpStMinOverride.ComParamData = value;
         }
 
-        public ISO_15765_2(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo)
+        public ISO_15765_4(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo)
         {
             HashAlgo = hashAlgo;
-            UniqueRespIdTables = new CpIso157652UniqueRespIdTables(HashAlgo);
+            UniqueRespIdTables = new ISO_15765_4.CpIso157654UniqueRespIdTables(HashAlgo);
             //init table one //We need at least one table
-            UniqueRespIdTables.Add(new CpIso157652UniqueRespIdTable("", HashAlgo));
+            UniqueRespIdTables.Add(new ISO_15765_4.CpIso157654UniqueRespIdTable("", HashAlgo));
 
-            _cpAr = (PduComParamOfTypeUint)CreateCp("CP_Ar", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            _cpAs = (PduComParamOfTypeUint)CreateCp("CP_As", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpAr = (PduComParamOfTypeUint)CreateCp("CP_Ar", 25000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpAs = (PduComParamOfTypeUint)CreateCp("CP_As", 25000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpBlockSize = (PduComParamOfTypeUint)CreateCp("CP_BlockSize", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpBlockSizeOverride = (PduComParamOfTypeUint)CreateCp("CP_BlockSizeOverride", 0xFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCANFDTxMaxDataLength = (PduComParamOfTypeUint)CreateCp("CP_CANFDTxMaxDataLength", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpMaxFirstFrameDataLength = (PduComParamOfTypeUint)CreateCp("CP_MaxFirstFrameDataLength", 4095, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpBr = (PduComParamOfTypeUint)CreateCp("CP_Br", 10000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            _cpBs = (PduComParamOfTypeUint)CreateCp("CP_Bs", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpMaxFirstFrameDataLength = (PduComParamOfTypeUint)CreateCp("CP_MaxFirstFrameDataLength", 0xFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpBr = (PduComParamOfTypeUint)CreateCp("CP_Br", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpBs = (PduComParamOfTypeUint)CreateCp("CP_Bs", 75000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpCanDataSizeOffset = (PduComParamOfTypeUint)CreateCp("CP_CanDataSizeOffset", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpCanFillerByte = (PduComParamOfTypeUint)CreateCp("CP_CanFillerByte", 0x55, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpCanFillerByte = (PduComParamOfTypeUint)CreateCp("CP_CanFillerByte", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFillerByteHandling = (PduComParamOfTypeUint)CreateCp("CP_CanFillerByteHandling", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFirstConsecutiveFrameValue = (PduComParamOfTypeUint)CreateCp("CP_CanFirstConsecutiveFrameValue", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqExtAddr = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqFormat = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqFormat", 5, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpCanFuncReqId = (PduComParamOfTypeUint)CreateCp("CP_CanFuncReqId", 0x7DF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpCanMaxNumWaitFrames = (PduComParamOfTypeUint)CreateCp("CP_CanMaxNumWaitFrames", 255, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
-            _cpCr = (PduComParamOfTypeUint)CreateCp("CP_Cr", 1000000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
-            _cpCs = (PduComParamOfTypeUint)CreateCp("CP_Cs", 10000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpCanMaxNumWaitFrames = (PduComParamOfTypeUint)CreateCp("CP_CanMaxNumWaitFrames", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpCr = (PduComParamOfTypeUint)CreateCp("CP_Cr", 150000, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
+            _cpCs = (PduComParamOfTypeUint)CreateCp("CP_Cs", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpRepeatReqCountTrans = (PduComParamOfTypeUint)CreateCp("CP_RepeatReqCountTrans", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_ERRHDL);
-            _cpRequestAddrMode = (PduComParamOfTypeUint)CreateCp("CP_RequestAddrMode", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
+            _cpRequestAddrMode = (PduComParamOfTypeUint)CreateCp("CP_RequestAddrMode", 2, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpSendRemoteFrame = (PduComParamOfTypeUint)CreateCp("CP_SendRemoteFrame", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_COM);
             _cpStMin = (PduComParamOfTypeUint)CreateCp("CP_StMin", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);
             _cpStMinOverride = (PduComParamOfTypeUint)CreateCp("CP_StMinOverride", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_TIMING);

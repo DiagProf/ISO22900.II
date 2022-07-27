@@ -26,9 +26,12 @@
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ISO22900.II.OdxLikeComParamSets;
+using ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer;
 using Spectre.Console;
 
 namespace ISO22900.II.Demo
@@ -50,26 +53,82 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow($"[yellow]{info}[/]");
             AnsiConsole.Write(infoGrid);
 
+
+
+
             using ( var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value), AbstractPageControl.LoggerFactory))
             {
                 using ( var vci = api.ConnectVci(this.AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                 {
                     //Define the protocol behavior
                     //These names (the strings) come from ODX or ISO 22900-2
-                    //var busTypeName = "ISO_11898_2_DWCAN";
-                    //var protocolName = "ISO_OBD_on_ISO_15765_4";
-                    //var dlcPinData = new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } };
+                    var busTypeName = "ISO_11898_2_DWCAN";
+                    var protocolName = "ISO_OBD_on_ISO_15765_4";
+                    var dlcPinData = new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } };
 
-                    var cllConfig = new LogicalLinkSettingObd2OverCAN();
-                    var busTypeName = cllConfig.BusTypeName;
-                    var protocolName = cllConfig.ProtocolName;
-                    var dlcPinData = cllConfig.DlcPinData;
+                    //var cllConfig = new LogicalLinkSettingObd2OverCAN();
+
+
+
+                    //var busTypeName = cllConfig.BusTypeName;
+                    //var protocolName = cllConfig.ProtocolName;
+                    //var dlcPinData = cllConfig.DlcPinData;
 
 
                     using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )
                     {
-                       
-                        cllConfig.SetUpLogicalLink(link);
+
+
+                        //cllConfig.SetUpLogicalLink(link);
+
+
+                        //Here we build the UniqueRespIdTable (is a List of PduEcuUniqueRespData) for OBD on CAN with 11–bit CAN Id size
+                        //In case of functional addressing. The UniqueRespIdentifier becomes more interesting than usual in physical addressing
+                        //because you can use it (the UniqueRespIdentifier) to find out the ECUs that have responded to the functional request
+
+                        var ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
+                        //for CAN OBD 11bit
+                        for (byte i = 0; i < 8; i++)
+                        {
+                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: 0x45435500u + i,   //<- this is the UniqueRespIdentifier
+                            new List<PduComParam>
+                            {
+                                DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 5, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0x7E0 + i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUSDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUSDTFormat", 5, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUSDTId", 0x7E8 + i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID)
+                            }
+                            ));
+                        }
+
+                        //for OBD on CAN with 29–bit CAN Id size
+                        //for (byte i = 0; i < 255; i++)
+                        //{
+                        //    ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: 0x45435500u + i,   //<- this is the UniqueRespIdentifier
+                        //    new List<PduComParam>
+                        //    {
+                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0x18DA0000 + ((i * 256) + 0xF1), PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTId",  0x18DAF100 + i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID)
+                        //    }
+                        //    ));
+                        //}
+
+                        link.SetUniqueRespIdTable(ecuUniqueRespDatas);
+
+
+
                         link.Connect();
 
                         var request = new byte[] { 0x01, 0x0C };
@@ -127,4 +186,5 @@ namespace ISO22900.II.Demo
             AbstractPageControl.NavigateHome();
         }
     }
+
 }

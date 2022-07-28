@@ -30,6 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using ISO22900.II.OdxLikeComParamSets;
 using ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer;
 using Spectre.Console;
@@ -40,7 +41,7 @@ namespace ISO22900.II.Demo
     {
         
         public PageUseCaseSimpleSendAndReceiveObd2OverCan(AbstractPageControl program)
-            : base("Use case simple send and receive OBD2 over CAN [[does not work yet!!]]", program)
+            : base("Use case simple send and receive OBD2 over CAN", program)
         {
         }
 
@@ -63,24 +64,15 @@ namespace ISO22900.II.Demo
                     //Define the protocol behavior
                     //These names (the strings) come from ODX or ISO 22900-2
                     var busTypeName = "ISO_11898_2_DWCAN";
-                    var protocolName = "ISO_OBD_on_ISO_15765_4";
+                    var protocolName = "ISO_OBD_on_ISO_15765_4"; //"ISO_15031_5"
                     var dlcPinData = new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } };
 
-                    //var cllConfig = new LogicalLinkSettingObd2OverCAN();
+            
 
-
-
-                    //var busTypeName = cllConfig.BusTypeName;
-                    //var protocolName = cllConfig.ProtocolName;
-                    //var dlcPinData = cllConfig.DlcPinData;
-
-
-                    using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )
+                    using (var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()))
                     {
-
-
-                        //cllConfig.SetUpLogicalLink(link);
-
+                        bool isOBDonCAN = false;
+                        
 
                         //Here we build the UniqueRespIdTable (is a List of PduEcuUniqueRespData) for OBD on CAN with 11–bit CAN Id size
                         //In case of functional addressing. The UniqueRespIdentifier becomes more interesting than usual in physical addressing
@@ -90,7 +82,7 @@ namespace ISO22900.II.Demo
                         //for CAN OBD 11bit
                         for (byte i = 0; i < 8; i++)
                         {
-                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: 0x45435500u + i,   //<- this is the UniqueRespIdentifier
+                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier:  i+1u,   //<- this is the UniqueRespIdentifier
                             new List<PduComParam>
                             {
                                 DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
@@ -106,75 +98,156 @@ namespace ISO22900.II.Demo
                             ));
                         }
 
-                        //for OBD on CAN with 29–bit CAN Id size
-                        //for (byte i = 0; i < 255; i++)
-                        //{
-                        //    ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: 0x45435500u + i,   //<- this is the UniqueRespIdentifier
-                        //    new List<PduComParam>
-                        //    {
-                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0x18DA0000 + ((i * 256) + 0xF1), PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUSDTId",  0x18DAF100 + i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                        //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID)
-                        //    }
-                        //    ));
-                        //}
 
+
+                        link.SetComParamValueViaGet("CP_CanFuncReqId", 0x7DF); //Set the functional request address if we use 11bit CAN ID
                         link.SetUniqueRespIdTable(ecuUniqueRespDatas);
-
-
-
                         link.Connect();
 
-                        var request = new byte[] { 0x01, 0x0C };
-
-                        //Use StartComm to start tester present behavior
-                        using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte []{ 0x01, 0x00} ))
+                        //something like a ping to see if 11bit CAN ID are used for OBD.
+                        using (var copPing = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, -2, new byte[] { 0x01, 0x00 }))
                         {
-                            copStartComm.WaitForCopResult();
+                            var result = copPing.WaitForCopResult();
+
+                            var responseString = string.Empty;
+
+
+                            if (result.PduEventItemErrors().Count > 0)
+                            {
+                                foreach (var error in result.PduEventItemErrors())
+                                {
+                                    responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                }
+                                responseString = "Error: " + responseString + " 11Bit CAN is not working for OBD";
+                            }
+                            else
+                            {
+                                isOBDonCAN = true;
+                                responseString = "11Bit CAN is working for OBD";
+                            }
+                            AnsiConsole.WriteLine($"{responseString}");
                         }
 
-                        for ( var i = 0x0C; i <= 0x20; i++ )
+                        if (isOBDonCAN == false)
                         {
-                            //request[1] = (byte)i;
+                            link.Disconnect();
+                            ecuUniqueRespDatas.Clear();
+                            //try with 29bit CAN id;
+                            //for OBD on CAN with 29–bit CAN Id size
 
-                            using (var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV,1,-2,  request) )
+                            //Here we build the UniqueRespIdTable (is a List of PduEcuUniqueRespData) for OBD on CAN with 29–bit CAN Id size
+                            //In case of functional addressing. The UniqueRespIdentifier becomes more interesting than usual in physical addressing
+                            //because you can use it (the UniqueRespIdentifier) to find out the ECUs that have responded to the functional request
+                            for (byte i = 0; i < 255; i++)
                             {
-                                var result = cop.WaitForCopResult();
-
-                                //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
-                                //e.g. the correct order might be first PduEventItemInfo and then DataMsg
-                                var responseString = string.Empty;
-                                uint responseTime = 0;
-                                if (result.DataMsgQueue().Count > 0)
+                                ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i+1u,   //<- this is the UniqueRespIdentifier
+                                new List<PduComParam>
                                 {
-                                    responseString = string.Join(",", result.DataMsgQueue().ConvertAll(bytes => { return BitConverter.ToString(bytes); }));
-                                    responseTime = result.ResponseTime();
+                                    DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0x18DA0000 + ((i * 256) + 0xF1), PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUSDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUSDTFormat", 7, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUSDTId",  0x18DAF100 + i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFFFFFFFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID)
                                 }
+                                ));
+                            }
+
+                            link.SetComParamValueViaGet("CP_CanFuncReqId", 0x18DB33F1); //Set the functional request address if we use 29bit CAN ID
+                            link.SetUniqueRespIdTable(ecuUniqueRespDatas);
+                            link.Connect();
+
+                            //Short ping to see if 29 bit CAN id work
+                            using (var copPing = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, -2, new byte[] { 0x01, 0x00 }))
+                            {
+                                var result = copPing.WaitForCopResult();
+
+                                var responseString = string.Empty;
+
+
                                 if (result.PduEventItemErrors().Count > 0)
                                 {
                                     foreach (var error in result.PduEventItemErrors())
                                     {
                                         responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
                                     }
-                                    responseString = "Error: " + responseString;
+                                    responseString = "Error: " + responseString + " 29Bit CAN is not working for OBD";
+                                  
                                 }
-                                if (result.PduEventItemInfos().Count > 0)
+                                else
                                 {
-                                    foreach (var error in result.PduEventItemInfos())
-                                    {
-                                        responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
-                                    }
-                                    responseString = "Info: " + responseString;
+                                    isOBDonCAN = true;
+                                    responseString = "29Bit CAN is working for OBD";
                                 }
-                                AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
+                                AnsiConsole.WriteLine($"{responseString}");
+
                             }
-                          
+
+                        }
+
+
+
+
+
+
+                        if (isOBDonCAN == true)
+                        {
+
+                            //Use StartComm to start tester present behavior
+                            using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte[] { 0x01, 0x00 }))
+                            {
+                                copStartComm.WaitForCopResult();
+                            }
+
+
+                            var request = new byte[] { 0x01, 0x0C };
+                            for (var i = 0x0C; i <= 0x20; i++)
+                            {
+                                request[1] = (byte)i;
+
+                                using (var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, -2, request))
+                                {
+                                    var result = cop.WaitForCopResult();
+
+                                    //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
+                                    //e.g. the correct order might be first PduEventItemInfo and then DataMsg
+                                    var responseString = string.Empty;
+                                    uint responseTime = 0;
+
+
+                                    foreach (var evItemResult in result.PduEventItemResults())
+                                    {
+                                        var uniqueRespIdentifier = evItemResult.ResultData.UniqueRespIdentifier;
+
+                                        responseString = $"ECU: {uniqueRespIdentifier}  Data: ";
+                                        responseString += BitConverter.ToString(evItemResult.ResultData.DataBytes);
+                                        responseTime = result.ResponseTime();
+
+                                    }
+
+                                    if (result.PduEventItemErrors().Count > 0)
+                                    {
+                                        foreach (var error in result.PduEventItemErrors())
+                                        {
+                                            responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                        }
+                                        responseString = "Error: " + responseString;
+                                    }
+                                    if (result.PduEventItemInfos().Count > 0)
+                                    {
+                                        foreach (var error in result.PduEventItemInfos())
+                                        {
+                                            responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
+                                        }
+                                        responseString = "Info: " + responseString;
+                                    }
+                                    AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
+                                }
+
+                            }
                         }
 
                         link.Disconnect();

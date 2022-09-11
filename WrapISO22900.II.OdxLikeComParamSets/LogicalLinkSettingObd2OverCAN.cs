@@ -38,6 +38,9 @@ namespace ISO22900.II.OdxLikeComParamSets
         public string BusTypeName { get; private set; } = BusTypeNameDefault;
         public string ProtocolName { get; private set; } = ProtocolNameDefault;
         public Dictionary<uint, string> DlcPinData { get; private set; } = DlcPinDataDefault;
+        Dictionary<uint,string> HashToEcuDomainName = new Dictionary<uint, string>();
+
+
 
 
         public LogicalLinkSettingObd2OverCAN(HashRuleUniqueRespIdentifierFromCpEcuLayerShortName hashAlgo = null) :base(HashAlgo)
@@ -54,17 +57,22 @@ namespace ISO22900.II.OdxLikeComParamSets
         public LogicalLinkSettingObd2OverCAN LogicalLinkSettingForOBD()
         {
             InitializeAllComParams();
-            Tpl.CP_UniqueRespIdTable["PowertrainControlModule"].CP_CanPhysReqId = 0x7E0;
-            Tpl.CP_UniqueRespIdTable["PowertrainControlModule"].CP_CanRespUSDTId = 0x7E8;
-            Tpl.CP_UniqueRespIdTable["TransmissionControlModule"].CP_CanPhysReqId = 0x7E1;
-            Tpl.CP_UniqueRespIdTable["TransmissionControlModule"].CP_CanRespUSDTId = 0x7E9;
+            Tpl.CP_UniqueRespIdTable[this["PowertrainControlModule"]].CP_CanPhysReqId = 0x7E0;
+            Tpl.CP_UniqueRespIdTable[this["PowertrainControlModule"]].CP_CanRespUSDTId = 0x7E8;
+            Tpl.CP_UniqueRespIdTable[this["TransmissionControlModule"]].CP_CanPhysReqId = 0x7E1;
+            Tpl.CP_UniqueRespIdTable[this["TransmissionControlModule"]].CP_CanRespUSDTId = 0x7E9;
             return this;
+        }
+
+        private string this[string name]
+        {
+            get { HashToEcuDomainName.TryAdd(HashAlgo(name), name); return name; }
         }
 
         //ToDo an implementation that shows the real idea
         private static uint HashAlgo(string cpeculayershortname)
         {
-            return 1;
+            return (uint)cpeculayershortname.GetHashCode(System.StringComparison.InvariantCulture);
         }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using ISO22900.II.UnSafeCStructs;
-using Microsoft.Extensions.Logging;
 
 // ReSharper disable BuiltInTypeReferenceStyle
 
@@ -22,47 +21,69 @@ namespace ISO22900.II
             uint resourceId, uint cllTag, PduFlagDataCllCreateFlag pduFlagDataCllCreateFlag)
         {
 
-            var pduRscDataNative = new PDU_RSC_DATA
-            {
-                BusTypeId = pduResourceData.BusTypeId,
-                ProtocolId = pduResourceData.ProtocolId,
-                NumPinData = (UNUM32) pduResourceData.DlcPinData.Count
-            };
-
-            var pduPinDataNative = new PDU_PIN_DATA[pduRscDataNative.NumPinData]; //Array of a value type
-            for (var index = 0; index < pduRscDataNative.NumPinData; index++)
-            {
-                pduPinDataNative[index].DLCPinNumber = pduResourceData.DlcPinData[index].Key;
-                pduPinDataNative[index].DLCPinTypeId = pduResourceData.DlcPinData[index].Value;
-            }
-
             var pduFlagDataNative = new PDU_FLAG_DATA
             {
-                NumFlagBytes = (uint) pduFlagDataCllCreateFlag.FlagData.Length
+                NumFlagBytes = (uint)pduFlagDataCllCreateFlag.FlagData.Length
             };
-            
+
             var flagBytes = new UNUM8[pduFlagDataNative.NumFlagBytes];
             for (var index = 0; index < pduFlagDataNative.NumFlagBytes; index++)
                 flagBytes[index] = pduFlagDataCllCreateFlag.FlagData[index];
 
+
             PduError result;
             uint comLogicalLinkHandle; //this is why we are here :-)
-            
-            unsafe
-            {
-                //inside dll nobody dereferences the pointer,so we can use it like a 32 bit id (uint(32bit) is well for 64 and 32 bit DLLs).
-                //Downsides is only if cllTag with zero, that should be avoided
-                var pCllTag = cllTag == 0 ? null : ((IntPtr)cllTag).ToPointer();
-                
-                fixed (PDU_PIN_DATA* pPinData = pduPinDataNative)
-                {
-                    pduRscDataNative.pDLCPinData = pPinData;  //complete the PDU_RSC_DATA structure
 
-                    fixed (UNUM8* pFlagBytes = flagBytes)
+
+            if ( resourceId == PduConst.PDU_ID_UNDEF )
+            {
+                var pduRscDataNative = new PDU_RSC_DATA
+                {
+                    BusTypeId = pduResourceData.BusTypeId,
+                    ProtocolId = pduResourceData.ProtocolId,
+                    NumPinData = (UNUM32)pduResourceData.DlcPinData.Count
+                };
+
+                var pduPinDataNative = new PDU_PIN_DATA[pduRscDataNative.NumPinData]; //Array of a value type
+                for ( var index = 0; index < pduRscDataNative.NumPinData; index++ )
+                {
+                    pduPinDataNative[index].DLCPinNumber = pduResourceData.DlcPinData[index].Key;
+                    pduPinDataNative[index].DLCPinTypeId = pduResourceData.DlcPinData[index].Value;
+                }
+
+                unsafe
+                {
+                    //inside dll nobody dereferences the pointer,so we can use it like a 32 bit id (uint(32bit) is well for 64 and 32 bit DLLs).
+                    //Downsides is only if cllTag with zero, that should be avoided
+                    var pCllTag = cllTag == 0 ? null : ((IntPtr)cllTag).ToPointer();
+
+                    fixed ( PDU_PIN_DATA* pPinData = pduPinDataNative )
+                    {
+                        pduRscDataNative.pDLCPinData = pPinData; //complete the PDU_RSC_DATA structure
+
+                        fixed ( UNUM8* pFlagBytes = flagBytes )
+                        {
+                            pduFlagDataNative.pFlagData = pFlagBytes; //complete the PDU_FLAG_DATA structure
+
+                            result = PDUCreateComLogicalLink(moduleHandle, &pduRscDataNative, resourceId,
+                                pCllTag, &comLogicalLinkHandle, &pduFlagDataNative);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                unsafe
+                {
+                    //inside dll nobody dereferences the pointer,so we can use it like a 32 bit id (uint(32bit) is well for 64 and 32 bit DLLs).
+                    //Downsides is only if cllTag with zero, that should be avoided
+                    var pCllTag = cllTag == 0 ? null : ((IntPtr)cllTag).ToPointer();
+
+                    fixed ( UNUM8* pFlagBytes = flagBytes )
                     {
                         pduFlagDataNative.pFlagData = pFlagBytes; //complete the PDU_FLAG_DATA structure
 
-                        result = PDUCreateComLogicalLink(moduleHandle, &pduRscDataNative, resourceId,
+                        result = PDUCreateComLogicalLink(moduleHandle, null, resourceId,
                             pCllTag, &comLogicalLinkHandle, &pduFlagDataNative);
                     }
                 }

@@ -31,10 +31,19 @@ namespace ISO22900.II
 {
     public class PduRscIdItemData
     {
+        //ToDo resolve the ModuleHandle (ModuleHandle -> ModuleName)
+        //because the handles are not accessible to the user or in other words the user can't do anything with the handle because there is no function that he could give the handle to
+        /// <summary>
+        ///     Vendor specific information string for the unique module identification. * E.g. Module serial number or Module
+        ///     friendly name
+        /// </summary>
+        public string VendorModuleName { get; internal set; } = "";
+
+
         /// <summary>
         /// handle of MVCI Protocol Module assigned by D-PDU API
         /// </summary>
-        public uint ModuleHandle { get; }
+        internal uint ModuleHandle { get; }
 
         /// <summary>
         /// number of resource Ids
@@ -46,7 +55,7 @@ namespace ISO22900.II
             get => ResourceIdArray[index];
         }
 
-        public PduRscIdItemData(uint moduleHandle, uint[] resourceIds)
+        internal PduRscIdItemData(uint moduleHandle, uint[] resourceIds)
         {
             ModuleHandle = moduleHandle;
             ResourceIdArray = resourceIds;

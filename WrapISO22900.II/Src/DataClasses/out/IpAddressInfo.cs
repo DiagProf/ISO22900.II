@@ -26,30 +26,29 @@
 #endregion
 
 using System;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ISO22900.II
 {
-    public class PduIoCtlVehicleIdRequestIpAddrInfoData
+    public class IpAddressInfo : IPAddress
     {
-        public uint IpVersion { get; }
-        public byte[] Address { get; }
+
+        public new static readonly IpAddressInfo Broadcast = new IpAddressInfo(new byte[] { 255, 255, 255, 255 });
+
+        public PduExIpVersion IpVersion => AddressFamily == AddressFamily.InterNetwork ? PduExIpVersion.IPv4 : PduExIpVersion.IPv6;
 
         internal void Accept(IVisitorPduIoCtl visitorPduIoCtl)
         {
             visitorPduIoCtl.VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(this);
         }
 
-        public PduIoCtlVehicleIdRequestIpAddrInfoData(uint ipVersion, byte[] address)
+        public IpAddressInfo(byte[] address) : base(address)
         {
-            if (((ipVersion == 4) && (address.Length==4))  || ((ipVersion == 6) && (address.Length == 16)))
-            {
-                IpVersion = ipVersion;
-                Address = address;
-            }
-            else
-            {
-                throw new ArgumentException();  //ToDo more info
-            }
+        }
+
+        public IpAddressInfo(ReadOnlySpan<byte> address) : base(address)
+        {
         }
     }
 }

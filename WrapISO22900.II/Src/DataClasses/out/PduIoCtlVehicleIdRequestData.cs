@@ -31,18 +31,27 @@ namespace ISO22900.II
 {
     public class PduIoCtlVehicleIdRequestData
     {
-        public uint PreselectionMode { get; }
+        public PduExPreselectionMode PreselectionMode { get; }
         public string PreselectionValue { get; }
-        public uint CombinationMode { get; }
+        public PduExCombinationMode CombinationMode { get; }
         public uint VehicleDiscoveryTime { get; }
-        public PduIoCtlVehicleIdRequestIpAddrInfoData[] DestinationAddresses { get; }
+        public IpAddressInfo[] DestinationAddresses { get; }
 
         internal void Accept(IVisitorPduIoCtl visitorPduIoCtl)
         {
             visitorPduIoCtl.VisitConcretePduIoCtlVehicleIdRequestData(this);
         }
 
-        public PduIoCtlVehicleIdRequestData(uint preselectionMode, string preselectionValue, uint combinationMode, uint vehicleDiscoveryTime, PduIoCtlVehicleIdRequestIpAddrInfoData[] destinationAddresses)
+        public PduIoCtlVehicleIdRequestData(PduExPreselectionMode preselectionMode, string preselectionValue, PduExCombinationMode combinationMode, uint vehicleDiscoveryTime)
+        {
+            PreselectionMode = preselectionMode;
+            PreselectionValue = preselectionValue;
+            CombinationMode = combinationMode;
+            VehicleDiscoveryTime = vehicleDiscoveryTime;
+            DestinationAddresses = Array.Empty<IpAddressInfo>();
+        }
+
+        public PduIoCtlVehicleIdRequestData(PduExPreselectionMode preselectionMode, string preselectionValue, PduExCombinationMode combinationMode, uint vehicleDiscoveryTime, IpAddressInfo[] destinationAddresses)
         {
             PreselectionMode = preselectionMode;
             PreselectionValue = preselectionValue;

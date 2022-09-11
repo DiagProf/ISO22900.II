@@ -28,9 +28,7 @@
 #endregion
 
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
@@ -49,7 +47,7 @@ namespace ISO22900.II
         internal override unsafe uint PduGetObjectId(PduObjt pduObjectType, string shortName)
         {
             var asc2 = Encoding.Latin1.GetBytes(shortName);
-            //Odx ShortName is not larger than 128 bytes.
+            //ODX ShortName is not larger than 128 bytes.
             //Stop at 128 so there is no stack overflow
             var length = asc2.Length < 128 ? asc2.Length : 128; 
             var pStack = stackalloc CHAR8[length + 1];

@@ -101,6 +101,9 @@ namespace ISO22900.II.Demo
 
 
                         link.SetComParamValueViaGet("CP_CanFuncReqId", 0x7DF); //Set the functional request address if we use 11bit CAN ID
+                        link.SetComParamValueViaGet("CP_Baudrate", 0); //0 -> 0 activates the testing of the baudrates specified in the CP_CanBaudrateRecord
+                        link.SetComParamValueViaGet("CP_CanBaudrateRecord", new uint[] { 500000, 250000 });
+
                         link.SetUniqueRespIdTable(ecuUniqueRespDatas);
                         link.Connect();
 
@@ -157,6 +160,8 @@ namespace ISO22900.II.Demo
                             }
 
                             link.SetComParamValueViaGet("CP_CanFuncReqId", 0x18DB33F1); //Set the functional request address if we use 29bit CAN ID
+                            link.SetComParamValueViaGet("CP_Baudrate", 0); //0 -> 0 activates the testing of the baudrates specified in the CP_CanBaudrateRecord
+                            link.SetComParamValueViaGet("CP_CanBaudrateRecord", new uint[] { 500000, 250000 });
                             link.SetUniqueRespIdTable(ecuUniqueRespDatas);
                             link.Connect();
 
@@ -195,6 +200,10 @@ namespace ISO22900.II.Demo
 
                         if (isOBDonCAN == true)
                         {
+                            //if you like you can see which baudrate from CP_CanBaudrateRecord is used.
+                            var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
+                            AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
+
 
                             //Use StartComm to start tester present behavior
                             using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte[] { 0x01, 0x00 }))

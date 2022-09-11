@@ -62,7 +62,7 @@ namespace ISO22900.II
             ModuleHandle = vci.ModuleHandle;
             ComLogicalLinkHandle = comLogicalLinkHandle;
 
-            Vci.DiagPduApiOneSysLevel.EventItemProvider.RegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle, CallbackPduEventItemReceived, CallbackDataLost);
+            Vci.SysLevel.EventItemProvider.RegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle, CallbackPduEventItemReceived, CallbackDataLost);
         }
 
         internal ComPrimitiveLevel StartCop(PduCopt pduCopType, byte[] copData, PduCopCtrlData copCtrlData, uint copTag)
@@ -93,7 +93,7 @@ namespace ISO22900.II
 
             lock (_syncStartCop)
             {
-                var comPrimitiveHandle = Vci.DiagPduApiOneSysLevel.Nwa.PduStartComPrimitive(ModuleHandle, ComLogicalLinkHandle,
+                var comPrimitiveHandle = Vci.SysLevel.Nwa.PduStartComPrimitive(ModuleHandle, ComLogicalLinkHandle,
                     pduCopType, copData, copCtrlData, copTag);
 
 
@@ -108,7 +108,7 @@ namespace ISO22900.II
 
         public void Connect()
         {
-            Vci.DiagPduApiOneSysLevel.Nwa.PduConnect(ModuleHandle, ComLogicalLinkHandle);
+            Vci.SysLevel.Nwa.PduConnect(ModuleHandle, ComLogicalLinkHandle);
         }
 
         public void Disconnect()
@@ -125,14 +125,14 @@ namespace ISO22900.II
 
             if ( linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED )
             {
-                Vci.DiagPduApiOneSysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
             }
         }
 
         public PduComParam GetComParam(string name)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
-            var cp = Vci.DiagPduApiOneSysLevel.Nwa.PduGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cp = Vci.SysLevel.Nwa.PduGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId);
             cp.ComParamShortName = name;
             return cp;
         }
@@ -140,11 +140,11 @@ namespace ISO22900.II
 
         public PduComParam SetComParamValueViaGet(string name, long value)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             if ( cpId != PduConst.PDU_ID_UNDEF )
             {
-                var cp = Vci.DiagPduApiOneSysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
+                var cp = Vci.SysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
                 cp.ComParamShortName = name;
                 return cp;
             }
@@ -154,11 +154,11 @@ namespace ISO22900.II
 
         public PduComParam SetComParamValueViaGet(string name, byte[] value)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             if ( cpId != PduConst.PDU_ID_UNDEF )
             {
-                var cp = Vci.DiagPduApiOneSysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
+                var cp = Vci.SysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
                 cp.ComParamShortName = name;
                 return cp;
             }
@@ -168,11 +168,11 @@ namespace ISO22900.II
 
         public PduComParam SetComParamValueViaGet(string name, uint[] value)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             if ( cpId != PduConst.PDU_ID_UNDEF )
             {
-                var cp = Vci.DiagPduApiOneSysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
+                var cp = Vci.SysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
                 cp.ComParamShortName = name;
                 return cp;
             }
@@ -182,11 +182,11 @@ namespace ISO22900.II
 
         public PduComParam SetComParamValueViaGet(string name, PduParamStructFieldData value)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             if ( cpId != PduConst.PDU_ID_UNDEF )
             {
-                var cp = Vci.DiagPduApiOneSysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
+                var cp = Vci.SysLevel.Nwa.PduSetViaGetComParam(ModuleHandle, ComLogicalLinkHandle, cpId, value);
                 cp.ComParamShortName = name;
                 return cp;
             }
@@ -198,7 +198,7 @@ namespace ISO22900.II
         {
             try
             {
-                var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, cp.ComParamShortName);
+                var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, cp.ComParamShortName);
                 if ( cpId == PduConst.PDU_ID_UNDEF )
                 {
                     _logger.LogInformation("Object-Id for ComParam {ComParamShortName} not defined in the API used", cp.ComParamShortName);
@@ -206,7 +206,7 @@ namespace ISO22900.II
                 }
 
                 cp.ComParamId = cpId;
-                Vci.DiagPduApiOneSysLevel.Nwa.PduSetComParam(ModuleHandle, ComLogicalLinkHandle, cp);
+                Vci.SysLevel.Nwa.PduSetComParam(ModuleHandle, ComLogicalLinkHandle, cp);
             }
             catch ( Iso22900IIException e )
             {
@@ -239,10 +239,10 @@ namespace ISO22900.II
         /// <param name="name">Name of the communication parameter.</param>
         public uint GetUniqueIdComParamValue(uint uniqueRespIdentifier, string name)
         {
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             List<PduEcuUniqueRespData> currentPages;
-            currentPages = Vci.DiagPduApiOneSysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+            currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
 
             var page = currentPages.Single(data => data.UniqueRespIdentifier.Equals(uniqueRespIdentifier));
 
@@ -271,12 +271,12 @@ namespace ISO22900.II
         {
             PduComParam returnPduComParam = null;
 
-            var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
+            var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, name);
 
             if ( cpId != PduConst.PDU_ID_UNDEF )
             {
                 List<PduEcuUniqueRespData> currentPages;
-                currentPages = Vci.DiagPduApiOneSysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+                currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
 
                 var page = currentPages.Single(data => data.UniqueRespIdentifier.Equals(uniqueRespIdentifier));
 
@@ -290,7 +290,7 @@ namespace ISO22900.II
                     }
                 }
 
-                Vci.DiagPduApiOneSysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
+                Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
             }
 
             return returnPduComParam;
@@ -313,7 +313,7 @@ namespace ISO22900.II
 
             foreach ( var pair in listComParamNameToValuePairs )
             {
-                var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, pair.Key);
+                var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, pair.Key);
                 if ( cpId != PduConst.PDU_ID_UNDEF )
                 {
                     listComParamIdAndComParamNameAndValuePairs.Add(new KeyValuePair<uint, KeyValuePair<string, uint>>(cpId, pair));
@@ -322,7 +322,7 @@ namespace ISO22900.II
 
             if (listComParamIdAndComParamNameAndValuePairs.Count > 0 )
             {
-                var currentPages = Vci.DiagPduApiOneSysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+                var currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
 
                 var page = currentPages.Single(data => data.UniqueRespIdentifier.Equals(uniqueRespIdentifier));
 
@@ -339,7 +339,7 @@ namespace ISO22900.II
                     }
                 }
 
-                Vci.DiagPduApiOneSysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
+                Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
             }
 
             return returnPduComParamList;
@@ -356,25 +356,55 @@ namespace ISO22900.II
             foreach ( var pduEcuUniqueRespData in ecuUniqueRespDatas )
             foreach ( var pduComParam in pduEcuUniqueRespData.ComParams )
             {
-                var cpId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, pduComParam.ComParamShortName);
+                var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, pduComParam.ComParamShortName);
                 pduComParam.ComParamId = cpId;
             }
 
-            Vci.DiagPduApiOneSysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, ecuUniqueRespDatas);
+            Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, ecuUniqueRespDatas);
+        }
+
+        public void CloneUniqueRespIdTablePageOneWithNewUniqueRespIdentifier(uint uniqueRespIdentifier)
+        {
+            List<PduEcuUniqueRespData> currentPages;
+            currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+
+            if (currentPages.Any())
+            {
+                currentPages.Add(currentPages.First().Clone());
+                currentPages.Last().UniqueRespIdentifier = uniqueRespIdentifier;
+            }
+
+            Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
+        }
+
+        public void DeleteAllPagesExceptPageOne()
+        {
+            List<PduEcuUniqueRespData> currentPages;
+            currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+
+            if (currentPages.Any())
+            {
+                var temp = currentPages.First();
+                currentPages.Clear();
+                currentPages.Add(temp);
+            }
+
+            Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
         }
 
         public void SetUniqueRespIdTablePageOneUniqueRespIdentifier(uint uniqueRespIdentifier)
         {
             List<PduEcuUniqueRespData> currentPages;
-            currentPages = Vci.DiagPduApiOneSysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+            currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
 
             if ( currentPages.Any() )
             {
                 currentPages.First().UniqueRespIdentifier = uniqueRespIdentifier;
             }
 
-            Vci.DiagPduApiOneSysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
+            Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
         }
+
 
         /// <summary>
         /// MeasureBatteryVoltage is a convenience function on cll
@@ -406,10 +436,10 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                var ioCtlCommandId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                    Vci.SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
                     return true;
                 }
             }
@@ -431,10 +461,10 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                var ioCtlCommandId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeUint(value));
+                    Vci.SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeUint(value));
                     return true;
                 }
             }
@@ -457,10 +487,10 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = Vci.DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                var ioCtlCommandId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, value);
+                    Vci.SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, value);
                     return true;
                 }
             }
@@ -476,7 +506,7 @@ namespace ISO22900.II
 
         public PduExStatusData Status()
         {
-            return Vci.DiagPduApiOneSysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
+            return Vci.SysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
         protected void OnDataLost(CallbackEventArgs eventArgs)
@@ -571,8 +601,8 @@ namespace ISO22900.II
                 //the normal way if everything is going well (without VCI lost)
 
                 //First the event because we need valid handles for native PduRegisterEventCallback function
-                Vci.DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
-                Vci.DiagPduApiOneSysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
             }
             else if ( (statusVci == PduStatus.PDU_MODST_AVAIL || statusVci == PduStatus.PDU_MODST_READY) &&
                       (statusCll == PduStatus.PDU_CLLST_ONLINE || statusCll == PduStatus.PDU_CLLST_COMM_STARTED) )
@@ -580,12 +610,12 @@ namespace ISO22900.II
                 //the the com logical link is left without performing a disconnect
                 //(may have been forgotten or due to an exception within the com logical link using block)
                 _logger.LogError("Forgot to put the ComLogicLink in the offline state with Disconnect()?");
-                Vci.DiagPduApiOneSysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
 
                 //First the event because we need valid handles for native PduRegisterEventCallback function
-                Vci.DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
 
-                Vci.DiagPduApiOneSysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
+                Vci.SysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
             }
             else if ( (statusVci == PduStatus.PDU_MODST_NOT_AVAIL || statusVci == PduStatus.PDU_MODST_NOT_READY) &&
                       statusCll == PduStatus.PDU_CLLST_OFFLINE )
@@ -595,7 +625,7 @@ namespace ISO22900.II
                 try
                 {
                     //First the event because we need valid handles for native PduRegisterEventCallback function
-                    Vci.DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                    Vci.SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
                     //well:
                     //- Softing
                     //- Bosch
@@ -610,7 +640,7 @@ namespace ISO22900.II
 
                 try
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
+                    Vci.SysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
                     //well:
                     //- Softing
                 }
@@ -632,7 +662,7 @@ namespace ISO22900.II
                 try
                 {
                     _logger.LogError("Forgot to put the ComLogicLink in the offline state with Disconnect() (Vector workaround)");
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
+                    Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
                 }
                 catch ( Iso22900IIException ex )
                 {
@@ -642,7 +672,7 @@ namespace ISO22900.II
                 try
                 {
                     //First the event because we need valid handles for native PduRegisterEventCallback function
-                    Vci.DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                    Vci.SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
                 }
                 catch (Iso22900IIException ex)
                 {
@@ -651,7 +681,7 @@ namespace ISO22900.II
 
                 try
                 {
-                    Vci.DiagPduApiOneSysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
+                    Vci.SysLevel.Nwa.PduDestroyComLogicalLink(ModuleHandle, ComLogicalLinkHandle);
                 }
                 catch (Iso22900IIException ex)
                 {

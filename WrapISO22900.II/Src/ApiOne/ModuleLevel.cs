@@ -40,7 +40,7 @@ namespace ISO22900.II
     {
         private readonly ILogger _logger = ApiLibLogging.CreateLogger<ModuleLevel>();
 
-        internal readonly DiagPduApiOneSysLevel DiagPduApiOneSysLevel;
+        internal readonly DiagPduApiOneSysLevel SysLevel;
 
         protected internal uint ModuleHandle { get; }
         protected internal uint ComLogicalLinkHandle { get; } = PduConst.PDU_HANDLE_UNDEF;
@@ -49,30 +49,42 @@ namespace ISO22900.II
         public event EventHandler<PduEventItem> EventFired;
 
 
-        internal ModuleLevel(DiagPduApiOneSysLevel diagPduApiOneSysLevel, uint moduleHandle)
+        internal ModuleLevel(DiagPduApiOneSysLevel sysLevel, uint moduleHandle)
         {
-            DiagPduApiOneSysLevel = diagPduApiOneSysLevel;
+            SysLevel = sysLevel;
             ModuleHandle = moduleHandle;
 
-            DiagPduApiOneSysLevel.EventItemProvider.RegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle, CallbackPduEventItemReceived, CallbackDataLost);
-        }
-
-        internal ComLogicalLinkLevel OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
-        {
-            return OpenComLogicalLink(busTypeName,protocolName,dlcPinToTypeNamePairs, new PduFlagDataCllCreateFlag());
+            SysLevel.EventItemProvider.RegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle, CallbackPduEventItemReceived, CallbackDataLost);
         }
 
         internal ComLogicalLinkLevel OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs, PduFlagDataCllCreateFlag cllCreateFlag)
         {
-            var busTypId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, busTypeName);
-            var protocolTypId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_PROTOCOL, protocolName);
-            var dlcPinToTypeIdPairs = DiagPduApiOneSysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
+            var busTypId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, busTypeName);
+            var protocolTypId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_PROTOCOL, protocolName);
+            var dlcPinToTypeIdPairs = SysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
 
             var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
-            var comLogicalLinkHandle = DiagPduApiOneSysLevel.Nwa.PduCreateComLogicalLink(ModuleHandle, pduResourceData,
+            var comLogicalLinkHandle = SysLevel.Nwa.PduCreateComLogicalLink(ModuleHandle, pduResourceData,
                 PduConst.PDU_ID_UNDEF,
                 0, cllCreateFlag);
 
+
+            var cll = new ComLogicalLinkLevel(this, comLogicalLinkHandle);
+            Disposing += cll.Dispose;
+            return cll;
+        }
+
+        /// <summary>
+        /// open a OpenComLogicalLink via resourceId
+        /// This should not be used if possible  //use OpenComLogicalLink(string busTypeName ...
+        /// The resourceId can be obtained from GetResourceIds or from the MDF file (reading the MDF file is not part of this API //a good application can live without an MDF file :-)
+        /// </summary>
+        /// <param name="resourceId"></param>
+        /// <param name="cllCreateFlag"></param>
+        /// <returns></returns>
+        internal ComLogicalLinkLevel OpenComLogicalLink(uint resourceId, PduFlagDataCllCreateFlag cllCreateFlag)
+        {
+            var comLogicalLinkHandle = SysLevel.Nwa.PduCreateComLogicalLink(ModuleHandle, null, resourceId, 0, cllCreateFlag);
 
             var cll = new ComLogicalLinkLevel(this, comLogicalLinkHandle);
             Disposing += cll.Dispose;
@@ -85,12 +97,12 @@ namespace ISO22900.II
         /// <returns>timestamp in microseconds</returns>
         internal uint Timestamp()
         {
-            return DiagPduApiOneSysLevel.Nwa.PduGetTimestamp(ModuleHandle);
+            return SysLevel.Nwa.PduGetTimestamp(ModuleHandle);
         }
 
         internal PduVersionData VersionData()
         {
-            return DiagPduApiOneSysLevel.Nwa.PduGetVersionData(ModuleHandle);
+            return SysLevel.Nwa.PduGetVersionData(ModuleHandle);
         }
 
 
@@ -104,13 +116,13 @@ namespace ISO22900.II
             //Then we can fake the result with the "ApiModifications" flags
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, "PDU_IOCTL_READ_VBATT");
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, "PDU_IOCTL_READ_VBATT");
                 if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    var pduIoCtlData = DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                    var pduIoCtlData = SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
                     if ( pduIoCtlData is PduIoCtlOfTypeUint ctlDataUnum32 )
                     {
-                        if ( DiagPduApiOneSysLevel.ApiModBitField.HasFlag(ApiModifications.VOLTAGE_TO_LOW_FIX) )
+                        if ( SysLevel.ApiModBitField.HasFlag(ApiModifications.VOLTAGE_TO_LOW_FIX) )
                         {
                             if ( ctlDataUnum32.Value > 500 )
                             {
@@ -125,7 +137,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                if ( !(DiagPduApiOneSysLevel.ApiModBitField.HasFlag(ApiModifications.VOLTAGE_FIX) &&
+                if ( !(SysLevel.ApiModBitField.HasFlag(ApiModifications.VOLTAGE_FIX) &&
                        (e.PduError == PduError.PDU_ERR_VOLTAGE_NOT_SUPPORTED || e.PduError == PduError.PDU_ERR_ID_NOT_SUPPORTED)) )
                 {
                     throw;
@@ -149,11 +161,11 @@ namespace ISO22900.II
             //Then we can fake the result with the "ApiModifications" flags
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, "PDU_IOCTL_READ_IGNITION_SENSE_STATE");
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, "PDU_IOCTL_READ_IGNITION_SENSE_STATE");
                 if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
                     var input = new PduIoCtlOfTypeUint(dlcPinNumber);
-                    var output = DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, input);
+                    var output = SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, input);
                     if ( output is PduIoCtlOfTypeUint ctlDataUnum32 )
                     {
                         return (ctlDataUnum32.Value & 0x1) != 0;
@@ -162,7 +174,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                if ( !(DiagPduApiOneSysLevel.ApiModBitField.HasFlag(ApiModifications.IGNITION_FIX) && e.PduError == PduError.PDU_ERR_ID_NOT_SUPPORTED) )
+                if ( !(SysLevel.ApiModBitField.HasFlag(ApiModifications.IGNITION_FIX) && e.PduError == PduError.PDU_ERR_ID_NOT_SUPPORTED) )
                 {
                     throw;
                 }
@@ -173,8 +185,62 @@ namespace ISO22900.II
 
         internal PduExStatusData Status()
         {
-            return DiagPduApiOneSysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
+            return SysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
+
+        /// <summary>
+        ///     An alternative way to find out resource-id for this parameters.
+        ///     Indirectly this is the question: "Can this vci (module) do the job?"
+        /// </summary>
+        /// <param name="busTypeName"></param>
+        /// <param name="protocolName"></param>
+        /// <param name="dlcPinToTypeNamePairs"></param>
+        /// <returns>if the list is empty... this VCI (in cooperation with this D-PDU-API (dll)) can't do the job</returns>
+        public List<uint> GetResourceIds(string busTypeName, string protocolName,
+            List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
+        {
+            var busTypId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, busTypeName);
+            var protocolTypId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_PROTOCOL, protocolName);
+
+            var dlcPinToTypeIdPairs = SysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
+
+            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
+            var pduRscIdItemDatas = SysLevel.Nwa.PduGetResourceIds(ModuleHandle, pduResourceData);
+
+            var resourceIds = new List<uint>();
+            //this loop should not be run through more than once.
+            //Because an entry in the list is a module. And we only query for this module
+            foreach ( var pduRscIdItemData in pduRscIdItemDatas )
+            {
+                for ( int i = 0; i < pduRscIdItemData.NumberOfResourceIds; i++ )
+                {
+                    resourceIds.Add(pduRscIdItemData[i]);
+                }
+            }
+
+            return resourceIds;
+        }
+
+
+        #region PduIoControlsOnModuleLevel
+
+        /// <summary>
+        ///     For IoCtl which takes only the name and as parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <returns>true or false</returns>
+        /// 
+        //internal bool IoCtlGeneral(string ioCtlShortName)
+        //{
+        //    var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+        //    if ( ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
+        //    {
+        //        return false;
+        //    }
+
+        //    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+        //    return true;
+        //}
 
         /// <summary>
         ///     For IoCtl which takes only the name and as parameter
@@ -185,10 +251,10 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
                     return true;
                 }
             }
@@ -204,16 +270,18 @@ namespace ISO22900.II
         ///     For IoCtl which takes the name and a uint as parameters
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value">a uint</param>
+        /// <param name="valueIn"></param>
+        /// <param name="valueOut"></param>
         /// <returns>true or false</returns>
         internal bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn, out uint valueOut)
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    valueOut = ((PduIoCtlOfTypeUint)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeUint(valueIn))).Value;
+                    valueOut = ((PduIoCtlOfTypeUint)SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId,
+                        new PduIoCtlOfTypeUint(valueIn))).Value;
                     return true;
                 }
             }
@@ -221,6 +289,7 @@ namespace ISO22900.II
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
+
             valueOut = default;
             return false;
         }
@@ -236,17 +305,18 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    value = ((PduIoCtlOfTypeUint)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null)).Value;
+                    value = ((PduIoCtlOfTypeUint)SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null)).Value;
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
+
             value = default;
             return false;
         }
@@ -262,14 +332,14 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeByteField(value));
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeByteField(value));
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
@@ -281,20 +351,20 @@ namespace ISO22900.II
         ///     For IoCtl which takes the name and PduIoCtlOfTypeProgVoltage as parameters
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value"></param>
+        /// <param name="pduIoCtlOfTypeProgVoltage"></param>
         /// <returns>true or false</returns>
-        internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlOfTypeProgVoltage value)
+        internal bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlOfTypeProgVoltage pduIoCtlOfTypeProgVoltage)
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, value);
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, pduIoCtlOfTypeProgVoltage);
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
@@ -306,20 +376,22 @@ namespace ISO22900.II
         ///     For IoCtl which takes the name and PduIoCtlOfTypeSetEthSwitchState as parameters
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value"></param>
+        /// <param name="ethernetActivationPin"></param>
+        /// <param name="ethernetActDlcPinNumber"></param>
         /// <returns>true or false</returns>
         internal bool TryIoCtlGeneral(string ioCtlShortName, PduExEthernetActivationPin ethernetActivationPin, uint ethernetActDlcPinNumber = 8)
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEthSwitchState(ethernetActivationPin, ethernetActDlcPinNumber));
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId,
+                        new PduIoCtlOfTypeEthSwitchState(ethernetActivationPin, ethernetActDlcPinNumber));
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
@@ -338,14 +410,15 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeVehicleIdRequest(vehicleIdRequestData));
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId,
+                        new PduIoCtlOfTypeVehicleIdRequest(vehicleIdRequestData));
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
@@ -366,10 +439,11 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
                 if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    value = ((PduIoCtlOfTypeUint)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
+                    value = ((PduIoCtlOfTypeUint)SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId,
+                        new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
                     return true;
                 }
             }
@@ -394,14 +468,15 @@ namespace ISO22900.II
         {
             try
             {
-                var ioCtlCommandId = DiagPduApiOneSysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                    value = ((PduIoCtlOfTypeEntityStatus)DiagPduApiOneSysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
+                    value = ((PduIoCtlOfTypeEntityStatus)SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId,
+                        new PduIoCtlOfTypeEntityAddress(logicalAddress, doIpCtrlTimeout))).Value;
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }
@@ -409,6 +484,8 @@ namespace ISO22900.II
             value = default;
             return false;
         }
+
+        #endregion
 
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {
@@ -460,7 +537,7 @@ namespace ISO22900.II
                 try
                 {
                     //First the event because we need valid handles for native PduRegisterEventCallback function
-                    DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                    SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
                     //well:
                     //- Softing
                     //- Bosch
@@ -475,7 +552,7 @@ namespace ISO22900.II
 
                 try
                 {
-                    DiagPduApiOneSysLevel.Nwa.PduModuleDisconnect(ModuleHandle);
+                    SysLevel.Nwa.PduModuleDisconnect(ModuleHandle);
                     //well:
                     //- Softing
                     //- Bosch
@@ -492,15 +569,15 @@ namespace ISO22900.II
             else
             {
                 //First the event because we need valid handles for PduRegisterEventCallback
-                DiagPduApiOneSysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
-                DiagPduApiOneSysLevel.Nwa.PduModuleDisconnect(ModuleHandle);
+                SysLevel.EventItemProvider.UnRegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle);
+                SysLevel.Nwa.PduModuleDisconnect(ModuleHandle);
             }
 
         }
 
         protected override void FreeManagedResources()
         {
-            DiagPduApiOneSysLevel.Disposing -= Dispose;
+            SysLevel.Disposing -= Dispose;
 
             if ( EventFired != null )
             {
@@ -510,6 +587,7 @@ namespace ISO22900.II
                 }
             }
         }
+
 
         /// <summary>
         ///     When the finalizer thread gets around to running, it runs all the destructors of the object.

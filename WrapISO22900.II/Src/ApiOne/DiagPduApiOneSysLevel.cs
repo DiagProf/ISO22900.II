@@ -228,16 +228,21 @@ namespace ISO22900.II
             }
         }
 
+        public PduExStatusData Status()
+        {
+            return Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
+        }
 
         /// <summary>
         ///     An alternative way to find out if there is a resource-id for this parameters.
         ///     Indirectly this is the question: "Is there a VCI that can do that?"
+        ///     PduRscIdItemData is not ready please only use whether the list is filled or empty
         /// </summary>
         /// <param name="busTypeName"></param>
         /// <param name="protocolName"></param>
         /// <param name="dlcPinToTypeNamePairs"></param>
         /// <returns>if the list is empty... no VCI (in cooperation with this D-PDU-API (dll)) can do the job</returns>
-        public List<PduRscIdItemData> PduGetResourceIds(string busTypeName, string protocolName,
+        public List<PduRscIdItemData> GetResourceIds(string busTypeName, string protocolName,
             List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
         {
             var busTypId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, busTypeName);
@@ -246,8 +251,26 @@ namespace ISO22900.II
             var dlcPinToTypeIdPairs = DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
 
             var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
-            return Nwa.PduGetResourceIds(ModuleHandle, pduResourceData);
+            var pduRscIdItemDatas = Nwa.PduGetResourceIds(ModuleHandle, pduResourceData);
+
+            if ( pduRscIdItemDatas.Any() )
+            {
+                //resolve the module handle to module name
+                var pduModuleDatas = Nwa.PduGetModuleIds();
+                foreach ( var pduRscIdItemData in pduRscIdItemDatas )
+                {
+                    foreach ( var pduModuleData in pduModuleDatas )
+                    {
+                        if ( pduRscIdItemData.ModuleHandle == pduModuleData.ModuleHandle )
+                        {
+                            pduRscIdItemData.VendorModuleName = pduModuleData.VendorModuleName;
+                        }
+                    }
+                }
+            }
+            return pduRscIdItemDatas;
         }
+
 
         internal List<KeyValuePair<uint, uint>> DlcTypeNameToTypeId(List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
         {
@@ -262,16 +285,11 @@ namespace ISO22900.II
             return dlcPinToTypeIdPairs;
         }
 
-        public PduExStatusData Status()
-        {
-            return Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
-        }
-
 
         /// <summary>
-        /// "PDU_IOCTL_VEHICLE_ID_REQUEST 
+        /// PDU_IOCTL_VEHICLE_ID_REQUEST 
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="vehicleIdRequestData"></param>
         /// <returns></returns>
         public bool TryIoCtlVehicleIdRequest(PduIoCtlVehicleIdRequestData vehicleIdRequestData)
         {
@@ -282,20 +300,20 @@ namespace ISO22900.II
         ///     For IoCtl which takes the name and PduIoCtlOfTypeVehicleIdRequest as parameters
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value"></param>
+        /// <param name="vehicleIdRequestData"></param>
         /// <returns>true or false</returns>
         public bool TryIoCtlGeneral(string ioCtlShortName, PduIoCtlVehicleIdRequestData vehicleIdRequestData)
         {
             try
             {
                 var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                if ( !ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
                 {
-                   Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeVehicleIdRequest(vehicleIdRequestData));
+                    Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeVehicleIdRequest(vehicleIdRequestData));
                     return true;
                 }
             }
-            catch (Iso22900IIException e)
+            catch ( Iso22900IIException e )
             {
                 _logger.LogWarning(e, ioCtlShortName);
             }

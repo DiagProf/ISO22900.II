@@ -41,7 +41,7 @@ namespace ISO22900.II
 
         void VisitConcretePduIoCtlOfTypeVehicleIdRequest(PduIoCtlOfTypeVehicleIdRequest cd);
         void VisitConcretePduIoCtlVehicleIdRequestData(PduIoCtlVehicleIdRequestData cd);
-        void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd);
+        void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(IpAddressInfo cd);
 
 
         void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd);

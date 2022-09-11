@@ -128,9 +128,9 @@ namespace ISO22900.II
         {
             var pIoVehicleIdRequest = (PDU_IO_VEHICLE_ID_REQUEST*)_pointerSpecialData;
             _pointerSpecialData = (byte*)_pointerSpecialData + sizeof(PDU_IO_VEHICLE_ID_REQUEST);
-            pIoVehicleIdRequest->PreselectionMode = cd.PreselectionMode;
+            pIoVehicleIdRequest->PreselectionMode = (uint)cd.PreselectionMode;
            
-            pIoVehicleIdRequest->CombinationMode = cd.CombinationMode;
+            pIoVehicleIdRequest->CombinationMode = (uint)cd.CombinationMode;
             pIoVehicleIdRequest->VehicleDiscoveryTime = cd.VehicleDiscoveryTime;
 
 
@@ -166,18 +166,19 @@ namespace ISO22900.II
             }
         }
 
-        public unsafe void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd)
+        public unsafe void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(IpAddressInfo cd)
         {
             var pIpAddrInfo = (PDU_IP_ADDR_INFO*)_pointerSpecialData;
             _pointerSpecialData = (byte*)_pointerSpecialData + sizeof(PDU_IP_ADDR_INFO);
-            pIpAddrInfo->IpVersion = cd.IpVersion;
+            pIpAddrInfo->IpVersion = (uint)cd.IpVersion;
             pIpAddrInfo->pAddress = (byte*)_pointerSpecialData;
-            for (var i = 0; i < cd.Address.Length; i++)
+            var addressBytesIp = cd.GetAddressBytes();
+            for (var i = 0; i < addressBytesIp.Length; i++)
             {
-                pIpAddrInfo->pAddress[i] = cd.Address[i];
+                pIpAddrInfo->pAddress[i] = addressBytesIp[i];
             }
 
-            _pointerSpecialData = (byte*)_pointerSpecialData + cd.Address.Length;
+            _pointerSpecialData = (byte*)_pointerSpecialData + addressBytesIp.Length;
         }
 
         public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd)

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    public class Iso22900NativeWrapAccess : IDisposable
+    internal class Iso22900NativeWrapAccess : IDisposable
     {
         private readonly object sync = new();
 

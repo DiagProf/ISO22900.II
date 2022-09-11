@@ -82,9 +82,13 @@ namespace ISO22900.II.OdxLikeComParamSets
         {
             //e.g. HUE213
             InitializeAllComParams();
-           
+            Tpl.CP_DoIPLogicalGatewayAddress = 0x2001;
             Tpl.CP_DoIPLogicalTesterAddress = 0x0EF0;
-            Tpl.CP_DoIPLogicalEcuAddress = 0x2001;
+            Tpl.CP_DoIPLogicalEcuAddress = 0x3000;
+            Tpl.CP_DoIPLogicalFunctionalAddress = 0xE400;
+            Tpl.CP_DoIPSecondaryLogicalECUResponseAddress = 0;
+            App.CP_P6Max = 6_500_000; //0-125000000us Timeout for the client to wait  after the successful transmission of a request message for the complete reception of thecorresponding response message
+            App.CP_P6Star = 11_450_000; //0-655350000us Enhanced timeout for the client to wait after the reception of a negative response message with negative response code 0x78
             Tpl.CP_ECULayerShortName = "HeadunitEntry";
             return this;
         }

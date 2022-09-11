@@ -37,7 +37,7 @@ namespace ISO22900.II.Demo
     internal class PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci : Page
     {
         public PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci(AbstractPageControl program)
-            : base("Use case simple send and receive DoIP without physical VCI", program) 
+            : base("Use case simple send and receive DoIP without physical VCI", program)
         {
         }
 
@@ -54,179 +54,180 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow($"[yellow]{info}[/]");
             infoGrid.AddRow($"[yellow]{wire}[/]");
             infoGrid.AddRow($"[yellow]{lic}[/]");
+            infoGrid.AddEmptyRow();
+            infoGrid.AddRow("[white]Example is for a connection to the Golf 8 gateway.[/]");
+            infoGrid.AddRow("[white]E.g. Ethernet adapter should have IP address: 169.254.123.1 and subnet mask 255.255.0.0[/]");
+            infoGrid.AddEmptyRow();
             AnsiConsole.Write(infoGrid);
 
 
-            using ( var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value), AbstractPageControl.LoggerFactory) )
+            using ( var api = DiagPduApiOneFactory.GetApi(
+                       DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
+                       AbstractPageControl.LoggerFactory) )
             {
-                var ctlVehicleIdRequestData = new PduIoCtlVehicleIdRequestData(0, "", 1, 5000,
-                    new[]
-                    {
-                        new PduIoCtlVehicleIdRequestIpAddrInfoData(4, new byte[] { 255, 255, 255, 255 }), // 255, 255, 255, 255 you can reduce the range with e.g. 169, 254, 255,255 , 169,254,123,17
-                    }
-                );
+                var ioCtlVehicleIdRequestData =
+                    new PduIoCtlVehicleIdRequestData(PduExPreselectionMode.NoPreselection, "", PduExCombinationMode.VinCombination, 5000);
 
-                if ( !api.TryIoCtlVehicleIdRequest(ctlVehicleIdRequestData) )
+                if ( api.TryIoCtlVehicleIdRequest(ioCtlVehicleIdRequestData) )
                 {
-                    AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
-                }
+                    var doipVCIs = api.PduModuleDataSets.FindAll(e => e.VendorModuleName.Contains("MVCI_ISO_13400_DoIP"));
 
-                var doipVCIs = api.PduModuleDataSets.FindAll(e => e.VendorModuleName.Contains("MVCI_ISO_13400_DoIP"));
-
-                if ( doipVCIs.Any() )
-                {
-                    AnsiConsole.WriteLine($"VendorModuleName: {doipVCIs.First().VendorModuleName}");
-                    AnsiConsole.WriteLine($"VendorAdditionalInfo: {doipVCIs.First().VendorAdditionalInfo}");
-
-                    using ( var doIpVci = api.ConnectVci(doipVCIs.First().VendorModuleName) )
+                    if ( doipVCIs.Any() )
                     {
-                        
+                        AnsiConsole.WriteLine($"VendorModuleName: {doipVCIs.First().VendorModuleName}");
+                        AnsiConsole.WriteLine($"VendorAdditionalInfo: {doipVCIs.First().VendorAdditionalInfo}");
+                        AnsiConsole.WriteLine();
 
-                        //Define the protocol behavior
-                        //These names (the strings) come from ODX or ISO 22900-2
-                        var cllSettingXxWithDoIp = new LogicalLinkSettingXXWithDoIp();
-                        //var dlcPinData = cllSettingXxWithDoIp.DlcPinData;
-                        var busTypeName = cllSettingXxWithDoIp.BusTypeName;
-                        var protocolName = cllSettingXxWithDoIp.ProtocolName;
-
-                        //this is only do see pinout
-                        if (doIpVci.TryIoCtlGetCableId(out var cableId))
+                        using ( var doIpVci = api.ConnectVci(doipVCIs.First().VendorModuleName) )
                         {
-                            AnsiConsole.WriteLine();
-                            var grid = new Grid()
-                                .AddColumn(new GridColumn().NoWrap().PadRight(4))
-                                .AddColumn()
-                                .AddRow("[b]Cable Id[/]", $"{cableId}");
+                            //Define the protocol behavior
+                            //These names (the strings) come from ODX or ISO 22900-2
+                            var cllSettingWithDoIp = new LogicalLinkSettingXXWithDoIp();
+                            var dlcPinData = cllSettingWithDoIp.DlcPinData;
+                            var busTypeName = cllSettingWithDoIp.BusTypeName;
+                            var protocolName = cllSettingWithDoIp.ProtocolName;
 
-                            //here is just an idea. You could get more out of the cdf file.
-                            var fullCdfPath =
-                                DiagPduApiHelper.FullCdfPathFormApiShortName((AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value));
-                            if (fullCdfPath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                            //simple OBD2 Ethernet Cable pin out description! (not the pin out) is different from API to API (i don't know why).
+                            //But is a good example for GetResourceIds do figure out the right setting used with your VCI
+                            //This is particularly helpful if an application is to use many different VCIs and D-PDU APIs.
+
+                            //GetResourceIds with default values
+                            List<uint> resourceIds = doIpVci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+
+                            if ( !resourceIds.Any() )
                             {
-                                ////Load the file and create a navigator object. 
-                                var xPath = new XPathDocument(fullCdfPath);
-                                var navigator = xPath.CreateNavigator();
-                                var nodeIterator = navigator.SelectSingleNode(
-                                    "MVCI_CABLE_DESCRIPTION/CABLE/CABLE_IDENTIFICATION/CABLE_ID[normalize-space(text()) = '" + $"{cableId}" + "']/../.." +
-                                    "/DESCRIPTION");
-                                if (nodeIterator != null)
+                                //GetResourceIds with values for softing
+                                dlcPinData = new() { { 1, "TX" }, { 3, "RX" } };
+                                resourceIds = doIpVci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+
+                                if ( !resourceIds.Any() )
                                 {
-                                    grid.AddRow("[b]Cable description[/]", $"{nodeIterator.Value}");
-                                }
-                            }
+                                    //GetResourceIds with values for porscheActia (PT3G-VCI (v2))
+                                    dlcPinData = new() { { 3, "RX" }, { 12, "TX" } };
+                                    resourceIds = doIpVci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
 
-                            AnsiConsole.Write(
-                                new Panel(grid)
-                                    .Header("Information"));
-                            AnsiConsole.WriteLine();
-                        }
-                        else
-                        {
-                            AnsiConsole.WriteLine("It is not possible to detect the diagnostic cable");
-                        }
-
-
-                        //play with the pins a bit. this is done very differently from API to API
-                        Dictionary<uint, string> DlcPinDataDefault = new() { { 1, "TX" }, { 3, "RX" } };
-                        
-                        //Dictionary<uint, string> DlcPinDataDefault = new() { { 3, "RX" }, { 12, "TX" } };
-
-
-
-
-                        using ( var link = doIpVci.OpenComLogicalLink(busTypeName, protocolName, DlcPinDataDefault.ToList()) )
-                        {
-                            cllSettingXxWithDoIp.LogicalLinkSettingGateway().SetUpLogicalLink(link);
-                            link.Connect();
-
-
-                            var errorString = string.Empty;
-                            
-                            using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM) )
-                            {
-                                var result = copStartComm.WaitForCopResult();
-
-                                if ( result.PduEventItemErrors().Count > 0 )
-                                {
-                                    foreach ( var error in result.PduEventItemErrors() )
+                                    if (!resourceIds.Any())
                                     {
-                                        errorString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                        //GetResourceIds with values for vw actia (VAS 6154 (A))
+                                        // like porscheActia  dlcPinData = new() { { 3, "RX" }, { 12, "TX" } };
+                                        busTypeName = "XDE_5024_UART"; //i don't know what vw is doing here. but that is at VW the synonym for "IEEE_802_3"
+                                        resourceIds = doIpVci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
                                     }
-
-                                    errorString = "Error: " + errorString;
-                                    AnsiConsole.WriteLine($"{errorString}");
                                 }
+  
                             }
 
-                            
-                            if ( errorString.Equals(string.Empty) )
+                            if ( resourceIds.Any() )
                             {
-                                var request = new byte[] { 0x22, 0xF1, 0x90 };
-
-                                for ( var i = 0x80; i <= 0xa0; i++ )
+                                //using (var link = doIpVci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()))
+                                //or
+                                using ( var link = doIpVci.OpenComLogicalLink(resourceIds.First()) )
                                 {
-                                    request[2] = (byte)i;
+                                    cllSettingWithDoIp.LogicalLinkSettingGateway().SetUpLogicalLink(link);
+                                    link.Connect();
 
-                                    using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, 1, request) )
+
+                                    var errorString = string.Empty;
+
+                                    using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM) )
                                     {
-                                        var result = cop.WaitForCopResult();
-
-                                        //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
-                                        //e.g. the correct order might be first PduEventItemInfo and then DataMsg
-                                        var responseString = string.Empty;
-                                        uint responseTime = 0;
-                                        if ( result.DataMsgQueue().Count > 0 )
-                                        {
-                                            responseString = string.Join(",",
-                                                result.DataMsgQueue().ConvertAll(bytes => { return BitConverter.ToString(bytes); }));
-                                            responseTime = result.ResponseTime();
-                                        }
+                                        var result = copStartComm.WaitForCopResult();
 
                                         if ( result.PduEventItemErrors().Count > 0 )
                                         {
                                             foreach ( var error in result.PduEventItemErrors() )
                                             {
-                                                responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                                errorString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
                                             }
 
-                                            responseString = "Error: " + responseString;
+                                            errorString = "Error: " + errorString;
+                                            AnsiConsole.WriteLine($"{errorString}");
                                         }
-
-                                        if ( result.PduEventItemInfos().Count > 0 )
-                                        {
-                                            foreach ( var error in result.PduEventItemInfos() )
-                                            {
-                                                responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
-                                            }
-
-                                            responseString = "Info: " + responseString;
-                                        }
-
-                                        AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
                                     }
-                                }
 
 
-                                using ( var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM) )
-                                {
-                                    var result = copStopComm.WaitForCopResult();
-
-                                    if ( result.PduEventItemErrors().Count > 0 )
+                                    if ( errorString.Equals(string.Empty) )
                                     {
-                                        foreach ( var error in result.PduEventItemErrors() )
+                                        var request = new byte[] { 0x22, 0xF1, 0x90 };
+
+                                        for ( var i = 0x80; i <= 0xa0; i++ )
                                         {
-                                            errorString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                            request[2] = (byte)i;
+
+                                            using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, 1, request) )
+                                            {
+                                                var result = cop.WaitForCopResult();
+
+                                                //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
+                                                //e.g. the correct order might be first PduEventItemInfo and then DataMsg
+                                                var responseString = string.Empty;
+                                                uint responseTime = 0;
+                                                if ( result.DataMsgQueue().Count > 0 )
+                                                {
+                                                    responseString = string.Join(",",
+                                                        result.DataMsgQueue().ConvertAll(bytes => { return BitConverter.ToString(bytes); }));
+                                                    responseTime = result.ResponseTime();
+                                                }
+
+                                                if ( result.PduEventItemErrors().Count > 0 )
+                                                {
+                                                    foreach ( var error in result.PduEventItemErrors() )
+                                                    {
+                                                        responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                                    }
+
+                                                    responseString = "Error: " + responseString;
+                                                }
+
+                                                if ( result.PduEventItemInfos().Count > 0 )
+                                                {
+                                                    foreach ( var error in result.PduEventItemInfos() )
+                                                    {
+                                                        responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
+                                                    }
+
+                                                    responseString = "Info: " + responseString;
+                                                }
+
+                                                AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
+                                            }
                                         }
 
-                                        errorString = "Error: " + errorString;
-                                        AnsiConsole.WriteLine($"{errorString}");
+
+                                        using ( var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM) )
+                                        {
+                                            var result = copStopComm.WaitForCopResult();
+
+                                            if ( result.PduEventItemErrors().Count > 0 )
+                                            {
+                                                foreach ( var error in result.PduEventItemErrors() )
+                                                {
+                                                    errorString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                                                }
+
+                                                errorString = "Error: " + errorString;
+                                                AnsiConsole.WriteLine($"{errorString}");
+                                            }
+                                        }
                                     }
+
+                                    link.Disconnect();
                                 }
                             }
-
-                            link.Disconnect();
+                            else
+                            {
+                                AnsiConsole.WriteLine("Can't find the right settings for ComLogicalLink.");
+                            }
                         }
                     }
+                    else
+                    {
+                        AnsiConsole.WriteLine("No DoIP VCI found.");
+                    }
+                }
+                else
+                {
+                    AnsiConsole.WriteLine("TryIoCtlVehicleIdRequest on API not possible.");
                 }
             }
 

@@ -119,10 +119,38 @@ namespace ISO22900.II
 
         public ComLogicalLink OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
         {
-            lock ( _sync )
+            return OpenComLogicalLink(busTypeName, protocolName, dlcPinToTypeNamePairs, new PduFlagDataCllCreateFlag());
+        }
+
+        public ComLogicalLink OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs, PduFlagDataCllCreateFlag cllCreateFlag)
+        {
+            lock (_sync)
             {
-                var cll = _vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinToTypeNamePairs);
-                return new ComLogicalLink(this, cll, busTypeName, protocolName, dlcPinToTypeNamePairs);
+                var cll = _vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinToTypeNamePairs, cllCreateFlag);
+                return new ComLogicalLink(this, cll, busTypeName, protocolName, dlcPinToTypeNamePairs, cllCreateFlag);
+            }
+        }
+
+        /// <summary>
+        /// open a OpenComLogicalLink via resourceId
+        /// This should not be used if possible (better use OpenCom Logical Link with bus TypeName, protocol Name and dlcPinToTypeNamePairs)
+        /// Because some VCIs didn't implement it.
+        /// In some use cases, however, it can make sense to use this function in conjunction with the function GetResourceIds.
+        /// </summary>
+        /// <param name="resourceId"></param>
+        /// <returns></returns>
+
+        public ComLogicalLink OpenComLogicalLink(uint resourceId)
+        {
+            return OpenComLogicalLink(resourceId, new PduFlagDataCllCreateFlag());
+        }
+
+        public ComLogicalLink OpenComLogicalLink(uint resourceId, PduFlagDataCllCreateFlag cllCreateFlag)
+        {
+            lock (_sync)
+            {
+                var cll = _vci.OpenComLogicalLink(resourceId, cllCreateFlag);
+                return new ComLogicalLink(this, cll, resourceId, cllCreateFlag);
             }
         }
 
@@ -141,6 +169,24 @@ namespace ISO22900.II
                 return _vci.VersionData();
             }
         }
+
+        public PduExStatusData Status()
+        {
+            lock (_sync)
+            {
+                return _vci.Status();
+            }
+        }
+
+        public List<uint> GetResourceIds(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
+        {
+            lock ( _sync )
+            {
+                return _vci.GetResourceIds(busTypeName, protocolName, dlcPinToTypeNamePairs);
+            }
+        }
+
+        #region PduIoControlsOnModule
 
         public uint MeasureBatteryVoltage()
         {
@@ -166,15 +212,6 @@ namespace ISO22900.II
             }
         }
 
-        public PduExStatusData Status()
-        {
-            lock ( _sync )
-            {
-                return _vci.Status();
-            }
-        }
-
-
         /// <summary>
         ///     You can use this method if you want to try something
         ///     For IoCtl where the name is the only one parameter
@@ -185,7 +222,7 @@ namespace ISO22900.II
         /// <returns>true or false</returns>
         public bool TryIoCtlGeneral(string ioCtlShortName)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral(ioCtlShortName);
             }
@@ -210,7 +247,7 @@ namespace ISO22900.II
         /// <returns>true or false</returns>
         public bool TryIoCtlGeneral(string ioCtlShortName, out uint value)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral(ioCtlShortName, out value);
             }
@@ -239,7 +276,6 @@ namespace ISO22900.II
         public bool TryIoCtlGetCableId(out uint value) => TryIoCtlGeneral("PDU_IOCTL_GET_CABLE_ID", out value);
 
 
-
         /// <summary>
         ///     You can use this method if you want to try something
         ///     For IoCtl which takes the name and a uint as parameters and you get uint result
@@ -247,7 +283,8 @@ namespace ISO22900.II
         ///     For real application prefer to use the methods that call this method with the appropriate parameter
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value">a uint</param>
+        /// <param name="valueIn"></param>
+        /// <param name="valueOut"></param>
         /// <returns>true or false</returns>
         public bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn, out uint valueOut)
         {
@@ -270,8 +307,10 @@ namespace ISO22900.II
         ///     2 = Ethernet Option 2 
         ///     3 and above reserved for future us
         /// </param>
-        /// <returns></returns>
-        public bool TryIoCtlGetEthPinOption(uint valueIn, out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_GET_ETH_PIN_OPTION", valueIn, out valueOut);
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGetEthPinOption(uint valueIn, out uint valueOut) =>
+            TryIoCtlGeneral("PDU_IOCTL_GET_ETH_PIN_OPTION", valueIn, out valueOut);
+
         //default pin 8 of the dlc is usually used
         public bool TryIoCtlGetEthPinOption(out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_GET_ETH_PIN_OPTION", 8, out valueOut);
 
@@ -283,8 +322,9 @@ namespace ISO22900.II
         ///     0 = Ignition OFF
         ///     1 = Ignition ON
         /// </param>
-        /// <returns></returns>
-        public bool TryIoCtlReadIgnitionSenseState(uint valueIn, out uint valueOut) => TryIoCtlGeneral("PDU_IOCTL_READ_IGNITION_SENSE_STATE", valueIn, out valueOut);
+        /// <returns>true or false</returns>
+        public bool TryIoCtlReadIgnitionSenseState(uint valueIn, out uint valueOut) =>
+            TryIoCtlGeneral("PDU_IOCTL_READ_IGNITION_SENSE_STATE", valueIn, out valueOut);
 
 
         /// <summary>
@@ -294,46 +334,47 @@ namespace ISO22900.II
         ///     For real application prefer to use the methods that call this method with the appropriate parameter
         /// </summary>
         /// <param name="ioCtlShortName"></param>
-        /// <param name="value"></param>
+        /// <param name="bytes"></param>
         /// <returns>true or false</returns>
-        public bool TryIoCtlGeneral(string ioCtlShortName, byte[] value)
+        public bool TryIoCtlGeneral(string ioCtlShortName, byte[] bytes)
         {
-            lock (_sync)
+            lock ( _sync )
             {
-                return _vci.TryIoCtlGeneral(ioCtlShortName, value);
+                return _vci.TryIoCtlGeneral(ioCtlShortName, bytes);
             }
         }
 
         /// <summary>
-        /// Stops the specified filter, based on filter number
-        /// Usually you don't need to change anything with this method
+        /// Allows the application to send a generic message to its drivers.
+        /// The message in the Data buffer is sent down to the MVCI protocol module, intercepting or interpreting it.
         /// </summary>
-        /// <param name="value">Filter number to stop</param>
+        /// <param name="bytes">Filter number to stop</param>
         /// <returns>true or false</returns>
-        public bool TryIoCtlGeneric(byte[] value) => TryIoCtlGeneral("PDU_IOCTL_GENERIC", value);
+        public bool TryIoCtlGeneric(byte[] bytes) => TryIoCtlGeneral("PDU_IOCTL_GENERIC", bytes);
 
         /// <summary>
         /// Set the programmable voltage on the specified pin/resource of the DLC
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryIoCtlSetProgVoltage(PduIoCtlOfTypeProgVoltage value)
+        /// <param name="pduIoCtlOfTypeProgVoltage"></param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlSetProgVoltage(PduIoCtlOfTypeProgVoltage pduIoCtlOfTypeProgVoltage)
         {
             lock ( _sync )
             {
-                return _vci.TryIoCtlGeneral("PDU_IOCTL_SET_PROG_VOLTAGE", value);
+                return _vci.TryIoCtlGeneral("PDU_IOCTL_SET_PROG_VOLTAGE", pduIoCtlOfTypeProgVoltage);
             }
         }
 
 
         /// <summary>
-        /// Set Ethernet switch state  
+        /// Set Ethernet switch state
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="ethernetActivationPin"></param>
+        /// <param name="ethernetActDlcPinNumber"></param>
+        /// <returns>true or false</returns>
         public bool TryIoCtlSetEthSwitchState(PduExEthernetActivationPin ethernetActivationPin, uint ethernetActDlcPinNumber = 8)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral("PDU_IOCTL_SET_ETH_SWITCH_STATE", ethernetActivationPin, ethernetActDlcPinNumber);
             }
@@ -341,13 +382,13 @@ namespace ISO22900.II
 
 
         /// <summary>
-        /// "PDU_IOCTL_VEHICLE_ID_REQUEST 
+        /// PDU_IOCTL_VEHICLE_ID_REQUEST
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
         public bool TryIoCtlVehicleIdRequest(PduIoCtlVehicleIdRequestData vehicleIdRequestData)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral("PDU_IOCTL_VEHICLE_ID_REQUEST", vehicleIdRequestData);
             }
@@ -364,7 +405,7 @@ namespace ISO22900.II
         /// <returns></returns>
         public bool TryIoCtlGetDiagnosticPowerMode(uint logicalAddress, uint doIpCtrlTimeout, out uint valueOut)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral("PDU_IOCTL_GET_DIAGNOSTIC_POWER_MODE", logicalAddress, doIpCtrlTimeout, out valueOut);
             }
@@ -379,11 +420,13 @@ namespace ISO22900.II
         /// <returns></returns>
         public bool TryIoCtlGetEntityStatus(uint logicalAddress, uint doIpCtrlTimeout, out PduIoCtlEntityStatusData valueOut)
         {
-            lock (_sync)
+            lock ( _sync )
             {
                 return _vci.TryIoCtlGeneral("PDU_IOCTL_GET_ENTITY_STATUS", logicalAddress, doIpCtrlTimeout, out valueOut);
             }
         }
+
+        #endregion
 
         /// <summary>
         ///     Attempts to restore the status of the VCI

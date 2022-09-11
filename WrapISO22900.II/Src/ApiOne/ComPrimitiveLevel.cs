@@ -124,14 +124,14 @@ namespace ISO22900.II
 
         public PduExStatusData Status()
         {
-            return _cll.Vci.DiagPduApiOneSysLevel.Nwa.PduGetStatus(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
+            return _cll.Vci.SysLevel.Nwa.PduGetStatus(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
         }
 
         public void Cancel()
         {
             if ( _needsToBeCanceled )
             {
-                _cll.Vci.DiagPduApiOneSysLevel.Nwa.PduCancelComPrimitive(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
+                _cll.Vci.SysLevel.Nwa.PduCancelComPrimitive(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
                 _needsToBeCanceled = false;
                 Cancel();
             }
@@ -156,7 +156,7 @@ namespace ISO22900.II
                 {
                     try
                     {
-                        _cll.Vci.DiagPduApiOneSysLevel.Nwa.PduCancelComPrimitive(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
+                        _cll.Vci.SysLevel.Nwa.PduCancelComPrimitive(_cll.ModuleHandle, _cll.ComLogicalLinkHandle, ComPrimitiveHandle);
                         Cancel();
                     }
                     catch ( Iso22900IIException )

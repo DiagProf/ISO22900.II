@@ -89,9 +89,9 @@ namespace ISO22900.II
             }
         }
 
-        public unsafe void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(PduIoCtlVehicleIdRequestIpAddrInfoData cd)
+        public unsafe void VisitConcretePduIoCtlVehicleIdRequestIpAddrInfoData(IpAddressInfo cd)
         {
-            MemorySize += sizeof(PDU_IP_ADDR_INFO) + cd.Address.Length;
+            MemorySize += sizeof(PDU_IP_ADDR_INFO) + cd.GetAddressBytes().Length;
         }
 
         public unsafe void VisitConcretePduIoCtlOfTypeEthSwitchState(PduIoCtlOfTypeEthSwitchState cd)

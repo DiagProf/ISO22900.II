@@ -85,7 +85,7 @@ public static async Task Main(string[] args)
         //take the first API
         var apiShortName = allInstalledPduApis.First().ShortName;
         using ( var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper
-                   .FullyQualifiedLibraryFileNameFormShortName(apiShortName)) )
+                   .FullLibraryPathFormApiShortName(apiShortName)) )
         {
             //without parameters means the first VCI that is found
             using ( var vci = api.ConnectVci() )
@@ -215,8 +215,8 @@ namespace ISO22900.II.SophisticatedExample
         static Module ConnectVci()
         {
             //Use this if you have a VCI that cannot read voltage or ignition status. 
-            //var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(UserPreferencesStore.ApiShortName),ApiModifications.VOLTAGE_FIX|ApiModifications.IGNITION_FIX);
-            var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(UserPreferencesStore.ApiShortName));
+            //var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullLibraryPathFormApiShortName(UserPreferencesStore.ApiShortName),ApiModifications.VOLTAGE_FIX|ApiModifications.IGNITION_FIX);
+            var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullLibraryPathFormApiShortName(UserPreferencesStore.ApiShortName));
             return api.ConnectVci(UserPreferencesStore.VciName);
         }
 
@@ -351,7 +351,7 @@ namespace ISO22900.II.SophisticatedExample
 
             foreach (var rootFileItem in DiagPduApiHelper.InstalledMvciPduApiDetails())
             {
-                using (var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullyQualifiedLibraryFileNameFormShortName(rootFileItem.ShortName)))
+                using (var api = DiagPduApiOneFactory.GetApi(DiagPduApiHelper.FullLibraryPathFormApiShortName(rootFileItem.ShortName)))
                 {
                     foreach (var vciBehindApi in api.PduModuleDataSets)
                     {

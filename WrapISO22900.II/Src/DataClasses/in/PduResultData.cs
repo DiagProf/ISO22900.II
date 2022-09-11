@@ -73,18 +73,18 @@ namespace ISO22900.II
         public uint StartMsgTimestamp { get; }
 
         /// <summary>
-        /// If NULL, no extra information is attached to the response structure.
-        /// This feature is enabled by setting the ENABLE_EXTRA_INFO bit in the TxFlag for
-        /// the ComPrimitiveLevel (See TxFlag definition section)
-        /// </summary>
-        public bool IsExtraInfo { get=> ExtraInfoHeaderBytes.Length != 0 | ExtraInfoFooterBytes.Length != 0; }
-
-        /// <summary>
         /// if RawMode then the data includes header bytes, checksum, message data bytes, and extra data, if any.
         /// In RawMode -> For ISO 15765, ISO11898 and SAE J1939, the first 4 bytes are the CAN ID (11 bit or 29 bit) followed by a possible extended address byte
         /// </summary>
         public byte[] DataBytes { get; }
 
+
+        /// <summary>
+        /// If false, no extra information is attached to the response structure.
+        /// This feature is enabled by setting the ENABLE_EXTRA_INFO bit in the TxFlag for
+        /// the ComPrimitiveLevel (See TxFlag definition section)
+        /// </summary>
+        public bool IsExtraInfo { get => ExtraInfoHeaderBytes.Length != 0 | ExtraInfoFooterBytes.Length != 0; }
 
         //The next 2 parameters actually come from the c structure PDU_EXTRA_INFO
         //this structure is omitted on the c # side

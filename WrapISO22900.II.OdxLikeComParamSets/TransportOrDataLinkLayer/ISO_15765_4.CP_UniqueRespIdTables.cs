@@ -35,6 +35,12 @@ namespace ISO22900.II.OdxLikeComParamSets.TransportOrDataLinkLayer
             {
                 get
                 {
+                    if (Exists(table => table.CP_ECULayerShortName.Equals("")))
+                    {
+                        var defaultSheet = Find(table => table.CP_ECULayerShortName.Equals(""));
+                        defaultSheet.CP_ECULayerShortName = cpEcuLayerShortName;
+                    }
+
                     if ( !Exists(table => table.CP_ECULayerShortName.Equals(cpEcuLayerShortName)) )
                     {
                         Add(new ISO_15765_4.CpIso157654UniqueRespIdTable(cpEcuLayerShortName, HashAlgo));

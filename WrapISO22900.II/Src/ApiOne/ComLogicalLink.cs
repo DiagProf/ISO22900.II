@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
@@ -45,6 +46,8 @@ namespace ISO22900.II
         private readonly string _protocolName;
         private readonly Dictionary<string, PduComParam> _cpParamBackupDic = new();
         private readonly List<KeyValuePair<uint, string>> _dlcPinToTypeNamePairs;
+        private readonly PduFlagDataCllCreateFlag _cllCreateFlag;
+        private readonly uint _resourceId;
 
         private readonly Module _module;
         
@@ -59,11 +62,13 @@ namespace ISO22900.II
         private readonly Dictionary<uint, Dictionary<string, PduComParam>> ecuUniqueRespDatasBackup = new();
 
         private ComLogicalLinkLevel _cll;
-        private bool isComLogicalLinkConnected; //track the ComParams only if the cll is offline
-        private bool isPduStartComUsed;
-        private byte[] pduStartComCopData;
-        private int pduStartComReceiveCycles;
-        private int pduStartComSendCycles;
+        private bool _isComLogicalLinkConnected; //track the ComParams only if the cll is offline
+        private bool _isPduStartComUsed;
+        private byte[] _pduStartComCopData;
+        private int _pduStartComReceiveCycles;
+        private int _pduStartComSendCycles;
+       
+
 
         private event EventHandler<CallbackEventArgs> BackingUpEventHandlerDataLost;
 
@@ -112,13 +117,31 @@ namespace ISO22900.II
         }
 
         internal ComLogicalLink(Module module, ComLogicalLinkLevel cll, string busTypeName, string protocolName,
-            List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
+            List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs, PduFlagDataCllCreateFlag cllCreateFlag)
         {
             _module = module;
             _cll = cll;
+
+            //Backup items which needed inside function TryToRecover
+            //Todo should I deep copy all parameters? To ensure that no subsequent changes are made to the objects.
             _busTypeName = busTypeName;
             _protocolName = protocolName;
             _dlcPinToTypeNamePairs = dlcPinToTypeNamePairs;
+            _cllCreateFlag = (PduFlagDataCllCreateFlag)cllCreateFlag.Clone();
+            _resourceId = PduConst.PDU_ID_UNDEF;
+        }
+
+        internal ComLogicalLink(Module module, ComLogicalLinkLevel cll, uint resourceId, PduFlagDataCllCreateFlag cllCreateFlag)
+        {
+            _module = module;
+            _cll = cll;
+
+            //Backup items which needed inside function TryToRecover
+            _busTypeName = String.Empty;
+            _protocolName = String.Empty;
+            _dlcPinToTypeNamePairs = null;
+            _cllCreateFlag = (PduFlagDataCllCreateFlag)cllCreateFlag.Clone();
+            _resourceId = resourceId;
         }
 
         public ComPrimitive StartCop(PduCopt pduCopType, TimeSpan delayTimeMs = default, uint copTag = 0)
@@ -175,10 +198,10 @@ namespace ISO22900.II
                 if ( pduCopType == PduCopt.PDU_COPT_STARTCOMM )
                 {
                     //Backup the StartCom data 
-                    isPduStartComUsed = true;
-                    pduStartComSendCycles = copCtrlData.NumSendCycles;
-                    pduStartComReceiveCycles = copCtrlData.NumReceiveCycles;
-                    pduStartComCopData = copData;
+                    _isPduStartComUsed = true;
+                    _pduStartComSendCycles = copCtrlData.NumSendCycles;
+                    _pduStartComReceiveCycles = copCtrlData.NumReceiveCycles;
+                    _pduStartComCopData = copData;
                 }
 
                 return new ComPrimitive(this, comPrimitiveLevel, pduCopType, copData, copCtrlData, copTag);
@@ -190,7 +213,7 @@ namespace ISO22900.II
             lock ( _sync )
             {
                 _cll.Connect();
-                isComLogicalLinkConnected = true;
+                _isComLogicalLinkConnected = true;
             }
         }
 
@@ -198,7 +221,7 @@ namespace ISO22900.II
         {
             lock ( _sync )
             {
-                isComLogicalLinkConnected = false;
+                _isComLogicalLinkConnected = false;
                 _cll.Disconnect();
             }
         }
@@ -279,7 +302,7 @@ namespace ISO22900.II
         private void StoreComParam(PduComParam cp)
         {
             //we no longer save ComParams when the CLL is connected (online).
-            if ( !isComLogicalLinkConnected )
+            if ( !_isComLogicalLinkConnected )
             {
                 if ( !_cpParamBackupDic.TryAdd(cp.ComParamShortName, cp) )
                 {
@@ -303,7 +326,7 @@ namespace ISO22900.II
                 var retCp = _cll.SetUniqueIdComParamValue(uniqueRespIdentifier, name, value);
                 if ( retCp != null )
                 {
-                    if ( !isComLogicalLinkConnected )
+                    if ( !_isComLogicalLinkConnected )
                     {
                         if ( ecuUniqueRespDatasBackup.ContainsKey(uniqueRespIdentifier) )
                         {
@@ -331,7 +354,7 @@ namespace ISO22900.II
                 var retCpList = _cll.SetUniqueIdComParamValues(uniqueRespIdentifier, listComParamNameToValuePairs);
                 if ( retCpList.Any() )
                 {
-                    if ( !isComLogicalLinkConnected )
+                    if ( !_isComLogicalLinkConnected )
                     {
                         foreach ( var retCp in retCpList )
                         {
@@ -365,7 +388,7 @@ namespace ISO22900.II
                 _cll.SetUniqueRespIdTable(ecuUniqueRespDatas);
 
                 //we no longer save ComParams when the CLL is connected (online)
-                if ( !isComLogicalLinkConnected )
+                if ( !_isComLogicalLinkConnected )
                 {
                     foreach ( var ecuUniqueRespData in ecuUniqueRespDatas )
                     {
@@ -587,7 +610,9 @@ namespace ISO22900.II
                         }
 
                         //this is where the magic happens.. the new instance is assigned under the hood
-                        _cll = _module.OpenComLogicalLink(_busTypeName, _protocolName, _dlcPinToTypeNamePairs)._cll;
+
+                        _cll = _resourceId == PduConst.PDU_ID_UNDEF ? _module.OpenComLogicalLink(_busTypeName, _protocolName, _dlcPinToTypeNamePairs, _cllCreateFlag)._cll : _module.OpenComLogicalLink(_resourceId, _cllCreateFlag)._cll;
+
 
                         if ( BackingUpEventHandlerEventFired != null )
                         {
@@ -620,18 +645,33 @@ namespace ISO22900.II
                         _cll.SetUniqueRespIdTable(ecuUniqueRespDatas);
 
                         _cll.Connect();
-                        if ( isPduStartComUsed )
+                        if ( _isPduStartComUsed )
                         {
-                            var comPrim = StartCop(PduCopt.PDU_COPT_STARTCOMM, pduStartComSendCycles, pduStartComReceiveCycles, pduStartComCopData);
+                            var comPrim = StartCop(PduCopt.PDU_COPT_STARTCOMM, _pduStartComSendCycles, _pduStartComReceiveCycles, _pduStartComCopData);
                             var queue = comPrim.WaitForCopResult();
                         }
 
-                        _logger.Log(LogLevel.Information, "ComLogicalLink recovering done for ComLogicalLink: {_stackName}",
-                            _protocolName + "_on_" + _busTypeName);
+                        if ( _resourceId == PduConst.PDU_ID_UNDEF )
+                        {
+                            _logger.Log(LogLevel.Information, "ComLogicalLink recovering done for ComLogicalLink: {_stackName}",
+                                _protocolName + "_on_" + _busTypeName);
+                        }
+                        else
+                        {
+                            _logger.Log(LogLevel.Information, "ComLogicalLink recovering done for ComLogicalLink: {_resourceId}", _resourceId);
+                        }
                     }
 
-                    _logger.Log(LogLevel.Information, "ComLogicalLink is back or no reason to recover for ComLogicalLink: {_stackName}",
-                        _protocolName + "_on_" + _busTypeName);
+
+                    if ( _resourceId == PduConst.PDU_ID_UNDEF )
+                    {
+                        _logger.Log(LogLevel.Information, "ComLogicalLink is back or no reason to recover for ComLogicalLink: {_stackName}",
+                            _protocolName + "_on_" + _busTypeName);
+                    }
+                    else
+                    {
+                        _logger.Log(LogLevel.Information, "ComLogicalLink is back or no reason to recover for ComLogicalLink: {_resourceId}", _resourceId);
+                    }
                 }
 
                 catch ( Iso22900IIExceptionBase ex )
@@ -658,7 +698,7 @@ namespace ISO22900.II
 
         public void Dispose()
         {
-            isComLogicalLinkConnected = false;
+            _isComLogicalLinkConnected = false;
             if ( BackingUpEventHandlerEventFired != null )
             {
                 foreach ( var d in BackingUpEventHandlerEventFired.GetInvocationList() )

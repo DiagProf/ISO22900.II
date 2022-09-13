@@ -56,6 +56,7 @@ namespace ISO22900.II.Demo
             AddPage(new PageUseCaseSimpleSendAndReceiveDoIpWithPhysicalVci(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveObd2OverCan(this));
+            AddPage(new PageUseCaseSimpleSendAndReceiveObd2OverKline(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveWithOptionString(this));
             AddPage(new PageUseCaseEventAllOver(this));
             AddPage(new PagePlayground(this));

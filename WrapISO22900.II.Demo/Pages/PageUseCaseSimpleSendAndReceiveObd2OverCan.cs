@@ -82,7 +82,7 @@ namespace ISO22900.II.Demo
                         //for CAN OBD 11bit
                         for (byte i = 0; i < 8; i++)
                         {
-                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier:  i+1u,   //<- this is the UniqueRespIdentifier
+                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier:  i,   //<- this is the UniqueRespIdentifier
                             new List<PduComParam>
                             {
                                 DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
@@ -141,9 +141,9 @@ namespace ISO22900.II.Demo
                             //Here we build the UniqueRespIdTable (is a List of PduEcuUniqueRespData) for OBD on CAN with 29–bit CAN Id size
                             //In case of functional addressing. The UniqueRespIdentifier becomes more interesting than usual in physical addressing
                             //because you can use it (the UniqueRespIdentifier) to find out the ECUs that have responded to the functional request
-                            for (byte i = 0; i < 255; i++)
+                            for (uint i = 0; i < 256; i++)
                             {
-                                ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i+1u,   //<- this is the UniqueRespIdentifier
+                                ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i,   //<- this is the UniqueRespIdentifier
                                 new List<PduComParam>
                                 {
                                     DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
@@ -231,7 +231,7 @@ namespace ISO22900.II.Demo
                                     {
                                         var uniqueRespIdentifier = evItemResult.ResultData.UniqueRespIdentifier;
 
-                                        responseString = $"ECU: {uniqueRespIdentifier}  Data: ";
+                                        responseString += $"ECU: {uniqueRespIdentifier}  Data: ";
                                         responseString += BitConverter.ToString(evItemResult.ResultData.DataBytes);
                                         responseTime = result.ResponseTime();
 

@@ -88,20 +88,8 @@ namespace ISO22900.II.Demo
             //      
             //      Keybytes: 0x8FE9,0x8F6B,0x8F6D,0x8FEF mean protocol iso 9141-2
             // 
-            //  What important to understand is that with option 2 and 3, the D-PDU API can't simply switch the protocols itself.
-            //  This is because some parameters can be set in advance (before the first ComPrimitive is send) only for one protocol or another.
-            //  e.g. 
-            //  +===============================+=============+==============+
-            //  | ComParam                      | ISO 9141-2  | ISO 14230-4  |
-            //  +===============================+=============+==============+
-            //  | CP_FuncReqFormatPriorityType  | 0x68        | 0xC0         |
-            //  +-------------------------------+-------------+--------------+
-            //  | CP_FuncReqTargetAddr          | 0x6A        | 0x33         |
-            //  +-------------------------------+-------------+--------------+
-            //  | CP_FuncRespFormatPriorityType | 0x48        | 0x80         |
-            //  +-------------------------------+-------------+--------------+
-            //  That's why option 2 (or 3, depending on what you want to try first) must be tried first
-            //  and if the keybytes don't match, option 3 again (or 2, depending on what you want to try second).
+            //  What important to understand is that with option 2 and 3, the D-PDU API can simply switch the parameters in UniqueRespIdTable itself.
+            //  but for the request parameters we have to do it
 
 
             using ( var api = DiagPduApiOneFactory.GetApi(
@@ -113,7 +101,7 @@ namespace ISO22900.II.Demo
                     //Define the protocol behavior
                     //These names (the strings) come from ODX or ISO 22900-2
                     var busTypeName = "ISO_9141_2_UART";
-                    var protocolName = "ISO_OBD_on_K_Line"; //"ISO_15031_5"
+                    var protocolName = "ISO_OBD_on_K_Line";
                     var dlcPinData = new Dictionary<uint, string> { { 7, "K" }, { 15, "L" } };
 
 
@@ -132,6 +120,17 @@ namespace ISO22900.II.Demo
                         link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x33);
                         link.SetComParamValueViaGet("CP_TesterSourceAddress", 0xF1);
 
+                        //TesterPresent behavior
+                        //0 = Send on periodic interval defined by CP_TesterPresentTime (periodically independent of other requests)
+                        //1 = Send when bus has been idle for CP_TesterPresentTime(after the last request)
+                        link.SetComParamValueViaGet("CP_TesterPresentSendType", 1); 
+                    
+                        link.SetComParamValueViaGet("CP_TesterPresentMessage", new byte[] { 0x01, 0x00 });
+                        link.SetComParamValueViaGet("CP_TesterPresentReqRsp", 1); //0 = no response, 1 = response expected
+                        link.SetComParamValueViaGet("CP_TesterPresentExpPosResp", new byte[] { 0x41, 0x00 });
+                        link.SetComParamValueViaGet("CP_TesterPresentExpNegResp", new byte[] { 0x7F, 0x01 });
+                        link.SetComParamValueViaGet("CP_TesterPresentTime", 2000000);
+
                         var ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
                         for ( uint i = 0; i < 256; i++ )
                         {
@@ -145,6 +144,7 @@ namespace ISO22900.II.Demo
                                 }
                             ));
                         }
+
                         link.SetUniqueRespIdTable(ecuUniqueRespDatas);
                         link.Connect();
 
@@ -178,8 +178,6 @@ namespace ISO22900.II.Demo
                                     isOBDonKline = false;
                                     responseString = "You should never come here. ISO 14230-4 with fast wake up is not working for OBD";
                                 }
-                                var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM);
-                                copStopComm.WaitForCopResult();
                             }
 
                             AnsiConsole.WriteLine($"{responseString}");
@@ -188,12 +186,11 @@ namespace ISO22900.II.Demo
                         #endregion
 
 
-                        #region 5BaudWakeUpAndandAssumingItIsISO142304
+                        #region 5BaudWakeUp
 
                         if ( isOBDonKline == false )
                         {
                             link.Disconnect();
-                            
 
                             //try with 5Baud wake up
                             //just change some settings, the rest can be taken over by fastinit
@@ -201,21 +198,6 @@ namespace ISO22900.II.Demo
                             link.SetComParamValueViaGet("CP_5BaudMode", 0);
                             link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
 
-                            ecuUniqueRespDatas.Clear();
-                            ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
-                            for (uint i = 0; i < 256; i++)
-                            {
-                                ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
-                                    new List<PduComParam>
-                                    {
-                                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0xF1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    }
-                                ));
-                            }
-                            link.SetUniqueRespIdTable(ecuUniqueRespDatas);
                             link.Connect();
 
                             //Use StartComm to start tester present behavior
@@ -242,75 +224,23 @@ namespace ISO22900.II.Demo
                                         isOBDonKline = true;
                                         responseString = "ISO 14230-4 with 5Baud wake up is working for OBD";
                                     }
-                                    else
+                                    else if ( IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
                                     {
-                                        isOBDonKline = false;
-                                        responseString = "could be Iso 9141-2";
-                                    }
+                                        //using (var copRestore = link.StartCop(PduCopt.PDU_COPT_RESTORE_PARAM))
+                                        //{
+                                        //    copRestore.WaitForCopResult();
+                                        //}
 
-                                    var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM);
-                                    copStopComm.WaitForCopResult();
-                                }
+                                        //the keybytes say ISO9141-2 so we have to adjust a few request parameters.
+                                        //The response parameters were automatically adjusted.This is because protocol string "ISO_OBD_on_K_Line" was used.
+                                        link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0x68);
+                                        link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x6A);
+                                        //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
+                                        using ( var copUpdate = link.StartCop(PduCopt.PDU_COPT_UPDATEPARAM) )
+                                        {
+                                            copUpdate.WaitForCopResult();
+                                        }
 
-                                AnsiConsole.WriteLine($"{responseString}");
-                            }
-                        }
-
-                        #endregion
-
-                        #region 5BaudWakeUpAndandAssumingItIsISO91412
-
-                        if (isOBDonKline == false)
-                        {
-                            link.Disconnect();
-                            
-                            //try with 5Baud wake up ISO91412
-                            //just change some settings, the rest can be taken over by 5 Baud init and iso14230-4
-                            link.SetComParamValueViaGet("CP_5BaudAddressFunc", 0x33); //Set the functional request address if we use 11bit CAN ID
-                            link.SetComParamValueViaGet("CP_5BaudMode", 0);
-                            link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
-                            link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0x68);
-                            link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x6A);
-
-                            ecuUniqueRespDatas.Clear();
-                            for (uint i = 0; i < 256; i++)
-                            {
-                                ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
-                                    new List<PduComParam>
-                                    {
-                                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x48, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0x6B, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    }
-                                ));
-                            }
-                            
-                            link.SetUniqueRespIdTable(ecuUniqueRespDatas);
-                            link.Connect();
-
-                            //Use StartComm to start tester present behavior
-                            using (var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 0, -2, new byte[] { }))
-                            {
-                                var result = copStartComm.WaitForCopResult();
-
-                                var responseString = string.Empty;
-
-
-                                if (result.PduEventItemErrors().Count > 0)
-                                {
-                                    foreach (var error in result.PduEventItemErrors())
-                                    {
-                                        responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
-                                    }
-
-                                    responseString = "Error: " + responseString + " ISO 9141-2 with 5Baud wake up is not working for OBD";
-                                }
-                                else
-                                {
-                                    var listOfKeyBytes = GetListOfKeyBytes(result);
-                                    if (IsListOfKeyBytesIso9141_2(listOfKeyBytes))
-                                    {
                                         isOBDonKline = true;
                                         responseString = "ISO 9141-2 with 5Baud wake up is working for OBD";
                                     }
@@ -319,8 +249,6 @@ namespace ISO22900.II.Demo
                                         isOBDonKline = false;
                                         responseString = "No OBD on K-line";
                                     }
-                                    var copStopComm = link.StartCop(PduCopt.PDU_COPT_STOPCOMM);
-                                    copStopComm.WaitForCopResult();
                                 }
 
                                 AnsiConsole.WriteLine($"{responseString}");
@@ -331,6 +259,10 @@ namespace ISO22900.II.Demo
 
                         if ( isOBDonKline == true )
                         {
+                            //if you like you can see which baudrate is used. Because at 5 baud wakeup the ECUs baud rate is determined.
+                            var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
+                            AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
+
                             //Use StartComm to start tester present behavior
                             using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte[] { 0x01, 0x00 }) )
                             {
@@ -402,11 +334,12 @@ namespace ISO22900.II.Demo
             foreach ( var evItemResult in result.PduEventItemResults() )
             {
                 AnsiConsole.WriteLine($"KeyBytes Raw:{BitConverter.ToString(evItemResult.ResultData.DataBytes)}");
-                
+
                 if ( evItemResult.ResultData.DataBytes.Length == 2 )
                 {
                     listOfKeyBytes.Add((ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]));
-                    AnsiConsole.WriteLine($"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
+                    AnsiConsole.WriteLine(
+                        $"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
                 }
             }
 

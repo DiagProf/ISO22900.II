@@ -263,12 +263,6 @@ namespace ISO22900.II.Demo
                             var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
                             AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
 
-                            //Use StartComm to start tester present behavior
-                            using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte[] { 0x01, 0x00 }) )
-                            {
-                                copStartComm.WaitForCopResult();
-                            }
-
 
                             var request = new byte[] { 0x01, 0x00 };
                             for ( var i = 0x00; i < 0x20; i++ )

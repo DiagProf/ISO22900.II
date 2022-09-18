@@ -4,7 +4,18 @@ namespace ISO22900.II
 {
     public class PduFlagDataCllCreateFlag : ICloneable
     {
-        public byte[] FlagData { get; private set; } = new byte[4] {0x00, 0x00, 0x00, 0x00};
+        /// <summary>
+        /// explanation why it is better to have the default 0x40 instead of 0x00
+        /// 0x40 is the ChecksumMode flag
+        /// The nature of the D-PDU API is to drive the vehicle protocols. That's why the D-PDU API inherently does the checksum.
+        /// But if you e.g. want more info about the deep layers you can turn on the RawMode
+        /// But now many are surprised that e.g. K-line protocols no longer work
+        /// This is because the ChecksumMode flag is only evaluated when RawMode is true
+        /// So from the user's point of view, you only want to turn on the RawMode for some protocols,
+        /// but you forget that you also have to turn on ChecksumMode so that everything works as before.
+        /// Therefore it is better that ChecksumMode is always set to true by default.
+        /// </summary>
+        public byte[] FlagData { get; private set; } = new byte[4] {0x40, 0x00, 0x00, 0x00};
 
         /// <summary>
         ///     Enables the ability to pass through entire received messages, unchanged, through the datalink (transmitted and

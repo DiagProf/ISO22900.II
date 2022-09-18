@@ -44,8 +44,13 @@ namespace ISO22900.II.OdxLikeComParamSets
             Tpl.SetUpComParamOfTypeUniqueRespIdTable(link);
             Tpl.SetUpComParam(link);
             App.SetUpComParam(link);
-            
+        }
 
+        public void SetUpLogicalLinkComParamsOnly(ComLogicalLink link)
+        {
+            Bus.SetUpComParam(link);
+            Tpl.SetUpComParam(link);
+            App.SetUpComParam(link);
         }
     }
 }

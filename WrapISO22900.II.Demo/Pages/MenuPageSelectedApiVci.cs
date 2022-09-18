@@ -43,6 +43,7 @@ namespace ISO22900.II.Demo
                 new Option("Use case simple send and receive", () => program.NavigateTo<PageUseCaseSimpleSendAndReceive>()),
                 new Option("Use case simple send and receive use K-Line", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveKline>()),
                 new Option("Use case simple send and receive use TP2.0 (SAE J2819)", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveTP20>()),
+                new Option("Use case simple send and receive use DoIP version 1 (obsolete) without physical Vci", () => program.NavigateTo <PageUseCaseSimpleSendAndReceiveDoIpVersion1p0WithoutPhysicalVci>()),
                 new Option("Use case simple send and receive use DoIP without physical Vci", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveDoIpWithoutPhysicalVci>()),
                 new Option("Use case simple send and receive use DoIP with physical Vci[[does not work yet!!]]", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveDoIpWithPhysicalVci>()),
                 new Option("Use case simple send and receive with option string", () => program.NavigateTo<PageUseCaseSimpleSendAndReceiveWithOptionString>()),

@@ -4,6 +4,16 @@ _[![ISO22900.II-Sharp NuGet Version](https://img.shields.io/nuget/v/ISO22900.II-
 
 ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-2 spec library (also called D-PDU-API) and lets you deal with the important stuff.
 
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [A bit of history with philosophy](#a bit of history with philosophy)
+3. [TODO's](#tODO's)
+4. [Usage](#usage)
+5. [FAQ](#faq)
+
+## Introduction
+
 The [ISO 22900-2](https://www.iso.org/standard/62490.html) friendly name is D-PDU-API both are synonymous for a software interface description. D-PDU-API can live alone but was normally designed in use with ISO 22900-X and ISO 22901-X in mind. All this spec libraries has the goal to make automotive diagnostic data interchangeable. In case of ISO 22900-2 this correctly means modular vehicle communication interface (MVCI or VCI) can be exchanged through MVCI from another manufacturer if both support ISO 22900-2.
 
 Extract from 22900-2: *"The purpose of ISO 22900-2 is to ensure that diagnostic and reprogramming applications from any vehicle or tool manufacturer can operate on a common software interface and can easily exchange MVCI protocol module implementations."*
@@ -33,8 +43,6 @@ If you look at the around 29 functions from ISO22900-2 it is initially difficult
 5. Now i built the functionality with this wrapper and called it ApiOne. And that's what I meant above, you could now use the wrapper and build another API. But the next thoughts relate to ApiOne.
 6. The ApiOne is divided into 4 levels. System-Level, Module-Level, ComLogicalLink-Level and ComPrimitive-Level. These different levels encapsulate the respective functionality and of course also hide the handles that exist in the original C API.
 
-
-
 For the next things we need a bit more ‘why’ first: For the mechanic in the workshop with hands like a bear and muscles like a lion, a VCI is just one tool of many like a hammer. And that's why they expect the diagnostic tester, VCI and the connection between both is robust like a hammer. Some developers do not understand this when they touch the VCI at their desks with velvet gloves. And that's why some software developers also believe that a loss of connection between the diagnostic tester and the VCI is an edge case. But in the real world, it's pretty much a common use case. ISO22900-2 also describes what should happen during VCI lost. But there are big differences between the API vendors. You could also say at this point "That separates the wheat from the chaff". But back how the ApiOne takes this point into account. 
 
 In a more sophisticated application it looks something like this:
@@ -46,9 +54,7 @@ In a more sophisticated application it looks something like this:
 
 The use case is now you are doing something with the com logical link(s)  e.g. read live data or  read out the vehicle ignition status or vehicle battery voltage from the VCI directly. And now it comes to a VCI lost. Because, for example, the VCI was disconnected from OBDII connector or the USB, LAN, Wifi or Bluetooth connection to the VCI was interrupted. Now the ISO22900-II says in this case the com logical links and the VCI are no longer valid (in a nutshell). Which also means instances of VCI and com logical link are also no longer valid. But the biggest problem at this point is. If I want to make a new connection attempt to the VCI. I need to go back to the point in the code where I have an instance of the API. To avoid these twists the ApiOne have the internal classes ModuleLevel, ComLogicalLinkLevel, ComPrimitiveLevel represents real instances but the user of the ApiOne only has access to instances of Module, ComLogicalLink, ComPrimitive which are like wrappers. The trick is now… if there is a VCI lost and an exception is thrown somewhere you can catch the exception (evaluate it a bit more if you like) and then use TryToRecover to let the ApiOne try to establish a new connection. Under the hood, the ApiOne destroys/dispose the old instances and when the connection is back, new instances are created. However, the ApiOne user does not notice this because he is working on the wrapper instances and these are retained.
 
-The [SophisticatedExample](## Usage sophisticated example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
-
-
+The [SophisticatedExample](#usage sophisticated example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
 
 7. Following point number 6 and the explanation, there is an internal representation for Module, ComLogicalLink and ComPrimitive and one that is passed to the outside. 
    
@@ -387,3 +393,90 @@ namespace ISO22900.II.SophisticatedExample
     }
 }
 ```
+
+## FAQ
+
+**Question:** DoIP and D-PDU API love each other?
+
+**Answer:** DoIP is like an elephant in a china shop. No kidding you can really see how the 1st generation of developers on the ISO22900-2 standard tried to organize the various steps of initialization in such a way that the connection establishment always follows the same pattern to the outside independent of the protocol. The 2nd generation only tried to bring DoIP quickly into ISO 22900-2 without the ambition to adapt it to the known behavior as far as possible. The fact that DoIP is the elephant is always justified with the bus topology that is needed for DoIP. But that is only half the stroy.
+
+
+
+**Q:** What is the right pin setup for DoIP (Diagnostic over internet protocol)?
+
+**A:** Short answer this is a nightmare. And I think that comes from a lot of factors (very long answer). 
+
+One is that the connection is not established when the ComLogicalLink connect() is executed as it's the case with other protocols but with DoIP much earlier, e.g. the Address Resolution Protocol (ARP) is running. This makes the transfer of the pin description when building the ComLogicalLink almost pointless.
+
+**Let's look at the hardware side first.**
+
+ The standards have always reserved pins for manufacturer-specific tasks.
+
+Extract from 15031-3 or SAEJ1962:  *"6.3 Vehicle connector contact allocation
+6.3.1 Vehicle connector contacts 1, 3, 8, 9, 11, 12 and 13
+Allocation of Contacts 1, 3, 8, 9, 11, 12 and 13 of the vehicle connector is left at the discretion of the vehicle manufacturer. "*
+
+With DoIP, the vehicle manufacturers recognized that these were the only pins that were not yet standardized. And that's why we were still free for DoIP. Of course, many manufacturers, especially in older vehicles, had already given some pins a different task than DoIP. But in the course of the task "getting a standard for DoIP". The manufacturers have agreed on "2 options for pinout" and the "Activation line" for DoIP. The Battery + pin is connected to the Activation line via a resistor. The control unit (e.g. gateway) in the vehicle recognizes via the "Activation line" that it should switch ethernet on the diagnostic plug (everything in the vehicle, mind you). This behavior is intended to protect the ethernet electronics in the vehicle, e.g. if old VCIs are plugged into the vehicle that have already done something else on these pins and also from short circuits that could occur with everything that can be plugged into the OBD plug these days.
+
+There are 2 options how DoIP can be routed to the 16-pin OBD connector. 
+
+| OBD pinout | Option 1        | Option 2        |
+| ---------- | --------------- | --------------- |
+| 1          |                 | RX+             |
+| 3          | RX+             |                 |
+| 8          | Activation line | Activation line |
+| 9          |                 | RX-             |
+| 11         | RX-             |                 |
+| 12         | TX+             | TX+             |
+| 13         | TX-             | TX-             |
+| 16         | Battery +       | Battery +       |
+
+*(only the pins required for DoIP are listed)*
+
+Activation line is not a line over which data is transmitted, but only for protection as described above. Therefore it is not considered when opening the ComLoicalLogiclLink.
+
+You can see in the table aboveTX- and TX+ are fixed. Only RX- and RX+ make the difference. 
+
+
+
+**Now how the pinout should be described on the software side.**
+
+The D-PDU API needs a description for each pin. The ISO22900-2 was only expanded to include these underlined DoIP entries when some were already done with their development.
+
+| Short name     | Pin type description (example protocol usage)                                        |
+| -------------- | ------------------------------------------------------------------------------------ |
+| HI             | Differential Line - High (e.g. DW_CAN High)                                          |
+| LOW            | Differential Line - Low (e.g. DW_CAN Low), *<u>DoIP TX_Minus_Line*</u>               |
+| K              | UART K-Line (e.g. KWP2000)                                                           |
+| L              | UART L-Line (e.g. ISO 9141-2)                                                        |
+| TX             | UART uni-directional transmit (e.g. SAE J2190), *<u>DoIP TX_Plus_Line</u>*           |
+| RX             | UART uni-directional receive (e.g. SAE J2190), *<u>DoIP RX_Plus_Line</u>*            |
+| PLUS           | SAE J1850 Plus (e.g. SAE J1850 VPW and SAE J1850 PWM)                                |
+| MINUS          | SAE J1850 Minus (e.g. SAE J1850 PWM), *<u>DoIP RX_Minus_Line</u>*                    |
+| SINGLE         | Single wire [e.g. SW_CAN, and UART bi-directional transmit/receive (e.g. SAE J2740)] |
+| PROGV          | Pin to set the programmable voltage on DLC                                           |
+| IGNITION_CLAMP | Pin to read the ignition sense state from DLC                                        |
+
+And it was probably not so easy to find out without this list whether e.g. Ethernet RX+ or RX- should get pin type description RX. Other developers have thought that since the DoIP options only differ by 2 pins, we should only specify 2 pins. Some manufacturers only describe the plus lines as TX+ and RX+. And apparently some do not describe the DLC but the RJ45 connection so that they do not have to distinguish between DoIP option 1 and 2.
+
+To clarify the chaos, this phrase was added in the last 2022 edition of ISO 22900-2.
+
+*NOTE The DoIP pins are used for documentation but are not considered for the D-PDU API*
+
+Embarrassing when you declare chaos to be the norm.
+
+
+
+I think that would be the correct pin to pin description for DoIP with option 1.
+
+{ 3, "RX" }, { 11, "MINUS" }, { 12, "TX" }, { 13, "LOW" }
+
+I've seen that too
+
+-  { 3, "TX" }, { 11, "LOW" }, { 12, "RX" }, { 13, "MINUS" }
+
+- { 1, "TX" }, { 3, "RX" }
+
+- { 3, "RX" }, { 12, "TX" }
+
+- 

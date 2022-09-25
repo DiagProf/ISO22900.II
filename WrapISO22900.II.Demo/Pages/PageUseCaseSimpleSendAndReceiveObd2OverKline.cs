@@ -29,8 +29,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Principal;
 using Newtonsoft.Json.Serialization;
 using Spectre.Console;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ISO22900.II.Demo
 {
@@ -132,14 +134,14 @@ namespace ISO22900.II.Demo
                         link.SetComParamValueViaGet("CP_TesterPresentTime", 2000000);
 
                         var ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
-                        for ( uint i = 0; i < 256; i++ )
+                        for ( uint i = 0x10; i < 256; i++ )
                         {
                             ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
                                 new List<PduComParam>
                                 {
                                     DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
                                     DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0xF1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                    DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
                                     DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
                                 }
                             ));
@@ -197,7 +199,7 @@ namespace ISO22900.II.Demo
                             link.SetComParamValueViaGet("CP_5BaudAddressFunc", 0x33); //Set the functional request address if we use 11bit CAN ID
                             link.SetComParamValueViaGet("CP_5BaudMode", 0);
                             link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
-
+                            link.SetUniqueRespIdTable(ecuUniqueRespDatas);
                             link.Connect();
 
                             //Use StartComm to start tester present behavior
@@ -226,13 +228,40 @@ namespace ISO22900.II.Demo
                                     }
                                     else if ( IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
                                     {
+                                        //Now there are different implementations. We have to check if the UniqueIdTable has been changed automatically or if we have to do it.
+
+                                        //fetch all pramters from the active-buffer into the working-buffer
                                         //using (var copRestore = link.StartCop(PduCopt.PDU_COPT_RESTORE_PARAM))
                                         //{
                                         //    copRestore.WaitForCopResult();
                                         //}
 
+                                        //test the funcRespFormatPriorityType at one point
+                                        //ISO22900-2 -> NOTE It is possible for the application to determine which protocol is being supported on the vehicle by reading 
+                                        //the CP_FuncRespFormatPriorityType byte in the URID table(i.e.ISO 9141 - 2 = 0x48 and ISO 14230 - 4 = 0x80).
+                                        var funcRespFormatPriorityType = link.GetUniqueIdComParamValue(result.PduEventItemResults().First().ResultData.UniqueRespIdentifier,
+                                            "CP_FuncRespFormatPriorityType");
+                                        if ( funcRespFormatPriorityType != 0x48 )
+                                        {
+                                            var ecuUniqueRespDatasFor91412 = new List<PduEcuUniqueRespData>();
+                                            for (uint i = 0x10; i < 0x20; i++)
+                                            {
+                                                ecuUniqueRespDatasFor91412.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
+                                                    new List<PduComParam>
+                                                    {
+                                                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x48, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0x6B, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                                    }
+                                                ));
+                                            }
+
+                                            link.SetUniqueRespIdTable(ecuUniqueRespDatasFor91412);
+                                        }
+
                                         //the keybytes say ISO9141-2 so we have to adjust a few request parameters.
-                                        //The response parameters were automatically adjusted.This is because protocol string "ISO_OBD_on_K_Line" was used.
+                                        //Parameters for the request must always be set
                                         link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0x68);
                                         link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x6A);
                                         //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
@@ -262,7 +291,7 @@ namespace ISO22900.II.Demo
                             //if you like you can see which baudrate is used. Because at 5 baud wakeup the ECUs baud rate is determined.
                             var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
                             AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
-
+                            link.SetComParamValueViaGet("CP_P2Max", 190_000);
 
                             var request = new byte[] { 0x01, 0x00 };
                             for ( var i = 0x00; i < 0x20; i++ )
@@ -329,12 +358,19 @@ namespace ISO22900.II.Demo
             {
                 AnsiConsole.WriteLine($"KeyBytes Raw:{BitConverter.ToString(evItemResult.ResultData.DataBytes)}");
 
+                //During fast wakeup, some D-PDU APIs only provide the keybytes and and others the response service id and the keybytes.
+                // e.g. c1 e9 8f  or only e9 8f
+                if (evItemResult.ResultData.DataBytes.Length == 3)
+                {
+                    listOfKeyBytes.Add((ushort)(evItemResult.ResultData.DataBytes[2] * 256 + evItemResult.ResultData.DataBytes[1]));
+                    AnsiConsole.WriteLine($"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[2] * 256 + evItemResult.ResultData.DataBytes[1]):X04}");
+                }
                 if ( evItemResult.ResultData.DataBytes.Length == 2 )
                 {
                     listOfKeyBytes.Add((ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]));
-                    AnsiConsole.WriteLine(
-                        $"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
+                    AnsiConsole.WriteLine($"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
                 }
+
             }
 
             return listOfKeyBytes;

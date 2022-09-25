@@ -60,7 +60,7 @@ namespace ISO22900.II.Demo
                     var dlcPinData = cllConfigPorscheKline.DlcPinData;
                     var busTypeName = cllConfigPorscheKline.BusTypeName;
                     //var busTypeName = "ISO_9141_2_UART";  //e.g. Softing
-                    //var busTypeName = "ISO_14230_1_UART"; //e.g. Samtec
+                    //var busTypeName = "ISO_14230_1_UART"; //e.g. Samtec  // Bosch
                     var protocolName = cllConfigPorscheKline.ProtocolName;
 
                     using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )

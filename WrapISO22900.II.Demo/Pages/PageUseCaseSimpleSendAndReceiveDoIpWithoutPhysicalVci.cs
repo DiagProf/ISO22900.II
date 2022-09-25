@@ -87,7 +87,7 @@ namespace ISO22900.II.Demo
                             var busTypeName = cllSettingWithDoIp.BusTypeName;
                             var protocolName = cllSettingWithDoIp.ProtocolName;
 
-                            //simple OBD2 Ethernet Cable pin out description! (not the pin out) is different from API to API (i don't know why).
+                            //simple OBD2 Ethernet Cable pinout description! Note the pinout is different from API to API (i don't know why).
                             //But is a good example for GetResourceIds do figure out the right setting used with your VCI
                             //This is particularly helpful if an application is to use many different VCIs and D-PDU APIs.
 

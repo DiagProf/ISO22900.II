@@ -70,10 +70,10 @@ namespace ISO22900.II.Demo
                        DiagPduApiHelper.FullLibraryPathFormApiShortName(AbstractPageControl.Preferences.GetSection("ApiVci:Api").Value),
                        AbstractPageControl.LoggerFactory) )
             {
-
-                var ioCtlVehicleIdRequestData = new PduIoCtlVehicleIdRequestData(PduExPreselectionMode.NoPreselection, "",
-                    PduExCombinationMode.AllCombination, 1000);
                 //Bosch needs PduExCombinationMode.AllCombination
+                var ioCtlVehicleIdRequestData = 
+                    new PduIoCtlVehicleIdRequestData(PduExPreselectionMode.NoPreselection, "", PduExCombinationMode.AllCombination, 500);
+                
 
 
                 //This is a good example of the generic version of TryIoCtlVehicleIdRequest
@@ -92,7 +92,7 @@ namespace ISO22900.II.Demo
                     }
 
                     //But for this ECU (which has some bugs in the DoIP stack) we are only interested in the Daimler variant.
-                    //so we do that
+                    //so we do that "MVCI_DAIMLER_DoIP" (an early DOIP implementation for Daimler)
                     doipVCIs = doipVCIs.FindAll(e => e.VendorModuleName.Contains("MVCI_DAIMLER_DoIP"));
 
                     if ( doipVCIs.Any() )
@@ -112,7 +112,7 @@ namespace ISO22900.II.Demo
                             var busTypeName = cllSettingWithDoIp.BusTypeName;
                             var protocolName = cllSettingWithDoIp.ProtocolName;
 
-                            //simple OBD2 Ethernet Cable pin out description! (not the pin out) is different from API to API (i don't know why).
+                            //simple OBD2 Ethernet Cable pin out description! Note the pinout is different from API to API (i don't know why).
                             //But is a good example for GetResourceIds do figure out the right setting used with your VCI
                             //This is particularly helpful if an application is to use many different VCIs and D-PDU APIs.
 
@@ -121,7 +121,7 @@ namespace ISO22900.II.Demo
 
                             if ( !resourceIds.Any() )
                             {
-                                //Bosch needs protocol name only "ISO_13400" the right is "ISO_14229_5_on_ISO_13400_2"
+                                //Bosch needs protocol name only "ISO_13400" the right is "ISO_14229_5_on_ISO_13400_2" but only for DAIMLER_DOIP (an early DOIP implementation for Daimler)
                                 protocolName = "ISO_13400";
                                 //Bosch Pinout is  It's weird or I'm misunderstanding something
                                 dlcPinData = new() { { 3, "TX" }, { 11, "LOW" }, { 12, "RX" }, { 13, "MINUS" } };
@@ -134,7 +134,7 @@ namespace ISO22900.II.Demo
                                 //or
                                 using ( var link = doIpVci.OpenComLogicalLink(resourceIds.First()) )
                                 {
-                                    //With this protocol, Bosch has 5 entries in the UniqueRespIdTable.
+                                    //With this protocol, Bosch has 5 entries in the UniqueRespIdTable but only for DAIMLER_DOIP (an early DOIP implementation for Daimler)
                                     //I don't understand exactly why
                                     //but that's why we set the ComParams separately from the ComParams in the UniqueRespIdTable
                                     cllSettingWithDoIp.LogicalLinkSettingHueMb().SetUpLogicalLinkComParamsOnly(link);

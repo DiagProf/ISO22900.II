@@ -46,7 +46,7 @@ namespace ISO22900.II.Demo
             var infoGrid = new Grid();
             var info = "Simple send and receive DoIP some D-PDU-APIs have not implemented this protocol!!";
             var wire =
-                "\"Without physical VCI but with virtual VCI\" means a simple OBD2 Ethernet Cable. But the D-PDU-API offers a virtual VCI to choose from.\nThe huge advantage of this approach is that the application can retain the behavior the customer is used to when selecting the VCI.\nUnfortunately, I have only seen this with the standalone [white]D-PDU API from Bosch[/]. But the idea is great";
+                "\"Without physical VCI but with virtual VCI\" means a simple OBD2 Ethernet Cable. But the D-PDU-API offers a virtual VCI to choose from.\nThe huge advantage of this approach is that the application can retain the behavior the customer is used to when selecting the VCI.\nUnfortunately, I have only seen this with the standalone [white]D-PDU API from Bosch[/]. But the idea is great.";
             var lic =
                 "Separate license for this is needed often!! Because \"without physical VCI\" imply that the VCI hardware can no longer serve as a license token.";
             infoGrid.AddColumn(new GridColumn().Centered());

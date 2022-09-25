@@ -116,7 +116,7 @@ namespace ISO22900.II.Demo
 
                                            foreach ( var moduleData in pduModuleDatas )
                                            {
-                                               var vciNode = vcisNode.AddNode($"VCI: {moduleData.VendorModuleName}");
+                                               var vciNode = vcisNode.AddNode($"VCI: {moduleData.VendorModuleName.EscapeMarkup()}");
                                                //vciNode.AddNode($"Module status: {moduleData.ModuleStatus}");
                                                //vciNode.AddNode($"Vendor additional info: {moduleData.VendorAdditionalInfo}");
                                                //vciNode.AddNode($"Module type id: {moduleData.ModuleTypeId}");
@@ -172,7 +172,7 @@ namespace ISO22900.II.Demo
             {
                 foreach ( var moduleData in pduModuleDatas )
                 {
-                    promptVci.AddChoice(new ApiTree($"{moduleData.VendorModuleName}", shortNameApi =>
+                    promptVci.AddChoice(new ApiTree($"{moduleData.VendorModuleName.EscapeMarkup()}", shortNameApi =>
                     {
                         shortNameApi.AddNode($"Module status: {moduleData.ModuleStatus}");
                         shortNameApi.AddNode($"Vendor additional info: {moduleData.VendorAdditionalInfo}");
@@ -181,6 +181,7 @@ namespace ISO22900.II.Demo
                 }
 
                 var vciName = AnsiConsole.Prompt(promptVci).Title;
+                vciName = vciName.RemoveMarkup();
                 AnsiConsole.WriteLine($"Selected API ShortName: {apiShortName}");
                 AnsiConsole.WriteLine($"Selected API: {path}");
                 AnsiConsole.WriteLine($"Selected VCI: {vciName}");

@@ -134,7 +134,7 @@ namespace ISO22900.II.Demo
                         link.SetComParamValueViaGet("CP_TesterPresentTime", 2000000);
 
                         var ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
-                        for ( uint i = 0x10; i < 256; i++ )
+                        for ( uint i = 0; i < 256; i++ )
                         {
                             ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
                                 new List<PduComParam>
@@ -230,11 +230,11 @@ namespace ISO22900.II.Demo
                                     {
                                         //Now there are different implementations. We have to check if the UniqueIdTable has been changed automatically or if we have to do it.
 
-                                        //fetch all pramters from the active-buffer into the working-buffer
-                                        //using (var copRestore = link.StartCop(PduCopt.PDU_COPT_RESTORE_PARAM))
-                                        //{
-                                        //    copRestore.WaitForCopResult();
-                                        //}
+                                        //fetch all pramters from the active-buffer into the working - buffer
+                                        using (var copRestore = link.StartCop(PduCopt.PDU_COPT_RESTORE_PARAM))
+                                        {
+                                            copRestore.WaitForCopResult();
+                                        }
 
                                         //test the funcRespFormatPriorityType at one point
                                         //ISO22900-2 -> NOTE It is possible for the application to determine which protocol is being supported on the vehicle by reading 

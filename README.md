@@ -8,15 +8,20 @@ ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-
 
 1. [Introduction](#introduction)
 2. [A bit of history with philosophy](#a-bit-of-history-with-philosophy)
-3. [TODO's](#tODO's)
-4. [Usage](#usage)
-5. [FAQ](#faq)
+3. [Thoughts about the API](#thoughts-about-the-API)
+4. [TODO's](#tODO's)
+5. [Usage](#usage)
+6. [FAQ](#faq)
+   
+   
 
 ## Introduction
 
 The [ISO 22900-2](https://www.iso.org/standard/62490.html) friendly name is D-PDU-API both are synonymous for a software interface description. D-PDU-API can live alone but was normally designed in use with ISO 22900-X and ISO 22901-X in mind. All this spec libraries has the goal to make automotive diagnostic data interchangeable. In case of ISO 22900-2 this correctly means modular vehicle communication interface (MVCI or VCI) can be exchanged through MVCI from another manufacturer if both support ISO 22900-2.
 
 Extract from 22900-2: *"The purpose of ISO 22900-2 is to ensure that diagnostic and reprogramming applications from any vehicle or tool manufacturer can operate on a common software interface and can easily exchange MVCI protocol module implementations."*
+
+
 
 ## A bit of history with philosophy
 
@@ -33,6 +38,10 @@ From my point of view, the biggest advantages of the D-PDU-API are:
 - the parameters for the vehicle protocols are also part of the specification (at least for the widely used protocols)
 
 - the parameters and the vehicle protocols are named **completely**, **uniformly** and the **effectiveness** of the parameter is determined
+
+
+
+## Thoughts about the API
 
 If you look at the around 29 functions from ISO22900-2 it is initially difficult to see how a user-friendly API can be built from them. I think the idea of one API fits all and is easy to use is not so straightforward. For example it would be possible to build an API with the 29 functions that looks and works like the J2534 API or to build an API that fits well under a diagnostic-server but can also be used on its own. The latter is what I'm doing here. What becomes particularly visible in the project when the name "ApiOne" appears in the names of files and folders. If I wanted to build an API out of the 29 functions that looks like a J2534 API, I might name it Api2534. In order to understand this even more clearly, I would like to briefly explain how I split ISO22900-2 in order to transfer it from a C API to the object world.
 
@@ -394,13 +403,13 @@ namespace ISO22900.II.SophisticatedExample
 }
 ```
 
+# 
+
 ## FAQ
 
 **Question:** DoIP and D-PDU API love each other?
 
 **Answer:** DoIP is like an elephant in a china shop. No kidding you can really see how the 1st generation of developers on the ISO22900-2 standard tried to organize the various steps of initialization in such a way that the connection establishment always follows the same pattern to the outside independent of the protocol. The 2nd generation only tried to bring DoIP quickly into ISO 22900-2 without the ambition to adapt it to the known behavior as far as possible. The fact that DoIP is the elephant is always justified with the bus topology that is needed for DoIP. But that is only half the stroy.
-
-
 
 **Q:** What is the right pin setup for DoIP (Diagnostic over internet protocol)?
 
@@ -437,8 +446,6 @@ Activation line is not a line over which data is transmitted, but only for prote
 
 You can see in the table aboveTX- and TX+ are fixed. Only RX- and RX+ make the difference. 
 
-
-
 **Now how the pinout should be described on the software side.**
 
 The D-PDU API needs a description for each pin. The ISO22900-2 was only expanded to include these underlined DoIP entries when some were already done with their development.
@@ -465,15 +472,13 @@ To clarify the chaos, this phrase was added in the last 2022 edition of ISO 2290
 
 Embarrassing when you declare chaos to be the norm.
 
-
-
 I think that would be the correct pin to pin description for DoIP with option 1.
 
 { 3, "RX" }, { 11, "MINUS" }, { 12, "TX" }, { 13, "LOW" }
 
 I've seen that too
 
--  { 3, "TX" }, { 11, "LOW" }, { 12, "RX" }, { 13, "MINUS" }
+- { 3, "TX" }, { 11, "LOW" }, { 12, "RX" }, { 13, "MINUS" }
 
 - { 1, "TX" }, { 3, "RX" }
 

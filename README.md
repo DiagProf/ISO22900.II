@@ -7,7 +7,7 @@ ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [A bit of history with philosophy](#a bit of history with philosophy)
+2. [A bit of history with philosophy](#a%20bit%20of%20history%20with%20philosophy)
 3. [TODO's](#tODO's)
 4. [Usage](#usage)
 5. [FAQ](#faq)
@@ -54,7 +54,7 @@ In a more sophisticated application it looks something like this:
 
 The use case is now you are doing something with the com logical link(s)  e.g. read live data or  read out the vehicle ignition status or vehicle battery voltage from the VCI directly. And now it comes to a VCI lost. Because, for example, the VCI was disconnected from OBDII connector or the USB, LAN, Wifi or Bluetooth connection to the VCI was interrupted. Now the ISO22900-II says in this case the com logical links and the VCI are no longer valid (in a nutshell). Which also means instances of VCI and com logical link are also no longer valid. But the biggest problem at this point is. If I want to make a new connection attempt to the VCI. I need to go back to the point in the code where I have an instance of the API. To avoid these twists the ApiOne have the internal classes ModuleLevel, ComLogicalLinkLevel, ComPrimitiveLevel represents real instances but the user of the ApiOne only has access to instances of Module, ComLogicalLink, ComPrimitive which are like wrappers. The trick is now… if there is a VCI lost and an exception is thrown somewhere you can catch the exception (evaluate it a bit more if you like) and then use TryToRecover to let the ApiOne try to establish a new connection. Under the hood, the ApiOne destroys/dispose the old instances and when the connection is back, new instances are created. However, the ApiOne user does not notice this because he is working on the wrapper instances and these are retained.
 
-The [SophisticatedExample](#usage sophisticated example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
+The [SophisticatedExample](#usage%20sophisticated%20example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
 
 7. Following point number 6 and the explanation, there is an internal representation for Module, ComLogicalLink and ComPrimitive and one that is passed to the outside. 
    

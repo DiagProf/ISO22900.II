@@ -29,7 +29,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Principal;
+using System.Threading;
 using Newtonsoft.Json.Serialization;
 using Spectre.Console;
 using static System.Net.Mime.MediaTypeNames;
@@ -88,7 +90,7 @@ namespace ISO22900.II.Demo
             //      c2 33 f1 01 00 e7 // Mode 01 PID 00
             //      86 f1 10 41 00 be 3f e8 11 be
             //      
-            //      Keybytes: 0x8FE9,0x8F6B,0x8F6D,0x8FEF mean protocol iso 9141-2
+            //      Keybytes: 0x8FE9,0x8F6B,0x8F6D,0x8FEF mean protocol ISO 14230-4 
             // 
             //  What important to understand is that with option 2 and 3, the D-PDU API can simply switch the parameters in UniqueRespIdTable itself.
             //  but for the request parameters we have to do it
@@ -100,114 +102,70 @@ namespace ISO22900.II.Demo
             {
                 using ( var vci = api.ConnectVci(this.AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                 {
-                    //Define the protocol behavior
-                    //These names (the strings) come from ODX or ISO 22900-2
-                    var busTypeName = "ISO_9141_2_UART";
-                    var protocolName = "ISO_OBD_on_K_Line";
-                    var dlcPinData = new Dictionary<uint, string> { { 7, "K" }, { 15, "L" } };
-
-
-                    using ( var link = vci.OpenComLogicalLink(busTypeName, protocolName, dlcPinData.ToList()) )
+                    var copCtrlDataForObd = new PduCopCtrlData //Enable the TxFlag ENABLE_EXTRA_INFO
                     {
-                        bool isOBDonKline = false;
-
-                        #region FastWakeUp
-
-                        //Try Fast Wakeup first. If Fast Wakeup succeeds, the result can only be ISO 14230-4 protocol
-                        link.SetComParamValueViaGet("CP_Baudrate", 10400);
-                        link.SetComParamValueViaGet("CP_InitializationSettings", 2); //2 fast init
-                        link.SetComParamValueViaGet("CP_RequestAddrMode", 2);
-                        link.SetComParamValueViaGet("CP_HeaderFormatKW", 4);
-                        link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0xC0);
-                        link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x33);
-                        link.SetComParamValueViaGet("CP_TesterSourceAddress", 0xF1);
-
-                        //TesterPresent behavior
-                        //0 = Send on periodic interval defined by CP_TesterPresentTime (periodically independent of other requests)
-                        //1 = Send when bus has been idle for CP_TesterPresentTime(after the last request)
-                        link.SetComParamValueViaGet("CP_TesterPresentSendType", 1); 
-                    
-                        link.SetComParamValueViaGet("CP_TesterPresentMessage", new byte[] { 0x01, 0x00 });
-                        link.SetComParamValueViaGet("CP_TesterPresentReqRsp", 1); //0 = no response, 1 = response expected
-                        link.SetComParamValueViaGet("CP_TesterPresentExpPosResp", new byte[] { 0x41, 0x00 });
-                        link.SetComParamValueViaGet("CP_TesterPresentExpNegResp", new byte[] { 0x7F, 0x01 });
-                        link.SetComParamValueViaGet("CP_TesterPresentTime", 2000000);
-
-                        var ecuUniqueRespDatas = new List<PduEcuUniqueRespData>();
-                        for ( uint i = 0; i < 256; i++ )
+                        NumSendCycles = 1,
+                        NumReceiveCycles = -2,
+                        TxFlag = new PduFlagDataTxFlag { EnableExtraInfo = true },
+                        PduExpectedResponseDatas = new[]
                         {
-                            ecuUniqueRespDatas.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
-                                new List<PduComParam>
-                                {
-                                    DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                    DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                }
-                            ));
+                            new PduExpectedResponseData(PduExResponseType.PositiveResponse, 1,
+                                new MaskAndPatternBytes(Array.Empty<byte>(), Array.Empty<byte>()),
+                                new UniqueRespIds(Array.Empty<uint>()))
                         }
+                    };
 
-                        link.SetUniqueRespIdTable(ecuUniqueRespDatas);
-                        link.Connect();
 
-                        //Use StartComm to start tester present behavior
-                        using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, -2, new byte[] { 0x81 }) )
+                    ComLogicalLink link = null;
+                    var listOfKeyBytes = new List<ushort>();
+                    bool isObdOnKline = false;
+                    if ( TryKlineScanSequencePartFastWakeupIso142304(vci, copCtrlDataForObd, ref link, ref listOfKeyBytes) )
+                    {
+                        isObdOnKline = true;
+                    }
+                    else if ( TryKlineScanSequencePart5BaudIso142304(vci, copCtrlDataForObd, ref link, ref listOfKeyBytes) )
+                    {
+                        isObdOnKline = true;
+                    }
+                    else
+                    {
+                        if ( listOfKeyBytes.Any() )
                         {
-                            var result = copStartComm.WaitForCopResult();
-
-                            var responseString = string.Empty;
-
-
-                            if ( result.PduEventItemErrors().Count > 0 )
-                            {
-                                foreach ( var error in result.PduEventItemErrors() )
-                                {
-                                    responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
-                                }
-
-                                responseString = "Error: " + responseString + " ISO 14230-4 with fast wake up is not working for OBD";
-                            }
-                            else
-                            {
-                                var listOfKeyBytes = GetListOfKeyBytes(result);
-                                if ( IsListOfKeyBytesIso14230_4(listOfKeyBytes) )
-                                {
-                                    isOBDonKline = true;
-                                    responseString = "ISO 14230-4 with fast wake up is working for OBD";
-                                }
-                                else
-                                {
-                                    isOBDonKline = false;
-                                    responseString = "You should never come here. ISO 14230-4 with fast wake up is not working for OBD";
-                                }
-                            }
-
-                            AnsiConsole.WriteLine($"{responseString}");
+                            Thread.Sleep(3000);
+                            isObdOnKline = TryKlineScanSequencePart5BaudIso91412(vci, copCtrlDataForObd, ref link, ref listOfKeyBytes);
                         }
+                    }
 
-                        #endregion
+                    if ( isObdOnKline == true )
+                    {
+                        //if you like you can see which baudrate is used. Because at 5 baud wakeup the ECUs baud rate is determined.
+                        var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
+                        AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
+                        //link.SetComParamValueViaGet("CP_P2Max", 190_000);
 
-
-                        #region 5BaudWakeUp
-
-                        if ( isOBDonKline == false )
+                        var request = new byte[] { 0x01, 0x00 };
+                        for ( var i = 0x00; i < 0x20; i++ )
                         {
-                            link.Disconnect();
+                            request[1] = (byte)i;
 
-                            //try with 5Baud wake up
-                            //just change some settings, the rest can be taken over by fastinit
-                            link.SetComParamValueViaGet("CP_5BaudAddressFunc", 0x33); //Set the functional request address if we use 11bit CAN ID
-                            link.SetComParamValueViaGet("CP_5BaudMode", 0);
-                            link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
-                            link.SetUniqueRespIdTable(ecuUniqueRespDatas);
-                            link.Connect();
-
-                            //Use StartComm to start tester present behavior
-                            using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 0, -2, new byte[] {}) )
+                            using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, -2, request) )
                             {
-                                var result = copStartComm.WaitForCopResult();
+                                var result = cop.WaitForCopResult();
 
+                                //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
+                                //e.g. the correct order might be first PduEventItemInfo and then DataMsg
                                 var responseString = string.Empty;
+                                uint responseTime = 0;
+
+
+                                foreach ( var evItemResult in result.PduEventItemResults() )
+                                {
+                                    var uniqueRespIdentifier = evItemResult.ResultData.UniqueRespIdentifier;
+
+                                    responseString += $" ECU: 0x{uniqueRespIdentifier:X02}  Data: ";
+                                    responseString += BitConverter.ToString(evItemResult.ResultData.DataBytes);
+                                    responseTime = result.ResponseTime();
+                                }
 
                                 if ( result.PduEventItemErrors().Count > 0 )
                                 {
@@ -216,139 +174,415 @@ namespace ISO22900.II.Demo
                                         responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
                                     }
 
-                                    responseString = "Error: " + responseString + " ISO 14230-4 with 5Baud wake up is not working for OBD";
+                                    responseString = "Error: " + responseString;
                                 }
-                                else
+
+                                if ( result.PduEventItemInfos().Count > 0 )
                                 {
-                                    var listOfKeyBytes = GetListOfKeyBytes(result);
-                                    if ( IsListOfKeyBytesIso14230_4(listOfKeyBytes) )
+                                    foreach ( var error in result.PduEventItemInfos() )
                                     {
-                                        isOBDonKline = true;
-                                        responseString = "ISO 14230-4 with 5Baud wake up is working for OBD";
+                                        responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
                                     }
-                                    else if ( IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
-                                    {
-                                        //Now there are different implementations. We have to check if the UniqueIdTable has been changed automatically or if we have to do it.
 
-                                        //fetch all pramters from the active-buffer into the working - buffer
-                                        using (var copRestore = link.StartCop(PduCopt.PDU_COPT_RESTORE_PARAM))
-                                        {
-                                            copRestore.WaitForCopResult();
-                                        }
-
-                                        //test the funcRespFormatPriorityType at one point
-                                        //ISO22900-2 -> NOTE It is possible for the application to determine which protocol is being supported on the vehicle by reading 
-                                        //the CP_FuncRespFormatPriorityType byte in the URID table(i.e.ISO 9141 - 2 = 0x48 and ISO 14230 - 4 = 0x80).
-                                        var funcRespFormatPriorityType = link.GetUniqueIdComParamValue(result.PduEventItemResults().First().ResultData.UniqueRespIdentifier,
-                                            "CP_FuncRespFormatPriorityType");
-                                        if ( funcRespFormatPriorityType != 0x48 )
-                                        {
-                                            var ecuUniqueRespDatasFor91412 = new List<PduEcuUniqueRespData>();
-                                            for (uint i = 0x10; i < 0x20; i++)
-                                            {
-                                                ecuUniqueRespDatasFor91412.Add(new PduEcuUniqueRespData(uniqueRespIdentifier: i, //<- this is the UniqueRespIdentifier
-                                                    new List<PduComParam>
-                                                    {
-                                                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", i, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x48, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0x6B, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                                    }
-                                                ));
-                                            }
-
-                                            link.SetUniqueRespIdTable(ecuUniqueRespDatasFor91412);
-                                        }
-
-                                        //the keybytes say ISO9141-2 so we have to adjust a few request parameters.
-                                        //Parameters for the request must always be set
-                                        link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0x68);
-                                        link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x6A);
-                                        //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
-                                        using ( var copUpdate = link.StartCop(PduCopt.PDU_COPT_UPDATEPARAM) )
-                                        {
-                                            copUpdate.WaitForCopResult();
-                                        }
-
-                                        isOBDonKline = true;
-                                        responseString = "ISO 9141-2 with 5Baud wake up is working for OBD";
-                                    }
-                                    else
-                                    {
-                                        isOBDonKline = false;
-                                        responseString = "No OBD on K-line";
-                                    }
+                                    responseString = "Info: " + responseString;
                                 }
 
-                                AnsiConsole.WriteLine($"{responseString}");
+                                AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
                             }
                         }
-
-                        #endregion
-
-                        if ( isOBDonKline == true )
-                        {
-                            //if you like you can see which baudrate is used. Because at 5 baud wakeup the ECUs baud rate is determined.
-                            var resultBaudrate = ((PduComParamOfTypeUint)link.GetComParam("CP_Baudrate")).ComParamData;
-                            AnsiConsole.WriteLine($"Used baudrate: {resultBaudrate}");
-                            link.SetComParamValueViaGet("CP_P2Max", 190_000);
-
-                            var request = new byte[] { 0x01, 0x00 };
-                            for ( var i = 0x00; i < 0x20; i++ )
-                            {
-                                request[1] = (byte)i;
-
-                                using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, -2, request) )
-                                {
-                                    var result = cop.WaitForCopResult();
-
-                                    //The following evaluation is okay for this use case, but it should be noted that the order may be lost.
-                                    //e.g. the correct order might be first PduEventItemInfo and then DataMsg
-                                    var responseString = string.Empty;
-                                    uint responseTime = 0;
-
-
-                                    foreach ( var evItemResult in result.PduEventItemResults() )
-                                    {
-                                        var uniqueRespIdentifier = evItemResult.ResultData.UniqueRespIdentifier;
-
-                                        responseString += $" ECU: 0x{uniqueRespIdentifier:X02}  Data: ";
-                                        responseString += BitConverter.ToString(evItemResult.ResultData.DataBytes);
-                                        responseTime = result.ResponseTime();
-                                    }
-
-                                    if ( result.PduEventItemErrors().Count > 0 )
-                                    {
-                                        foreach ( var error in result.PduEventItemErrors() )
-                                        {
-                                            responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
-                                        }
-
-                                        responseString = "Error: " + responseString;
-                                    }
-
-                                    if ( result.PduEventItemInfos().Count > 0 )
-                                    {
-                                        foreach ( var error in result.PduEventItemInfos() )
-                                        {
-                                            responseString += $"{error.InfoCode}" + $" ({error.ExtraInfoData})";
-                                        }
-
-                                        responseString = "Info: " + responseString;
-                                    }
-
-                                    AnsiConsole.WriteLine($"{BitConverter.ToString(request)} | {responseString}  | {responseTime}µs");
-                                }
-                            }
-                        }
-
-                        link.Disconnect();
                     }
                 }
             }
 
             AnsiConsole.Console.ReadKey("Press [DodgerBlue1][[Enter]][/] to navigate home");
             AbstractPageControl.NavigateHome();
+        }
+
+        private bool TryKlineScanSequencePartFastWakeupIso142304(Module vci, PduCopCtrlData ctrlData, ref ComLogicalLink link,
+            ref List<ushort> listOfKeyBytes)
+        {
+            var isObdOnKline = false;
+            var busTypeName = "ISO_14230_1_UART";
+            var protocolName = "ISO_OBD_on_K_Line";
+            var dlcPinData = new Dictionary<uint, string> { { 7, "K" } };
+
+            var resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+
+            if ( !resourceIds.Any() )
+            {
+                //Always do this as the 2nd because e.g. Bosch says that everything is okay with the combination, but then it doesn't work properly.
+                busTypeName = "ISO_9141_2_UART";
+                resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+            }
+
+            if ( resourceIds.Any() )
+            {
+                link = vci.OpenComLogicalLink(resourceIds.First());
+
+
+                link.SetComParamValueViaGet("CP_Baudrate", 10400);
+                link.SetComParamValueViaGet("CP_InitializationSettings", 2); //2 fast init
+                Iso142304HeaderSetUp(link);
+                SetTesterPresentBehavior(link);
+                link.SetUniqueRespIdTablePageOneUniqueRespIdentifier(uniqueRespIdentifier: PduConst.PDU_ID_UNDEF);
+                link.Connect();
+
+                //Use StartComm to start tester present behavior
+                using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, new byte[] { 0x81 }, ctrlData) )
+                {
+                    var result = copStartComm.WaitForCopResult();
+
+                    var responseString = string.Empty;
+
+                    if ( result.PduEventItemErrors().Count > 0 )
+                    {
+                        foreach ( var error in result.PduEventItemErrors() )
+                        {
+                            responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                        }
+
+                        responseString = "Error: " + responseString + " ISO 14230-4 with fast wake up is not working for OBD";
+                    }
+                    else
+                    {
+                        listOfKeyBytes = GetListOfKeyBytes(result);
+                        if ( IsListOfKeyBytesIso14230_4(listOfKeyBytes) )
+                        {
+                            var ecuAddresses = ExtractEcuAdressesFromHeaderBytes(result);
+                            if ( ecuAddresses.Any() )
+                            {
+                                var newUniqueResponseDatas = NewPduEcuUniqueRespDatasForIso142304(ecuAddresses);
+
+                                link.SetUniqueRespIdTable(newUniqueResponseDatas);
+                                //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
+                                using ( var copUpdate = link.StartCop(PduCopt.PDU_COPT_UPDATEPARAM) )
+                                {
+                                    copUpdate.WaitForCopResult();
+                                }
+
+                                isObdOnKline = true;
+                                responseString = "ISO 14230-4 with fast wake up is working for OBD";
+                            }
+                            else
+                            {
+                                responseString = "Could not extract an address from the header bytes";
+                            }
+                        }
+                        else if ( !IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
+                        {
+                            //We only do this to save another pointless 5 baud wakeup attempt later
+                            listOfKeyBytes.Clear();
+                            responseString = "No OBD on K-line with fast and ISO 14230-4";
+                        }
+                    }
+
+                    AnsiConsole.WriteLine($"{responseString}");
+                }
+
+                if ( !isObdOnKline )
+                {
+                    link.Dispose();
+                }
+            }
+
+            return isObdOnKline;
+        }
+
+
+        private bool TryKlineScanSequencePart5BaudIso142304(Module vci, PduCopCtrlData ctrlData, ref ComLogicalLink link,
+            ref List<ushort> listOfKeyBytes)
+        {
+            var isObdOnKline = false;
+            var busTypeName = "ISO_14230_1_UART";
+            var protocolName = "ISO_OBD_on_K_Line";
+            var dlcPinData = new Dictionary<uint, string> { { 7, "K" }, { 15, "L" } };
+
+            var resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+
+            if ( !resourceIds.Any() )
+            {
+                //Always do this as the 2nd because e.g. Bosch says that everything is okay with the combination, but then it doesn't work properly.
+                busTypeName = "ISO_9141_2_UART";
+                resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+            }
+
+            if ( resourceIds.Any() )
+            {
+                link = vci.OpenComLogicalLink(resourceIds.First());
+
+                //try with 5Baud wake u
+                link.SetComParamValueViaGet("CP_TIdle", 300_000);
+                //link.SetComParamValueViaGet("CP_P2max", 25_000);
+                link.SetComParamValueViaGet("CP_5BaudAddressFunc", 0x33); //Set the functional request address if we use 11bit CAN ID
+                link.SetComParamValueViaGet("CP_5BaudMode", 0);
+                link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
+                Iso142304HeaderSetUp(link);
+                SetTesterPresentBehavior(link);
+                link.SetUniqueRespIdTablePageOneUniqueRespIdentifier(uniqueRespIdentifier: PduConst.PDU_ID_UNDEF);
+                link.Connect();
+
+                //Use StartComm to start tester present behavior
+                using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, new byte[] {}, ctrlData) )
+                {
+                    var result = copStartComm.WaitForCopResult();
+
+                    var responseString = string.Empty;
+
+                    if ( result.PduEventItemErrors().Count > 0 )
+                    {
+                        foreach ( var error in result.PduEventItemErrors() )
+                        {
+                            responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                        }
+
+                        responseString = "Error: " + responseString + " ISO 14230-4 with 5Baud wake up is not working for OBD";
+                    }
+                    else
+                    {
+                        listOfKeyBytes = GetListOfKeyBytes(result);
+                        if ( IsListOfKeyBytesIso14230_4(listOfKeyBytes) )
+                        {
+                            ComPrimitiveResult pingCopResult;
+                            using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, new byte[] { 0x01, 0x00 }, ctrlData) )
+                            {
+                                pingCopResult = cop.WaitForCopResult();
+                            }
+
+                            var ecuAddresses = ExtractEcuAdressesFromHeaderBytes(pingCopResult);
+                            if ( ecuAddresses.Any() )
+                            {
+                                var newUniqueResponseDatas = NewPduEcuUniqueRespDatasForIso142304(ecuAddresses);
+
+                                link.SetUniqueRespIdTable(newUniqueResponseDatas);
+                                //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
+                                using ( var copUpdate = link.StartCop(PduCopt.PDU_COPT_UPDATEPARAM) )
+                                {
+                                    copUpdate.WaitForCopResult();
+                                }
+
+                                isObdOnKline = true;
+                                responseString = "ISO 14230-4 with 5Baud wake up is working for OBD";
+                            }
+                            else
+                            {
+                                responseString = "Could not extract an address from the header bytes";
+                            }
+                        }
+                        else if ( !IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
+                        {
+                            //We only do this to save another pointless 5 baud wakeup attempt later
+                            listOfKeyBytes.Clear();
+                            responseString = "No OBD on K-line with 5Baud and ISO 14230-4";
+                        }
+                    }
+
+                    AnsiConsole.WriteLine($"{responseString}");
+                }
+
+                if ( !isObdOnKline )
+                {
+                    link.Dispose();
+                }
+            }
+
+            return isObdOnKline;
+        }
+
+        private bool TryKlineScanSequencePart5BaudIso91412(Module vci, PduCopCtrlData ctrlData, ref ComLogicalLink link, ref List<ushort> listOfKeyBytes)
+        {
+            var isObdOnKline = false;
+            var busTypeName = "ISO_9141_2_UART";
+            var protocolName = "ISO_OBD_on_K_Line";
+            var dlcPinData = new Dictionary<uint, string> { { 7, "K" }, { 15, "L" } };
+
+            var resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+
+            if ( !resourceIds.Any() )
+            {
+                //Always do this as the 2nd because e.g. Bosch says that everything is okay with the combination, but then it doesn't work properly.
+                busTypeName = "ISO_14230_1_UART";
+                resourceIds = vci.GetResourceIds(busTypeName, protocolName, dlcPinData.ToList());
+            }
+
+            if ( resourceIds.Any() )
+            {
+                link = vci.OpenComLogicalLink(resourceIds.First());
+
+                //try with 5Baud wake u
+                link.SetComParamValueViaGet("CP_TIdle", 500_000);
+                //link.SetComParamValueViaGet("CP_P2max", 25_000);
+                link.SetComParamValueViaGet("CP_5BaudAddressFunc", 0x33); //Set the functional request address if we use 11bit CAN ID
+                link.SetComParamValueViaGet("CP_5BaudMode", 0);
+                link.SetComParamValueViaGet("CP_InitializationSettings", 1); //1 5Baud init
+                //link.SetComParamValueViaGet("CP_W3Max", 20_000);
+                //link.SetComParamValueViaGet("CP_W4Max", 50_000);
+
+                link.SetComParamValueViaGet("CP_RequestAddrMode", 2);
+                link.SetComParamValueViaGet("CP_HeaderFormatKW", 4);
+                link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0x68);
+                link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x6A);
+                link.SetComParamValueViaGet("CP_TesterSourceAddress", 0xF1);
+
+                SetTesterPresentBehavior(link);
+                link.SetUniqueRespIdTablePageOneUniqueRespIdentifier(uniqueRespIdentifier: PduConst.PDU_ID_UNDEF);
+                link.Connect();
+
+                //Use StartComm to start tester present behavior
+                using ( var copStartComm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, new byte[] {}, ctrlData) )
+                {
+                    var result = copStartComm.WaitForCopResult();
+
+                    var responseString = string.Empty;
+
+                    if ( result.PduEventItemErrors().Count > 0 )
+                    {
+                        foreach ( var error in result.PduEventItemErrors() )
+                        {
+                            responseString += $"{error.ErrorCodeId}" + $" ({error.ExtraErrorInfoId})";
+                        }
+
+                        responseString = "Error: " + responseString + " ISO 9141_2 with 5Baud wake up is not working for OBD";
+                    }
+                    else
+                    {
+                        listOfKeyBytes = GetListOfKeyBytes(result);
+                        if ( IsListOfKeyBytesIso9141_2(listOfKeyBytes) )
+                        {
+                            ComPrimitiveResult pingCopResult;
+                            using ( var cop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, new byte[] { 0x01, 0x00 }, ctrlData) )
+                            {
+                                pingCopResult = cop.WaitForCopResult();
+                            }
+
+                            var ecuAddresses = ExtractEcuAdressesFromHeaderBytes(pingCopResult);
+                            if ( ecuAddresses.Any() )
+                            {
+                                var newUniqueResponseDatas = NewPduEcuUniqueRespDatasForIso91412(ecuAddresses);
+
+                                link.SetUniqueRespIdTable(newUniqueResponseDatas);
+                                //we need PduCopt.PDU_COPT_UPDATEPARAM because we are changing an active link
+                                using ( var copUpdate = link.StartCop(PduCopt.PDU_COPT_UPDATEPARAM) )
+                                {
+                                    copUpdate.WaitForCopResult();
+                                }
+
+                                isObdOnKline = true;
+                                responseString = "ISO 9141_2 with 5Baud wake up is working for OBD";
+                            }
+                            else
+                            {
+                                responseString = "Could not extract an address from the header bytes";
+                            }
+                        }
+                        else if ( !IsListOfKeyBytesIso14230_4(listOfKeyBytes) )
+                        {
+                            //We only do this to save another pointless 5 baud wakeup attempt later
+                            listOfKeyBytes.Clear();
+                            responseString = "No OBD on K-line with 5Baud and 9141_2";
+                        }
+                    }
+
+                    AnsiConsole.WriteLine($"{responseString}");
+                }
+
+                if ( !isObdOnKline )
+                {
+                    link.Dispose();
+                }
+            }
+
+            return isObdOnKline;
+        }
+
+        private static List<PduEcuUniqueRespData> NewPduEcuUniqueRespDatasForIso142304(List<byte> ecuAddresses)
+        {
+            var newUniqueResponseDatas = new List<PduEcuUniqueRespData>();
+
+            foreach ( var ecuAddress in ecuAddresses )
+            {
+                newUniqueResponseDatas.Add(new PduEcuUniqueRespData(
+                    uniqueRespIdentifier: ecuAddress, //we use it also as UniqueRespIdentifier 
+                    new List<PduComParam>
+                    {
+                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", ecuAddress, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x80, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0xF1, PduPt.PDU_PT_UNUM32,  //Actia needs 0xF1 nit 0xFF
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                    }
+                ));
+            }
+
+            return newUniqueResponseDatas;
+        }
+
+        private static List<PduEcuUniqueRespData> NewPduEcuUniqueRespDatasForIso91412(List<byte> ecuAddresses)
+        {
+            var newUniqueResponseDatas = new List<PduEcuUniqueRespData>();
+
+            foreach (var ecuAddress in ecuAddresses)
+            {
+                newUniqueResponseDatas.Add(new PduEcuUniqueRespData(
+                    uniqueRespIdentifier: ecuAddress, //we use it also as UniqueRespIdentifier 
+                    new List<PduComParam>
+                    {
+                        DiagPduApiComParamFactory.Create("CP_EcuRespSourceAddress", ecuAddress, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_FuncRespFormatPriorityType", 0x48, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_FuncRespTargetAddr", 0x6B, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                        DiagPduApiComParamFactory.Create("CP_PhysRespFormatPriorityType", 0xFF, PduPt.PDU_PT_UNUM32,
+                            PduPc.PDU_PC_UNIQUE_ID),
+                    }
+                ));
+            }
+
+            return newUniqueResponseDatas;
+        }
+
+        private static List<byte> ExtractEcuAdressesFromHeaderBytes(ComPrimitiveResult result)
+        {
+            var ecuAddresses = new List<byte>();
+            foreach ( var evItemResult in result.PduEventItemResults() )
+            {
+                if ( evItemResult.ResultData.IsExtraInfo )
+                {
+                    if ( evItemResult.ResultData.ExtraInfoHeaderBytes.Length >= 3 )
+                    {
+                        //e.g. the Header 86 f1 10 we need the 0x10
+                        ecuAddresses.Add(evItemResult.ResultData.ExtraInfoHeaderBytes[2]);
+                    }
+                }
+            }
+
+            return ecuAddresses;
+        }
+
+        private static void Iso142304HeaderSetUp(ComLogicalLink link)
+        {
+            link.SetComParamValueViaGet("CP_RequestAddrMode", 2);
+            link.SetComParamValueViaGet("CP_HeaderFormatKW", 4 );
+            link.SetComParamValueViaGet("CP_FuncReqFormatPriorityType", 0xC0);
+            link.SetComParamValueViaGet("CP_FuncReqTargetAddr", 0x33);
+            link.SetComParamValueViaGet("CP_TesterSourceAddress", 0xF1);
+        }
+
+        private static void SetTesterPresentBehavior(ComLogicalLink link)
+        {
+            //TesterPresent behavior
+            //0 = Send on periodic interval defined by CP_TesterPresentTime (periodically independent of other requests)
+            //1 = Send when bus has been idle for CP_TesterPresentTime (after the last request)
+            link.SetComParamValueViaGet("CP_TesterPresentSendType", 1);
+
+            link.SetComParamValueViaGet("CP_TesterPresentMessage", new byte[] { 0x01, 0x00 });
+            link.SetComParamValueViaGet("CP_TesterPresentReqRsp", 1); //0 = no response, 1 = response expected
+            link.SetComParamValueViaGet("CP_TesterPresentExpPosResp", new byte[] { 0x41, 0x00 });
+            link.SetComParamValueViaGet("CP_TesterPresentExpNegResp", new byte[] { 0x7F, 0x01 });
+            link.SetComParamValueViaGet("CP_TesterPresentTime", 2000000);
         }
 
         private List<ushort> GetListOfKeyBytes(ComPrimitiveResult result)
@@ -358,19 +592,21 @@ namespace ISO22900.II.Demo
             {
                 AnsiConsole.WriteLine($"KeyBytes Raw:{BitConverter.ToString(evItemResult.ResultData.DataBytes)}");
 
-                //During fast wakeup, some D-PDU APIs only provide the keybytes and and others the response service id and the keybytes.
-                // e.g. c1 e9 8f  or only e9 8f
-                if (evItemResult.ResultData.DataBytes.Length == 3)
+                //During fast wakeup we get Service ID and key bytes
+                // e.g. c1 e9 8f  C1 is Response-Service-Id
+                if ( evItemResult.ResultData.DataBytes.Length == 3 )
                 {
                     listOfKeyBytes.Add((ushort)(evItemResult.ResultData.DataBytes[2] * 256 + evItemResult.ResultData.DataBytes[1]));
-                    AnsiConsole.WriteLine($"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[2] * 256 + evItemResult.ResultData.DataBytes[1]):X04}");
+                    AnsiConsole.WriteLine(
+                        $"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[2] * 256 + evItemResult.ResultData.DataBytes[1]):X04}");
                 }
+
                 if ( evItemResult.ResultData.DataBytes.Length == 2 )
                 {
                     listOfKeyBytes.Add((ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]));
-                    AnsiConsole.WriteLine($"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
+                    AnsiConsole.WriteLine(
+                        $"KeyBytes right order:{(ushort)(evItemResult.ResultData.DataBytes[1] * 256 + evItemResult.ResultData.DataBytes[0]):X04}");
                 }
-
             }
 
             return listOfKeyBytes;

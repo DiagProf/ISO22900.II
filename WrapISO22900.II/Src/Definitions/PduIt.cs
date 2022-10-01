@@ -12,6 +12,7 @@ namespace ISO22900.II
         PDU_IT_IO_BYTEARRAY = 0x1002,  // IOCTL Byte Array item.
         PDU_IT_IO_FILTER = 0x1003,  // IOCTL Filter item.
         PDU_IT_IO_EVENT_QUEUE_PROPERTY = 0x1004,  // IOCTL Event Queue Property item.
+        PDU_IT_IO_TLS_CERTIFICATE = 0x1005, // IOCTL Set certificate structure.
         PDU_IT_RSC_STATUS = 0x1100,  // Resource Status item
         PDU_IT_PARAM = 0x1200,  // ComParam item
         PDU_IT_RESULT = 0x1300,  // Result item

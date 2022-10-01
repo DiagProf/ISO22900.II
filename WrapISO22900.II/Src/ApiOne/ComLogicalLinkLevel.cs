@@ -213,7 +213,7 @@ namespace ISO22900.II
                 {
                     //Unfortunately, Actia, for example, uses this method if the Object ID cannot be determined
                     //It would be better to return //cpId = PduConst.PDU_ID_UNDEF
-                    _logger.LogWarning(e, "Trouble with comParam {ComParamShortName} not supported Object-Id", cp.ComParamShortName);
+                    _logger.LogWarning(e, "Trouble with ComParam {ComParamShortName} not supported Object-Id", cp.ComParamShortName);
                     return;
                 }
 
@@ -225,6 +225,34 @@ namespace ISO22900.II
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// For those who don't want to register a logger.
+        /// But still want to know if something goes wrong when setting the ComParam.
+        /// </summary>
+        /// <param name="cp">PduComParam</param>
+        /// <returns>true or false</returns>
+        public bool TrySetComParam(PduComParam cp)
+        {
+            try
+            {
+                var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, cp.ComParamShortName);
+                if (cpId == PduConst.PDU_ID_UNDEF)
+                {
+                    _logger.LogInformation("Object-Id for ComParam {ComParamShortName} not defined in the API used", cp.ComParamShortName);
+                    return false;
+                }
+
+                cp.ComParamId = cpId;
+                Vci.SysLevel.Nwa.PduSetComParam(ModuleHandle, ComLogicalLinkHandle, cp);
+            }
+            catch (Iso22900IIException ex)
+            {
+                _logger.LogWarning(ex,"Trouble with ComParam {ComParamShortName} ", cp.ComParamShortName);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -508,6 +536,11 @@ namespace ISO22900.II
             return Vci.SysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
+        internal PduExLastErrorData LastError()
+        {
+            return Vci.SysLevel.Nwa.PduGetLastError(ModuleHandle, ComLogicalLinkHandle);
+        }
+
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {
             DataLost?.Invoke(this, eventArgs);
@@ -537,7 +570,7 @@ namespace ISO22900.II
                 if (!AddItemToMatchingChannel(item))
                 {
                     //the event from the native code was faster than
-                    //creating the ComPrimtive instance in the managed code
+                    //creating the ComPrimitive instance in the managed code
                     lock (_syncStartCop)
                     {
                         AddItemToMatchingChannel(item);

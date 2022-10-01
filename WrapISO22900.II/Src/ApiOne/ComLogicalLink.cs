@@ -299,6 +299,26 @@ namespace ISO22900.II
             }
         }
 
+        /// <summary>
+        /// For those who don't want to register a logger.
+        /// But still want to know if something goes wrong when setting the ComParam.
+        /// </summary>
+        /// <param name="cp">PduComParam</param>
+        /// <returns>true or false</returns>
+        public bool TrySetComParam(PduComParam cp)
+        {
+            lock (_sync)
+            {
+                var check = _cll.TrySetComParam(cp);
+                if ( check )
+                {
+                    StoreComParam(cp);
+                }
+
+                return check;
+            }
+        }
+
         private void StoreComParam(PduComParam cp)
         {
             //we no longer save ComParams when the CLL is connected (online).
@@ -449,6 +469,20 @@ namespace ISO22900.II
             }
         }
 
+        /// <summary>
+        /// Unfortunately, the function does not work very well.
+        /// Because some manufacturers of the D-PDU API have not implemented it well. So please don't use it.
+        /// The reason method is here anyway is because some users of the ApiOne use ApiOne to verify D-PDU API's (before they buy).
+        /// </summary>
+        /// <returns>PduExLastErrorData</returns>
+        [Obsolete("Method is only for VCI evaluation. Do not use it in real projects. The result is not reliable.")]
+        public PduExLastErrorData LastError()
+        {
+            lock (_sync)
+            {
+                return _cll.LastError();
+            }
+        }
 
         /// <summary>
         ///     You can use this method if you want to try something

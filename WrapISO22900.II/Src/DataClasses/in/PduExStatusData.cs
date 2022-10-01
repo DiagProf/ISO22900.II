@@ -20,12 +20,12 @@
         /// <summary>
         ///     For ComPrimitives, ExtraInfo is 0.
         ///     For MVCI protocol modules and ComLogicalLinks, ExtraInfo contains additional information which is defined by the
-        ///     MVCI protocol module supplier.
+        ///     MVCI protocol module supplier. Use MDF file to get a text from code.
         ///     If no information is available, it shall be 0.
         /// </summary>
         public uint ExtraInfo { get; }
 
-        public PduExStatusData(PduStatus status, uint timestamp, uint extraInfo)
+        internal PduExStatusData(PduStatus status, uint timestamp, uint extraInfo)
         {
             Status = status;
             Timestamp = timestamp;

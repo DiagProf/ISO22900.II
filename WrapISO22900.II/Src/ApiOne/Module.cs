@@ -178,6 +178,21 @@ namespace ISO22900.II
             }
         }
 
+        /// <summary>
+        /// Unfortunately, the function does not work very well.
+        /// Because some manufacturers of the D-PDU API have not implemented it well. So please don't use it.
+        /// The reason method is here anyway is because some users of the ApiOne use ApiOne to verify D-PDU API's (before they buy).
+        /// </summary>
+        /// <returns>PduExLastErrorData</returns>
+        [Obsolete("Method is only for VCI evaluation. Do not use it in real projects. The result is not reliable.")]
+        public PduExLastErrorData LastError()
+        {
+            lock (_sync)
+            {
+                return _vci.LastError();
+            }
+        }
+
         public List<uint> GetResourceIds(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs)
         {
             lock ( _sync )

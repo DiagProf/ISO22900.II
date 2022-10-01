@@ -94,7 +94,7 @@ namespace ISO22900.II
         /// </summary>
         /// <param name="shortName"></param>
         /// <returns></returns>
-        [Obsolete("Method1 is deprecated, please use FullLibraryPathFormApiShortName instead.")]
+        [Obsolete("Method is deprecated, please use FullLibraryPathFormApiShortName instead.")]
         public static string FullyQualifiedLibraryFileNameFormShortName(string shortName)
         {
             return FullLibraryPathFormApiShortName(shortName);

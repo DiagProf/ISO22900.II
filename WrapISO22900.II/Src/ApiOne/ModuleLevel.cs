@@ -188,6 +188,11 @@ namespace ISO22900.II
             return SysLevel.Nwa.PduGetStatus(ModuleHandle, ComLogicalLinkHandle, PduConst.PDU_HANDLE_UNDEF);
         }
 
+        internal PduExLastErrorData LastError()
+        {
+            return SysLevel.Nwa.PduGetLastError(ModuleHandle, ComLogicalLinkHandle);
+        }
+
         /// <summary>
         ///     An alternative way to find out resource-id for this parameters.
         ///     Indirectly this is the question: "Can this vci (module) do the job?"

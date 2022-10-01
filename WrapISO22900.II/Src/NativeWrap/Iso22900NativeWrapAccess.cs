@@ -1,7 +1,9 @@
+//#define D_PDU_API_EVALUATION
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+
 
 
 // ReSharper disable InconsistentNaming
@@ -10,8 +12,15 @@ namespace ISO22900.II
 {
     internal class Iso22900NativeWrapAccess : IDisposable
     {
-        private readonly object sync = new();
 
+
+        //From ISO 22900-2
+        //The D-PDU-API implementation shall support, at a minimum, single clients and asynchronous, multithread operation.
+        //But the real world shows that some D-PDU API sometimes have problems when a function is called while another thread is also calling that function.
+        //that's why I prefer sync
+#if !D_PDU_API_EVALUATION
+        private readonly object sync = new();
+#endif
         private readonly ApiCallPduConstruct _apiCallPduConstruct;
         private readonly ApiCallPduDestruct _apiCallPduDestruct;
         private readonly ApiCallPduModuleConnect _apiCallPduModuleConnect;
@@ -36,6 +45,7 @@ namespace ISO22900.II
         private readonly ApiCallPduGetVersion _apiCallPduGetVersion;
         private readonly ApiCallPduGetResourceIds _apiCallPduGetResourceIds;
         private readonly ApiCallPduIoCtl _apiCallPduIoCtl;
+        private readonly ApiCallPduGetLastError _apiCallPduGetLastError;
 
         private bool disposedValue;
         private IntPtr _handleNativeLibrary;
@@ -77,11 +87,14 @@ namespace ISO22900.II
             _apiCallPduGetVersion = new ApiCallFactoryPduGetVersion(ApiModFlags, _handleNativeLibrary).GetApiCall();
             _apiCallPduGetResourceIds = new ApiCallFactoryPduGetResourceIds(ApiModFlags, _handleNativeLibrary).GetApiCall();
             _apiCallPduIoCtl = new ApiCallFactoryPduIoCtl(ApiModFlags, _handleNativeLibrary).GetApiCall();
+            _apiCallPduGetLastError = new ApiCallFactoryPduGetLastError(ApiModFlags, _handleNativeLibrary).GetApiCall();
         }
 
         public void PduConstruct()
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduConstruct.PduConstruct();
             }
@@ -89,7 +102,9 @@ namespace ISO22900.II
 
         public void PduConstruct(string optionStr)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduConstruct.PduConstruct(optionStr);
             }
@@ -97,7 +112,9 @@ namespace ISO22900.II
 
         public void PduConstruct(uint apiTag)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduConstruct.PduConstruct(apiTag);
             }
@@ -105,7 +122,9 @@ namespace ISO22900.II
 
         public void PduDestruct()
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduDestruct.PduDestruct();
             }
@@ -113,7 +132,9 @@ namespace ISO22900.II
 
         public List<PduModuleData> PduGetModuleIds()
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetModuleIds.PduGetModuleIds();
             }
@@ -121,7 +142,9 @@ namespace ISO22900.II
 
         public PduExStatusData PduGetStatus(uint moduleHandle, uint comLogicalLinkHandle, uint comPrimitiveHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetStatus.PduGetStatus(moduleHandle, comLogicalLinkHandle, comPrimitiveHandle);
             }
@@ -129,7 +152,9 @@ namespace ISO22900.II
 
         public void PduModuleConnect(uint moduleHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduModuleConnect.PduModuleConnect(moduleHandle);
             }
@@ -137,7 +162,9 @@ namespace ISO22900.II
 
         public void PduModuleDisconnect(uint moduleHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduModuleDisconnect.PduModuleDisconnect(moduleHandle);
             }
@@ -146,7 +173,9 @@ namespace ISO22900.II
         public uint PduCreateComLogicalLink(uint moduleHandle, PduResourceData pduResourceData,
             uint resourceId, uint cllTag, PduFlagDataCllCreateFlag pduFlagDataCllCreateFlag)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduCreateComLogicalLink.PduCreateComLogicalLink(moduleHandle, pduResourceData,
                     resourceId, cllTag, pduFlagDataCllCreateFlag);
@@ -155,7 +184,9 @@ namespace ISO22900.II
 
         public void PduDestroyComLogicalLink(uint moduleHandle, uint comLogicalLinkHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduDestroyComLogicalLink.PduDestroyComLogicalLink(moduleHandle, comLogicalLinkHandle);
             }
@@ -163,7 +194,9 @@ namespace ISO22900.II
 
         public PduComParam PduGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetComParam.PduGetComParam(moduleHandle, comLogicalLinkHandle, objectId);
             }
@@ -171,7 +204,9 @@ namespace ISO22900.II
 
         public void PduSetComParam(uint moduleHandle, uint comLogicalLinkHandle, PduComParam cp)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduSetComParam.PduSetComParam(moduleHandle, comLogicalLinkHandle, cp);
             }
@@ -179,15 +214,19 @@ namespace ISO22900.II
 
         public PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId, long value)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
-               return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
+                return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
             }
         }
 
         public PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId, byte[] value)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
             }
@@ -195,23 +234,29 @@ namespace ISO22900.II
 
         public PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId, uint[] value)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
-               return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
+                return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
             }
         }
 
         public PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId, PduParamStructFieldData value)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
-               return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
+                return _apiCallPduSetViaGetComParam.PduSetViaGetComParam(moduleHandle, comLogicalLinkHandle, objectId, value);
             }
         }
 
         public void PduSetUniqueRespIdTable(uint moduleHandle, uint comLogicalLinkHandle, List<PduEcuUniqueRespData> ecuUniqueRespDatas)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduSetUniqueRespIdTable.PduSetUniqueRespIdTable(moduleHandle, comLogicalLinkHandle, ecuUniqueRespDatas);
             }
@@ -219,7 +264,9 @@ namespace ISO22900.II
 
         public List<PduEcuUniqueRespData> PduGetUniqueRespIdTable(uint moduleHandle, uint comLogicalLinkHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetUniqueRespIdTable.PduGetUniqueRespIdTable(moduleHandle, comLogicalLinkHandle);
             }
@@ -228,7 +275,9 @@ namespace ISO22900.II
         public uint PduStartComPrimitive(uint moduleHandle, uint comLogicalLinkHandle, PduCopt pduCopType, byte[] copData, PduCopCtrlData copCtrlData,
             uint copTag)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduStartComPrimitive.PduStartComPrimitive(moduleHandle, comLogicalLinkHandle, pduCopType, copData, copCtrlData,
                     copTag);
@@ -237,7 +286,9 @@ namespace ISO22900.II
 
         public void PduCancelComPrimitive(uint moduleHandle, uint comLogicalLinkHandle, uint comPrimitiveHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduCancelComPrimitive.PduCancelComPrimitive(moduleHandle, comLogicalLinkHandle, comPrimitiveHandle);
             }
@@ -250,7 +301,9 @@ namespace ISO22900.II
         /// <param name="comLogicalLinkHandle"></param>
         public void PduConnect(uint moduleHandle, uint comLogicalLinkHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduConnect.PduConnect(moduleHandle, comLogicalLinkHandle);
             }
@@ -266,7 +319,9 @@ namespace ISO22900.II
         /// <param name="comLogicalLinkHandle"></param>
         public void PduDisconnect(uint moduleHandle, uint comLogicalLinkHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduDisconnect.PduDisconnect(moduleHandle, comLogicalLinkHandle);
             }
@@ -275,7 +330,9 @@ namespace ISO22900.II
         public void PduRegisterEventCallback(uint moduleHandle, uint comLogicalLinkHandle,
             Action<PduEvtData, uint, uint, uint, uint> eventHandler)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 _apiCallPduRegisterEventCallback.PduRegisterEventCallback(moduleHandle, comLogicalLinkHandle, eventHandler);
             }
@@ -283,7 +340,9 @@ namespace ISO22900.II
 
         public uint PduGetTimestamp(uint moduleHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetTimestamp.PduGetTimestamp(moduleHandle);
             }
@@ -298,7 +357,9 @@ namespace ISO22900.II
         /// <returns>id</returns>
         public uint PduGetObjectId(PduObjt pduObjectType, string shortName)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetObjectId.PduGetObjectId(pduObjectType, shortName);
             }
@@ -306,7 +367,9 @@ namespace ISO22900.II
 
         public Queue<PduEventItem> PduGetEventItem(uint moduleHandle, uint comLogicalLinkHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetEventItem.PduGetEventItem(moduleHandle, comLogicalLinkHandle);
             }
@@ -314,7 +377,9 @@ namespace ISO22900.II
 
         public PduVersionData PduGetVersionData(uint moduleHandle)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetVersion.PduGetVersion(moduleHandle);
             }
@@ -322,7 +387,9 @@ namespace ISO22900.II
 
         public List<PduRscIdItemData> PduGetResourceIds(uint moduleHandle, PduResourceData pduResourceData)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduGetResourceIds.PduGetResourceIds(moduleHandle, pduResourceData);
             }
@@ -330,9 +397,21 @@ namespace ISO22900.II
 
         public PduIoCtl PduIoCtl(uint moduleHandle, uint comLogicalLinkHandle, uint ioCtlCommandId, PduIoCtl pduIoCtlData)
         {
+#if !D_PDU_API_EVALUATION
             lock ( sync )
+#endif
             {
                 return _apiCallPduIoCtl.PduIoCtl(moduleHandle, comLogicalLinkHandle, ioCtlCommandId, pduIoCtlData);
+            }
+        }
+
+        public PduExLastErrorData PduGetLastError(uint moduleHandle, uint comLogicalLinkHandle)
+        {
+#if !D_PDU_API_EVALUATION
+            lock ( sync )
+#endif
+            {
+                return _apiCallPduGetLastError.PduGetLastError(moduleHandle, comLogicalLinkHandle);
             }
         }
 

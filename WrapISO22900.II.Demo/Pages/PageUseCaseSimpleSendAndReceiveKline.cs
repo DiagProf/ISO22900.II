@@ -28,6 +28,7 @@
 using System;
 using System.Linq;
 using ISO22900.II.OdxLikeComParamSets;
+using ISO22900.II.OdxLikeComParamSets.PhysicalLayer;
 using Spectre.Console;
 
 namespace ISO22900.II.Demo
@@ -59,7 +60,7 @@ namespace ISO22900.II.Demo
                     //Define the protocol behavior
                     var dlcPinData = cllConfigPorscheKline.DlcPinData;
                     var busTypeName = cllConfigPorscheKline.BusTypeName;
-                    //var busTypeName = "ISO_9141_2_UART";  //e.g. Softing
+                    //var busTypeName = "ISO_9141_2_UART";  //e.g. Softing since version 11.30.053, 14.06.2022 -> Added support for bus type ISO_14230_1_UART in addition to ISO_9141_2_UART
                     //var busTypeName = "ISO_14230_1_UART"; //e.g. Samtec  // Bosch
                     var protocolName = cllConfigPorscheKline.ProtocolName;
 
@@ -67,7 +68,7 @@ namespace ISO22900.II.Demo
                     {
                         cllConfigPorscheKline.LogicalLinkSettingPcm().SetUpLogicalLink(link);
                         link.Connect();
-                        //Thread.Sleep(500);
+                        
                         var copStartcomm = link.StartCop(PduCopt.PDU_COPT_STARTCOMM, 1, 1, new byte[] { 0x81 });
                         var queueS = copStartcomm.WaitForCopResult();
 

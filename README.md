@@ -1,6 +1,6 @@
 # `ISO22900.II-Sharp`
 
-_[![ISO22900.II-Sharp NuGet Version](https://img.shields.io/nuget/v/ISO22900.II-Sharp.svg?style=flat&label=NuGet%3A-ISO22900.II-Sharp)](https://www.nuget.org/packages/ISO22900.II-Sharp)_
+_[![ISO22900.II-Sharp NuGet Version](https://img.shields.io/nuget/v/ISO22900.II-Sharp.svg?style=flat&label=NuGet%3A-ISO22900.II-Sharp)](https://www.nuget.org/packages/ISO22900.II-Sharp)_ *(only WrapISO22900.II is the NuGet package)*
 
 ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-2 spec library (also called D-PDU-API) and lets you deal with the important stuff.
 
@@ -12,16 +12,12 @@ ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-
 4. [TODO's](#tODO's)
 5. [Usage](#usage)
 6. [FAQ](#faq)
-   
-   
 
 ## Introduction
 
 The [ISO 22900-2](https://www.iso.org/standard/62490.html) friendly name is D-PDU-API both are synonymous for a software interface description. D-PDU-API can live alone but was normally designed in use with ISO 22900-X and ISO 22901-X in mind. All this spec libraries has the goal to make automotive diagnostic data interchangeable. In case of ISO 22900-2 this correctly means modular vehicle communication interface (MVCI or VCI) can be exchanged through MVCI from another manufacturer if both support ISO 22900-2.
 
 Extract from 22900-2: *"The purpose of ISO 22900-2 is to ensure that diagnostic and reprogramming applications from any vehicle or tool manufacturer can operate on a common software interface and can easily exchange MVCI protocol module implementations."*
-
-
 
 ## A bit of history with philosophy
 
@@ -38,8 +34,6 @@ From my point of view, the biggest advantages of the D-PDU-API are:
 - the parameters for the vehicle protocols are also part of the specification (at least for the widely used protocols)
 
 - the parameters and the vehicle protocols are named **completely**, **uniformly** and the **effectiveness** of the parameter is determined
-
-
 
 ## Thoughts about the API
 
@@ -483,5 +477,3 @@ I've seen that too
 - { 1, "TX" }, { 3, "RX" }
 
 - { 3, "RX" }, { 12, "TX" }
-
-- 

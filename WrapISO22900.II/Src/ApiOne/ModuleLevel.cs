@@ -138,7 +138,9 @@ namespace ISO22900.II
             catch ( Iso22900IIException e )
             {
                 if ( !(SysLevel.ApiModBitField.HasFlag(ApiModifications.VOLTAGE_FIX) &&
-                       (e.PduError == PduError.PDU_ERR_VOLTAGE_NOT_SUPPORTED || e.PduError == PduError.PDU_ERR_ID_NOT_SUPPORTED)) )
+                       (e.PduError == PduError.PDU_ERR_VOLTAGE_NOT_SUPPORTED  //I've already seen that but it shouldn't actually be on the IoCtrl "PDU_IOCTL_READ_VBATT" only for "PDU_IOCTL_SET_PROG_VOLTAGE"
+                        || e.PduError == PduError.PDU_ERR_FCT_FAILED
+                        || e.PduError == PduError.PDU_ERR_ID_NOT_SUPPORTED)) )
                 {
                     throw;
                 }

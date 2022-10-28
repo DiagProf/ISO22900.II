@@ -45,8 +45,8 @@ namespace ISO22900.II
 
         /// <summary>
         ///     D-PDU API create checksum to transmit messages
-        ///     This flag is ignored if RawMode is set to off !!!
-        ///     false = off (default)
+        ///     this flag is ignored if RawMode is set to off !!!
+        ///     false = off
         ///     true = on
         /// </summary>
         public bool ChecksumMode

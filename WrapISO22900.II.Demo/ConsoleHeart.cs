@@ -60,6 +60,7 @@ namespace ISO22900.II.Demo
             AddPage(new PageUseCaseSimpleSendAndReceiveObd2OverCan(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveObd2OverKline(this));
             AddPage(new PageUseCaseSimpleSendAndReceiveWithOptionString(this));
+            AddPage(new PageUseCaseSimpleSendAndReceiveWithEventDrivenCanTrace(this));
             AddPage(new PageUseCaseEventAllOver(this));
             AddPage(new PagePlayground(this));
             AddPage(new PageUseCaseEcuSimulator(this));

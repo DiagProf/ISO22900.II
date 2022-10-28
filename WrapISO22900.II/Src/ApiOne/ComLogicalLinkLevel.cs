@@ -71,7 +71,7 @@ namespace ISO22900.II
 
             if ((copCtrlData.NumSendCycles < 0) || copCtrlData.NumReceiveCycles == -1)
             {
-                //LongRunning ComPrimitive (must be chanced)
+                //LongRunning ComPrimitive (must be canceled)
                 //the reason for a "Bounded channel" is that the cop will run indefinitely (until they are channeled)
                 //and the channels might fill up if not emptied. So we limit the channel
                 channel = Channel.CreateBounded<PduEventItem>(new BoundedChannelOptions(50)

@@ -73,15 +73,21 @@ namespace ISO22900.II
             _copTag = copTag;
         }
 
-
-        public ComPrimitiveResult WaitForCopResult()
+        /// <summary>
+        /// I have a async brother.  
+        /// There are APIs which do not generate a PDU_COPST_CANCELLED event if the VCI connection is lost.
+        /// This is normally not allowed. As a work around you can use the CancellationToken.
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public ComPrimitiveResult WaitForCopResult(CancellationToken ct = default)
         {
-            return _cop.WaitForCopResult();
+            return _cop.WaitForCopResult(ct);
         }
 
         public async Task<ComPrimitiveResult> WaitForCopResultAsync(CancellationToken ct = default)
         {
-            return await _cop.WaitForCopResultAsync(ct);
+            return await _cop.WaitForCopResultAsync(ct).ConfigureAwait(false);
         }
 
         public PduExStatusData Status()

@@ -4,6 +4,8 @@ _[![ISO22900.II-Sharp NuGet Version](https://img.shields.io/nuget/v/ISO22900.II-
 
 ISO22900.II-Sharp handles all the details of operating with unmanaged ISO 22900-2 spec library (also called D-PDU-API) and lets you deal with the important stuff.
 
+You could also say ISO22900.II-Sharp is an extended C# wrapper for the native D-PDU API. This implies that at least one native D-PDU-API must be installed on the machine before the warpper can be used at runtime. (*last sentence is for the absolute newbies*)
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -55,7 +57,7 @@ In a more sophisticated application it looks something like this:
 - One or more instances of com logical links are then opened on this VCI instance.  And these com logical links are then passed around in the application.
 - At the point in the application where you use the com logical link, you usually no longer have direct access to the VCI instance. Unless you passed the VCI instance around which is usually ugly.
 
-The use case is now you are doing something with the com logical link(s)  e.g. read live data or  read out the vehicle ignition status or vehicle battery voltage from the VCI directly. And now it comes to a VCI lost. Because, for example, the VCI was disconnected from OBDII connector or the USB, LAN, Wifi or Bluetooth connection to the VCI was interrupted. Now the ISO22900-II says in this case the com logical links and the VCI are no longer valid (in a nutshell). Which also means instances of VCI and com logical link are also no longer valid. But the biggest problem at this point is. If I want to make a new connection attempt to the VCI. I need to go back to the point in the code where I have an instance of the API. To avoid these twists the ApiOne have the internal classes ModuleLevel, ComLogicalLinkLevel, ComPrimitiveLevel represents real instances but the user of the ApiOne only has access to instances of Module, ComLogicalLink, ComPrimitive which are like wrappers. The trick is now… if there is a VCI lost and an exception is thrown somewhere you can catch the exception (evaluate it a bit more if you like) and then use TryToRecover to let the ApiOne try to establish a new connection. Under the hood, the ApiOne destroys/dispose the old instances and when the connection is back, new instances are created. However, the ApiOne user does not notice this because he is working on the wrapper instances and these are retained.
+The use case is now you are doing something with the com logical link(s)  e.g. read live data or  read out the vehicle ignition status or vehicle battery voltage from the VCI directly. And now it comes to a VCI lost. Because, for example, the VCI was disconnected from OBDII connector or the USB, LAN, Wifi or Bluetooth connection to the VCI was interrupted. Now the ISO22900-2 says in this case the com logical links and the VCI are no longer valid (in a nutshell). Which also means instances of VCI and com logical link are also no longer valid. But the biggest problem at this point is. If I want to make a new connection attempt to the VCI. I need to go back to the point in the code where I have an instance of the API. To avoid these twists the ApiOne have the internal classes ModuleLevel, ComLogicalLinkLevel, ComPrimitiveLevel represents real instances but the user of the ApiOne only has access to instances of Module, ComLogicalLink, ComPrimitive which are like wrappers. The trick is now… if there is a VCI lost and an exception is thrown somewhere you can catch the exception (evaluate it a bit more if you like) and then use TryToRecover to let the ApiOne try to establish a new connection. Under the hood, the ApiOne destroys/dispose the old instances and when the connection is back, new instances are created. However, the ApiOne user does not notice this because he is working on the wrapper instances and these are retained.
 
 The [SophisticatedExample](#usage-sophisticated-example) below show that. Note ApiOne remembers when ComPrimitive was sent with type PduCopt.PDU_COPT_STARTCOM. During the TryToReover run on the ComLogicalLink, this stored ComPrimitive is also sent.
 
@@ -460,7 +462,7 @@ The D-PDU API needs a description for each pin. The ISO22900-2 was only expanded
 
 And it was probably not so easy to find out without this list whether e.g. Ethernet RX+ or RX- should get pin type description RX. Other developers have thought that since the DoIP options only differ by 2 pins, we should only specify 2 pins. Some manufacturers only describe the plus lines as TX+ and RX+. And apparently some do not describe the DLC but the RJ45 connection so that they do not have to distinguish between DoIP option 1 and 2.
 
-To clarify the chaos, this phrase was added in the last 2022 edition of ISO 22900-2.
+To clarify the chaos, this phrase was added in the last 2022 edition of ISO22900-2.
 
 *NOTE The DoIP pins are used for documentation but are not considered for the D-PDU API*
 
@@ -477,3 +479,31 @@ I've seen that too
 - { 1, "TX" }, { 3, "RX" }
 
 - { 3, "RX" }, { 12, "TX" }
+
+
+
+
+
+**Q:** I have read the ISO22900-2 but do not fully understand the structure of the UniqueRespIdTable?
+
+**A:** I think it helps to imagine an excel under the term UniqueRespIdTable. In this excel each sheet,or called page has a list of unique ComParams.
+
+for e.g. Protocol ISO_15765_3_on_ISO_15765_2 a page would look something like this (*without first row*)
+
+| Unique-ComParam       | Value      |
+| --------------------- | ---------- |
+| CP_CanPhysReqFormat   | 5          |
+| CP_CanPhysReqExtAddr  | 0          |
+| CP_CanPhysReqId       | 0x7E0      |
+| CP_CanRespUSDTFormat  | 5          |
+| CP_CanRespUSDTExtAddr | 0          |
+| CP_CanRespUSDTId      | 0x7E8      |
+| CP_CanRespUUDTFormat  | 0          |
+| CP_CanRespUUDTExtAddr | 0          |
+| CP_CanRespUUDTId      | 0xFFFFFFFF |
+
+If we now stay in the analogy to excel, then the name of the page is something like the UniqueRespIdentifier. (*not shown here i can't get it working with markdown*)
+
+Furthermore, with this picture in mind is <u>one</u> excel for <u>one</u> protocol. And that also means that on all other pages the list of Unique-ComParam must also be the same. Of course some of the Unique-ComParams with different values.
+
+95% of the time you only need one page. More pages are only needed for functional communication. And by the way, with physical addressing, only the 1st page is ever used for the tester request address, even if there are several pages.

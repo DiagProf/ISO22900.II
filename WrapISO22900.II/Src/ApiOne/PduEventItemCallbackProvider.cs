@@ -103,8 +103,8 @@ namespace ISO22900.II
                         if (cbTask.Result.EventType == PduEvtData.PDU_EVT_DATA_AVAILABLE)
                             try
                             {
-                                await EventDataProducerTask(cbTask.Result);
-                                await EventDataConsumerTask();
+                                await EventDataProducerTask(cbTask.Result).ConfigureAwait(false);
+                                await EventDataConsumerTask().ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
@@ -114,7 +114,7 @@ namespace ISO22900.II
                         else
                             try
                             {
-                                await DataLostTask(cbTask.Result);
+                                await DataLostTask(cbTask.Result).ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {

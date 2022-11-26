@@ -284,6 +284,7 @@ namespace ISO22900.II
             return 0;
         }
 
+
         /// <summary>
         ///     Set a single communication parameter from a single page.
         /// </summary>
@@ -431,6 +432,29 @@ namespace ISO22900.II
 
             Vci.SysLevel.Nwa.PduSetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle, currentPages);
         }
+
+        public uint GetUniqueRespIdTableNumberOfPages()
+        {
+            return (uint)Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle).Count;
+        }
+
+        public uint GetPageUniqueRespIdentifier(uint pageIndex)
+        {
+            List<PduEcuUniqueRespData> currentPages;
+            currentPages = Vci.SysLevel.Nwa.PduGetUniqueRespIdTable(ModuleHandle, ComLogicalLinkHandle);
+
+            try
+            {
+                return currentPages[(int)pageIndex].UniqueRespIdentifier;
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                _logger.LogCritical(ex, "Page with index {pageIndex} does not exist!", pageIndex);
+                throw new DiagPduApiException($"Page with index {pageIndex} does not exist!");
+            }
+
+        }
+
 
 
         /// <summary>

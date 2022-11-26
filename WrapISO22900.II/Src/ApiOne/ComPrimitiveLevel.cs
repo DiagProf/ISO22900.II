@@ -59,22 +59,24 @@ namespace ISO22900.II
             }
         }
 
-        public ComPrimitiveResult WaitForCopResult()
+        public ComPrimitiveResult WaitForCopResult(CancellationToken ct)
         {
-            var cts = new CancellationTokenSource();
-            //cts.CancelAfter(5000); Bug fix for Vector D-PDU-API if VCI they.. don't send PDU_COPST_CANCELLED
             try
             {
-                return WaitForCopResultAsync(cts.Token).Result;
+                return WaitForCopResultAsync(ct).Result;
             }
             catch ( AggregateException e )
             {
-                throw e.InnerException;
+                foreach ( var ex in e.InnerExceptions )
+                {
+                    if ( ex is not OperationCanceledException )
+                    {
+                        throw ex;
+                    }
+                }
             }
-            finally
-            {
-                cts.Dispose();
-            }
+
+            return new ComPrimitiveResult(new Queue<PduEventItem>());
         }
 
         public async Task<ComPrimitiveResult> WaitForCopResultAsync(CancellationToken ct)
@@ -83,7 +85,7 @@ namespace ISO22900.II
             var copResult = new ComPrimitiveResult(eventItemResults);
             try
             {
-                while (await _channelReader.WaitToReadAsync(ct))
+                while (await _channelReader.WaitToReadAsync(ct).ConfigureAwait(false))
                 {
                     if (_channelReader.TryRead(out var item))
                     {

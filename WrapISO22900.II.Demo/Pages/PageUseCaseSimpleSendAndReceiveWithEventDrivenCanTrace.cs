@@ -93,30 +93,30 @@ namespace ISO22900.II.Demo
                             var pcmCllConfig = new VehicleInfoSpecForTestEcu();
                             pcmCllConfig.SetUpLogicalLink(link);
 
-                            //The next 3 commands are only needed if I want to build a filter that pass only the diagnostic Can-Ids from the link (the worker).
-                            link.SetUniqueRespIdTablePageOneUniqueRespIdentifier(0x4711); //this is a hack because the next function needs an id. I think i need something like "get UniqueRespIdentifier from first table" //ToDo for APIOne extension
+                            //The next 3 commands are only needed if I want to build a filter that pass only the diagnostic CAN-Ids from the link (the worker).
+                            var uniqueRespIdentifier = link.GetPageOneUniqueRespIdentifier(); 
                             //here we pick up the request and response address and use it as two response addresses for tracing
-                            var canPhysReqId = link.GetUniqueIdComParamValue(0x4711, "CP_CanPhysReqId");
-                            var canRespUSDTId = link.GetUniqueIdComParamValue(0x4711, "CP_CanRespUSDTId");
+                            var canPhysReqId = link.GetUniqueIdComParamValue(uniqueRespIdentifier, "CP_CanPhysReqId");
+                            var canRespUSDTId = link.GetUniqueIdComParamValue(uniqueRespIdentifier, "CP_CanRespUSDTId");
 
 
                             var traceUniqueResponseDatas = new List<PduEcuUniqueRespData>
                             {
                                 //that lets all CAN-IDs pass
-                                new PduEcuUniqueRespData(PduConst.PDU_ID_UNDEF, new List<PduComParam>
-                                {
-                                        //The next 3 should only be initialized and if possible so that the link cannot send anything.
-                                        DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0xFF_FF_FF_FF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                        DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                //new PduEcuUniqueRespData(PduConst.PDU_ID_UNDEF, new List<PduComParam>
+                                //{
+                                //        //The next 3 should only be initialized and if possible so that the link cannot send anything.
+                                //        DiagPduApiComParamFactory.Create("CP_CanPhysReqFormat", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                //        DiagPduApiComParamFactory.Create("CP_CanPhysReqId", 0xFF_FF_FF_FF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                //        DiagPduApiComParamFactory.Create("CP_CanPhysReqExtAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
 
-                                        //now let's set the receiving side
-                                        DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID), //0x00 -> normal, unsegmented, 11‐bit, without FC
-                                        DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFF_FF_FF_FF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID), //we don't want to send anything
-                                        DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
-                                })
+                                //        //now let's set the receiving side
+                                //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTFormat", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID), //0x00 -> normal, unsegmented, 11‐bit, without FC
+                                //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTId", 0xFF_FF_FF_FF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID), //we don't want to send anything
+                                //        DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0xFF, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
+                                //})
 
-                                /*
+                                
                                     //that only lets pass the CAN IDs from the from the link (the worker)
 
                                     //that looks at the request messages
@@ -145,7 +145,7 @@ namespace ISO22900.II.Demo
                                         DiagPduApiComParamFactory.Create("CP_CanRespUUDTId",  canRespUSDTId, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID), //we don't want to send anything
                                         DiagPduApiComParamFactory.Create("CP_CanRespUUDTExtAddr", 0x00, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_UNIQUE_ID),
                                     })
-                                */
+
                             };
 
                             //setup the linkCanRawTrace (the tracer)

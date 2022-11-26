@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
@@ -333,11 +334,12 @@ namespace ISO22900.II
 
         public uint GetUniqueIdComParamValue(uint uniqueRespIdentifier, string name)
         {
-            lock ( _sync )
+            lock (_sync)
             {
                 return _cll.GetUniqueIdComParamValue(uniqueRespIdentifier, name);
             }
         }
+
 
         public void SetUniqueIdComParamValue(uint uniqueRespIdentifier, string name, long value)
         {
@@ -431,6 +433,47 @@ namespace ISO22900.II
             lock ( _sync )
             {
                 _cll.SetUniqueRespIdTablePageOneUniqueRespIdentifier(uniqueRespIdentifier);
+            }
+        }
+
+
+
+        /// <summary>
+        /// returns the number of the current pages
+        /// usually in preparation for the function GetPageUniqueRespIdentifier
+        /// </summary>
+        /// <returns></returns>
+        public uint GetUniqueRespIdTableNumberOfPages()
+        {
+            lock (_sync)
+            {
+                return _cll.GetUniqueRespIdTableNumberOfPages();
+            }
+        }
+
+
+        /// <summary>
+        /// returns the UniqueRespIdentifier from page one
+        /// actually there should always be at least one page
+        /// but I think there are also wrong implementations where you can delete all pages. Then you have to be careful with this function
+        /// </summary>
+        /// <returns></returns>
+        public uint GetPageOneUniqueRespIdentifier()
+        {
+            return this.GetPageUniqueRespIdentifier(0);
+        }
+
+        /// <summary>
+        /// returns the UniqueRespIdentifier from page with index x
+        /// use GetUniqueRespIdTableNumberOfPages to see how many there are
+        /// </summary>
+        /// <param name="pageIndex">page index</param>
+        /// <returns></returns>
+        public uint GetPageUniqueRespIdentifier(uint pageIndex)
+        {
+            lock (_sync)
+            {
+                return _cll.GetPageUniqueRespIdentifier(pageIndex);
             }
         }
 

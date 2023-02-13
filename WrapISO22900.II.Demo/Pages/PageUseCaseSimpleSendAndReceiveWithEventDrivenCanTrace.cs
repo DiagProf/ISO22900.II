@@ -252,7 +252,9 @@ namespace ISO22900.II.Demo
                 string responseString;
                 if (result.DataBytes.Length >= 4) 
                 {
-                    //we are in raw mode so canIds are in the date
+                    //For ISO 15765, SAE J1939 and ISO 11898, the first 4 bytes of the pCopData shall be the CAN ID (11-bit or 
+                    //29 - bit). If extended addressing is enabled(see D.2.1), then the byte following the CAN ID contains the extended address byte
+                    //we are in raw mode so canIds are in the data
                     uint canId = BitConverter.ToUInt32(result.DataBytes,0);
                    
                     if (BitConverter.IsLittleEndian)
@@ -260,9 +262,10 @@ namespace ISO22900.II.Demo
                         canId = BinaryPrimitives.ReverseEndianness(canId);
                     }
 
-                    if ( canId > 0x80_00_00_00 )
+                    //For ISO 15765, SAE J1939 and ISO 11898, the first 4 bytes of the pCopData shall be the CAN ID (11-bit or 
+                    //29 - bit). If extended addressing is enabled(see D.2.1), then the byte following the CAN ID contains the extended address byte
+                    if ( result.RxFlag.Can29BitId)
                     {
-                        canId &= 0x1F_FF_FF_FF;
                         //responseString = $"29Bit CanId: 0x{canId:X8}  Data: ";
                         responseString = $"CanId: 0x{canId:X8}  Data: ";
                     }
@@ -278,6 +281,16 @@ namespace ISO22900.II.Demo
 
                     AnsiConsole.MarkupLine($"[green]{responseString}[/]");
                 }
+            }
+
+            //Yes, PduIt.PDU_IT_ERROR can also happen with just tracing, e.g. if you swapped CAN high-low lines or forgot the terminating resistor for CAN.
+            //You can display something or just ignore it
+            if (e.PduItemType == PduIt.PDU_IT_ERROR)
+            {
+                var resultError = ((PduEventItemError)e);
+                var responseString = string.Empty;
+                responseString += $"{resultError.ErrorCodeId}" + $" ({resultError.ExtraErrorInfoId})";
+                AnsiConsole.MarkupLine($"[red]{responseString}[/]");
             }
         }
 

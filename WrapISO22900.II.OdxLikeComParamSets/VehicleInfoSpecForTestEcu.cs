@@ -77,6 +77,14 @@ namespace ISO22900.II.OdxLikeComParamSets
             return this;
         }
 
+        public VehicleInfoSpecForTestEcu LogicalLinkSettingForIpc()
+        {
+            InitializeAllComParams();
+            Tpl.CP_CanPhysReqId = 0x720;
+            Tpl.CP_CanRespUSDTId = 0x728;
+            return this;
+        }
+
         public VehicleInfoSpecForTestEcu LogicalLinkSettingForOBD()
         {
             InitializeAllComParams();

@@ -367,12 +367,7 @@ namespace ISO22900.II
 
         public Queue<PduEventItem> PduGetEventItem(uint moduleHandle, uint comLogicalLinkHandle)
         {
-#if !D_PDU_API_EVALUATION
-            lock ( sync )
-#endif
-            {
-                return _apiCallPduGetEventItem.PduGetEventItem(moduleHandle, comLogicalLinkHandle);
-            }
+            return _apiCallPduGetEventItem.PduGetEventItem(moduleHandle, comLogicalLinkHandle);
         }
 
         public PduVersionData PduGetVersionData(uint moduleHandle)

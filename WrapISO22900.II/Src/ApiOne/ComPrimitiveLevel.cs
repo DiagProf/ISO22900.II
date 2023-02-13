@@ -109,7 +109,7 @@ namespace ISO22900.II
 
                         //if the cop is set up in such a way that there can be an infinite number of results
                         //then each individual result is returned
-                        if (item.PduItemType == PduIt.PDU_IT_RESULT && _needsToBeCanceled)
+                        if ( _needsToBeCanceled /*&& (item.PduItemType == PduIt.PDU_IT_RESULT || item.PduItemType == PduIt.PDU_IT_ERROR)*/ )
                         {
                             break;
                         }

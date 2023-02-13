@@ -153,6 +153,8 @@ namespace ISO22900.II
                 //only that there is no irritation. It would also work with 1
                 _readyToUseCopControl.NumSendCycles = 0;
                 _readyToUseCopControl.NumReceiveCycles = 0;
+                var backup = _readyToUseCopControl.PduExpectedResponseDatas;
+                _readyToUseCopControl.PduExpectedResponseDatas = Array.Empty<PduExpectedResponseData>();
                 try
                 {
                     return StartCop(pduCopType, new byte[] {}, _readyToUseCopControl, copTag);
@@ -163,6 +165,7 @@ namespace ISO22900.II
                     _readyToUseCopControl.Time = 0;
                     _readyToUseCopControl.NumSendCycles = 1;
                     _readyToUseCopControl.NumReceiveCycles = 1;
+                    _readyToUseCopControl.PduExpectedResponseDatas = backup;
                 }
             }
         }

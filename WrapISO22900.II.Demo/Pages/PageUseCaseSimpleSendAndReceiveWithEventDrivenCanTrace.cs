@@ -90,7 +90,7 @@ namespace ISO22900.II.Demo
                         using ( var linkCanRawTrace = vci.OpenComLogicalLink(busTypeName, protocolNameForCanTrace, dlcPinData.ToList(), cllCreateFlag ))
                         {
                             //setUp the link (the worker)
-                            var pcmCllConfig = new VehicleInfoSpecForTestEcu();
+                            var pcmCllConfig = new VehicleInfoSpecForTestEcu().LogicalLinkSettingForPcm();
                             pcmCllConfig.SetUpLogicalLink(link);
 
                             //The next 3 commands are only needed if I want to build a filter that pass only the diagnostic CAN-Ids from the link (the worker).

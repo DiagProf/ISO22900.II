@@ -33,7 +33,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
@@ -47,6 +49,12 @@ namespace ISO22900.II
         internal readonly ModuleLevel Vci;
 
         internal ConcurrentDictionary<uint, ChannelWriter<PduEventItem>> CopChannels { get; } = new();
+        internal Channel<PduEventItem> TraceCllEvent = Channel.CreateBounded<PduEventItem>(new BoundedChannelOptions(10)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest,
+            SingleReader = true,
+            SingleWriter = true
+        });
 
         protected internal uint ModuleHandle { get; }
         protected internal uint ComLogicalLinkHandle { get; }
@@ -95,8 +103,6 @@ namespace ISO22900.II
                 var comPrimitiveHandle = Vci.SysLevel.Nwa.PduStartComPrimitive(ModuleHandle, ComLogicalLinkHandle,
                     pduCopType, copData, copCtrlData, copTag);
 
-
-
                 CopChannels.GetOrAdd(comPrimitiveHandle,channel.Writer);
                 
                 var comPrimitive = new ComPrimitiveLevel(this, comPrimitiveHandle, channel.Reader, pduCopType, copData, copCtrlData, copTag);
@@ -112,19 +118,71 @@ namespace ISO22900.II
 
         public void Disconnect()
         {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(5000)))
+            {
+                try
+                {
+                    _ = DisconnectAsync(cts.Token);
+                }
+                catch (AggregateException e)
+                {
+                    foreach (var ex in e.InnerExceptions)
+                    {
+                        if (ex is not OperationCanceledException)
+                        {
+                            throw ex;
+                        }
+                    }
+                }
+            }
+
+
+            //var linkStatus = PduStatus.PDU_CLLST_OFFLINE;
+            //try
+            //{
+            //    linkStatus = Status().Status;
+            //}
+            //catch (Iso22900IIException)
+            //{
+            //    _logger.LogWarning("The ComLogicalLink can no longer be reached.This could be normal if a VCI was lost previously.");
+            //}
+
+            //if (linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED)
+            //{
+            //    Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
+            //}
+        }
+
+        public async Task DisconnectAsync(CancellationToken ct)
+        {
             var linkStatus = PduStatus.PDU_CLLST_OFFLINE;
             try
             {
                 linkStatus = Status().Status;
             }
-            catch ( Iso22900IIException )
+            catch (Iso22900IIException)
             {
                 _logger.LogWarning("The ComLogicalLink can no longer be reached.This could be normal if a VCI was lost previously.");
             }
 
-            if ( linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED )
+            if (linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED)
             {
                 Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
+
+                while ( await TraceCllEvent.Reader.WaitToReadAsync(ct).ConfigureAwait(false) )
+                {
+                    if ( TraceCllEvent.Reader.TryRead(out var item) )
+                    {
+                        if ( item.PduItemType == PduIt.PDU_IT_STATUS )
+                        {
+                            //all status infos are not put into the queue.
+                            if ( ((PduEventItemStatus)item).PduStatus == PduStatus.PDU_CLLST_OFFLINE)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -587,6 +645,7 @@ namespace ISO22900.II
             {
                 //Event is CLL event
                 OnPduEventItemReceived(item);
+                TraceCllEvent.Writer.TryWrite(item);
             }
             else
             {
@@ -626,7 +685,7 @@ namespace ISO22900.II
 
         protected override void FreeUnmanagedResources()
         {
-
+            TraceCllEvent.Writer.Complete();
             //First of all, we carefully ask what the VCI is doing
             //No exception is to be expected here
             var statusVci = Vci.Status().Status;

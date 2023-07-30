@@ -35,11 +35,11 @@ namespace ISO22900.II.Test
             if (Environment.Is64BitProcess)
             {
                 //Attention, this path is only VALID for x86
-                nativeLibraryPath = @"C:\Program Files\Softing\D-PDU API\11.30.030\VeCom\PDUAPI_SoftingAG_11.30.030.dll";
+                nativeLibraryPath = @"C:\Program Files\Softing\D-PDU API\11.30.058\VeCom\PDUAPI_SoftingAG_11.30.058.dll";
             }
             else
             {
-                nativeLibraryPath = @"C:\Program Files (x86)\Softing\D-PDU API\11.30.030\VeCom\PDUAPI_SoftingAG_11.30.030.dll";
+                nativeLibraryPath = @"C:\Program Files (x86)\Softing\D-PDU API\11.30.058\VeCom\PDUAPI_SoftingAG_11.30.058.dll";
             }
 
         }
@@ -171,7 +171,81 @@ namespace ISO22900.II.Test
             Assert.IsTrue(oneSysLevel.IsDisposed);
         }
 
-    }
+    
 
+        [Test]
+        public async Task UseCopPrimitiveWitchCreateEventPressure()
+        {
+
+            //out side only for test
+            DiagPduApiOneSysLevel oneSysLevel;
+            Module vci;
+            ComLogicalLink cll;
+            CancellationTokenSource cts = new CancellationTokenSource();
+            uint countResp = 0;
+            uint countError = 0;
+            uint countReturnsFromResultAsync = 0;
+
+            using (oneSysLevel = DiagPduApiOneFactory.GetApi(nativeLibraryPath))
+            using (vci = oneSysLevel.ConnectVci())
+            using (cll = vci.OpenComLogicalLink("ISO_11898_2_DWCAN", "ISO_15765_3_on_ISO_15765_2",
+                       new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } }.ToList()))
+            {
+                //Set UniqueId ComParam's
+                uint pageOneId = 815; //give page one a ID  
+                cll.SetUniqueRespIdTablePageOneUniqueRespIdentifier(pageOneId);
+                cll.SetUniqueIdComParamValue(pageOneId, "CP_CanPhysReqId", 0x7E0);
+                cll.SetUniqueIdComParamValue(pageOneId, "CP_CanRespUSDTId", 0x7E8);
+
+                cll.SetComParamValueViaGet("CP_P2Max", 2000); //2ms
+                cll.Connect();
+
+                uint dataIdentifier = 0x4711;
+                var tmp = new byte[] { 0x22, (byte)((dataIdentifier & 0xFF00) >> 8), (byte)(dataIdentifier & 0x00FF) };
+
+                var ctrlData = new PduCopCtrlData(new PduExpectedResponseData[] { new PduExpectedResponseData(PduExResponseType.PositiveResponse, 1u, new MaskAndPatternBytes(new byte[0], new byte[0]), new UniqueRespIds(new uint[0])) })
+                {
+                    Time = 3, //send every 3ms
+                    NumReceiveCycles = 1,
+                    NumSendCycles = -1,
+                };
+                using (var cop = cll.StartCop(PduCopt.PDU_COPT_SENDRECV, tmp, ctrlData))
+                {
+                    cts.CancelAfter(TimeSpan.FromSeconds(10)); //10 Sekunden
+                    while (!cts.Token.IsCancellationRequested)
+                    {
+                        countReturnsFromResultAsync++;
+                        var result = await cop.WaitForCopResultAsync();
+
+                        if (result.DataMsgQueue().Count > 0)
+                        {
+                            countResp++;
+                            //if ( countResp == 1000 || countResp == 1800 )
+                            //{
+                            //    countResp = countResp;
+                            //}
+                        }
+                        else if (result.PduEventItemErrors().Count > 0)
+                        {
+                            foreach (var error in result.PduEventItemErrors())
+                            {
+                                countError++;
+                            }
+
+                        }
+
+                    }
+                }
+
+                cll.Disconnect();
+            }
+            //Run 10Seconds -> 10000ms
+            //Cycletime -> 3ms
+            //P2max -> 2ms
+            //10000 / (3 + 5) -> 2000 copResults  //in simulation response after 1ms so P2max with 2ms ist more... thats way more than 2000 possible   
+            Assert.IsTrue((countResp + countError) >= 2000);
+
+        }
+    }
 
 }

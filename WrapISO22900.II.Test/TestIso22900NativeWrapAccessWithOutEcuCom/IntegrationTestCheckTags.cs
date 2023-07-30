@@ -37,11 +37,11 @@ namespace ISO22900.II.Test
             if (Environment.Is64BitProcess)
             {
                 //Attention, this path is only VALID for x86
-                nativeLibraryPath = @"C:\Program Files\Softing\D-PDU API\11.30.030\VeCom\PDUAPI_SoftingAG_11.30.030.dll";
+                nativeLibraryPath = @"C:\Program Files\Softing\D-PDU API\11.30.058\VeCom\PDUAPI_SoftingAG_11.30.058.dll";
             }
             else
             {
-                nativeLibraryPath = @"C:\Program Files (x86)\Softing\D-PDU API\11.30.030\VeCom\PDUAPI_SoftingAG_11.30.030.dll";
+                nativeLibraryPath = @"C:\Program Files (x86)\Softing\D-PDU API\11.30.058\VeCom\PDUAPI_SoftingAG_11.30.058.dll";
             }
 
             _dPduApi = new Iso22900NativeWrapAccess(nativeLibraryPath);

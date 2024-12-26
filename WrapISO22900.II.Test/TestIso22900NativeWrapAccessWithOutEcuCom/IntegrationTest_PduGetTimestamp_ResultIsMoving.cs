@@ -14,7 +14,7 @@ namespace ISO22900.II.Test
             var timestamp2 = _dPduApi.PduGetTimestamp(_moduleOne);
 
             //If an overflow occurs exactly at the moment of test. It will fail. But that is the most unlikely case :-)
-            Assert.Less(timestamp1, timestamp2);
+            Assert.That(timestamp1, Is.LessThan(timestamp2));
         }
     }
 }

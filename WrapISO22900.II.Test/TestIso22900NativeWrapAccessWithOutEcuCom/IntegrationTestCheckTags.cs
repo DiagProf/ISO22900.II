@@ -69,7 +69,7 @@ namespace ISO22900.II.Test
                 break;
             }
 
-            Assert.AreNotEqual(_moduleOne, PduConst.PDU_HANDLE_UNDEF);
+            Assert.That(_moduleOne, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
 
             _dPduApi.PduModuleConnect(_moduleOne);
 
@@ -85,7 +85,7 @@ namespace ISO22900.II.Test
                 cllDescription.First(x => x.Value == "DiagCom").Key,
                 new PduFlagDataCllCreateFlag());
 
-            Assert.AreNotEqual(_cll, PduConst.PDU_HANDLE_UNDEF);
+            Assert.That(_cll, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
         }
 
 
@@ -139,14 +139,14 @@ namespace ISO22900.II.Test
                 _dPduApi.PduRegisterEventCallback(_moduleOne, _cll, evHandler);
 
                 _dPduApi.PduConnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 var queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
 
-                Assert.IsTrue(queue.TryDequeue(out var item));
-                if (item.PduItemType == PduIt.PDU_IT_STATUS)
+                Assert.That(queue.TryDequeue(out var item), Is.True);
+                if (item?.PduItemType == PduIt.PDU_IT_STATUS)
                 {
-                    Assert.AreEqual(((PduEventItemStatus) item).PduStatus, PduStatus.PDU_CLLST_ONLINE);
+                    Assert.That(((PduEventItemStatus)item).PduStatus, Is.EqualTo(PduStatus.PDU_CLLST_ONLINE));
                 }
 
                 uint delay = 500;
@@ -157,7 +157,7 @@ namespace ISO22900.II.Test
                     copControlDelay,
                     copDescription.First(x => x.Value == "DelayCop").Key);
 
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(delay + 200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(delay + 200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
                 bool isFinished = false;
@@ -175,11 +175,11 @@ namespace ISO22900.II.Test
                     }
                 }
 
-                Assert.IsTrue(isFinished);
+                Assert.That(isFinished, Is.True);
 
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
-                Assert.IsTrue(isTagApiOkay && isTagCllOkay && isTagCopOkay);
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
+                Assert.That(isTagApiOkay && isTagCllOkay && isTagCopOkay, Is.True);
             }
             catch
             {

@@ -58,7 +58,7 @@ namespace ISO22900.II.Test
          
             Module vci = null;
             Module vci2 = null;
-            ComLogicalLinkLevel cll;
+         
 
             var task1 = Task.Run(() =>
             {
@@ -81,7 +81,7 @@ namespace ISO22900.II.Test
                     var mvolt = vci2.MeasureBatteryVoltage();
                     if (mvolt != 12000)
                     {
-                        mvolt = mvolt;
+                        //mvolt = mvolt;
                         break;
                     }
                 }
@@ -89,14 +89,14 @@ namespace ISO22900.II.Test
                 
             });
             await Task.WhenAll(new Task[2] { task1, task2 });
-            vci.Disconnect();
-            vci2.Disconnect();
+            vci?.Disconnect();
+            vci2?.Disconnect();
             //vci = DiagPduApiOneFactory.GetVci(vciName, nativeLibraryPath, NullLogger.Instance);
             //vci2 = DiagPduApiOneFactory.GetVci(vciName, nativeLibraryPath, NullLogger.Instance);
             //vci.Disconnect();
             //Assert.IsFalse(vci.IsDisposed); 
             //vci2.Status();
-            Assert.IsTrue(vci2.IsDisposed);
+            Assert.That(vci2?.IsDisposed, Is.True);
 
             //vci2.Disconnect();
 
@@ -130,9 +130,9 @@ namespace ISO22900.II.Test
                 cll.Disconnect();
             }
 
-            Assert.IsTrue(cll.IsDisposed);
-            Assert.IsTrue(vci.IsDisposed);
-            Assert.IsTrue(oneSysLevel.IsDisposed);
+            Assert.That(cll.IsDisposed, Is.True);
+            Assert.That(vci.IsDisposed, Is.True);
+            Assert.That(oneSysLevel.IsDisposed, Is.True);
         }
 
 
@@ -166,9 +166,9 @@ namespace ISO22900.II.Test
                 Run();
             }
 
-            Assert.IsTrue(cll.IsDisposed);
-            Assert.IsTrue(vci.IsDisposed);
-            Assert.IsTrue(oneSysLevel.IsDisposed);
+            Assert.That(cll.IsDisposed, Is.True);
+            Assert.That(vci.IsDisposed, Is.True);
+            Assert.That(oneSysLevel.IsDisposed, Is.True);
         }
 
     
@@ -243,7 +243,7 @@ namespace ISO22900.II.Test
             //Cycletime -> 3ms
             //P2max -> 2ms
             //10000 / (3 + 5) -> 2000 copResults  //in simulation response after 1ms so P2max with 2ms ist more... thats way more than 2000 possible   
-            Assert.IsTrue((countResp + countError) >= 2000);
+            Assert.That((countResp + countError) >= 2000, Is.True);
 
         }
     }

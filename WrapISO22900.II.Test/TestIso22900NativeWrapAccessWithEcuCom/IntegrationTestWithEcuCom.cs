@@ -91,7 +91,7 @@ namespace ISO22900.II.Test
             }
             _dPduApi.PduModuleConnect(_moduleOne);
 
-            Assert.AreNotEqual(_moduleOne, PduConst.PDU_HANDLE_UNDEF);
+            Assert.That(_moduleOne, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
 
             //All further tests depend partly on this protocol stack settings. So don't change it
             var busTypId = _dPduApi.PduGetObjectId(PduObjt.PDU_OBJT_BUSTYPE, "ISO_11898_2_DWCAN");
@@ -103,7 +103,7 @@ namespace ISO22900.II.Test
             _cll = _dPduApi.PduCreateComLogicalLink(_moduleOne, pduRscData, PduConst.PDU_ID_UNDEF, 0,
                 new PduFlagDataCllCreateFlag());
 
-            Assert.AreNotEqual(_cll, PduConst.PDU_HANDLE_UNDEF);
+            Assert.That(_cll, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
 
             var testValue = _dPduApi.PduGetUniqueRespIdTable(_moduleOne, _cll);
 

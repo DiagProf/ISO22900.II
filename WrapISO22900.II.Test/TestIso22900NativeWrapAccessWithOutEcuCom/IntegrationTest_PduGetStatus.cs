@@ -10,14 +10,14 @@ namespace ISO22900.II.Test
         public void TestPduGetStatusModule()
         {
             var statusData = _dPduApi.PduGetStatus(_moduleOne, PduConst.PDU_HANDLE_UNDEF, PduConst.PDU_HANDLE_UNDEF);
-            Assert.AreEqual(PduStatus.PDU_MODST_READY, statusData.Status );
+            Assert.That(statusData.Status, Is.EqualTo(PduStatus.PDU_MODST_READY));
         }
 
         [Test]
         public void TestPduGetStatusComLogicalLink()
         {
             var statusData = _dPduApi.PduGetStatus(_moduleOne, _cll, PduConst.PDU_HANDLE_UNDEF);
-            Assert.AreEqual(PduStatus.PDU_CLLST_OFFLINE, statusData.Status);
+            Assert.That(statusData.Status, Is.EqualTo(PduStatus.PDU_CLLST_OFFLINE));
         }
 
 
@@ -32,7 +32,7 @@ namespace ISO22900.II.Test
                 0);
             
             var statusData = _dPduApi.PduGetStatus(_moduleOne, _cll, hCoP);
-            Assert.AreEqual(PduStatus.PDU_COPST_IDLE, statusData.Status);
+            Assert.That(statusData.Status, Is.EqualTo(PduStatus.PDU_COPST_IDLE));
             _dPduApi.PduDisconnect(_moduleOne, _cll);
         }
     }

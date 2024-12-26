@@ -27,14 +27,14 @@ namespace ISO22900.II.Test
                 _dPduApi.PduRegisterEventCallback(_moduleOne, _cll, evHandler);
                 
                 _dPduApi.PduConnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 var queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
-                
-                Assert.IsTrue(queue.TryDequeue(out var item));
-                if (item.PduItemType == PduIt.PDU_IT_STATUS)
+
+                Assert.That(queue.TryDequeue(out var item), Is.True);
+                if (item?.PduItemType == PduIt.PDU_IT_STATUS)
                 {
-                    Assert.AreEqual(((PduEventItemStatus)item).PduStatus, PduStatus.PDU_CLLST_ONLINE);
+                    Assert.That(((PduEventItemStatus)item).PduStatus, Is.EqualTo(PduStatus.PDU_CLLST_ONLINE));
                 }    
 
 
@@ -58,8 +58,8 @@ namespace ISO22900.II.Test
 
                 var hCoP = _dPduApi.PduStartComPrimitive(_moduleOne, _cll, PduCopt.PDU_COPT_SENDRECV, request,
                     copControl, 0);
-                    
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
                
                 //Remove all Items from event queue to enable a new callback
                 queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
@@ -74,7 +74,7 @@ namespace ISO22900.II.Test
                         }
                     }
                 }
-                Assert.IsTrue(isExecuting);
+                Assert.That(isExecuting, Is.True);
 
                 //ISO_22900_2_2017 -> If the ComPrimitiveLevel is already in the PDU_COPST_FINISHED status, this call will return success!!
                 //But e.g. Softing D-PDU-API unfortunately returns a negative answer here (PDU_ERR_INVALID_HANDLE)
@@ -83,7 +83,7 @@ namespace ISO22900.II.Test
                 //But that would also mean that the handle is lost. 
                 _dPduApi.PduCancelComPrimitive(_moduleOne, _cll, hCoP);
 
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
                 bool isCanceled = false;
@@ -97,9 +97,9 @@ namespace ISO22900.II.Test
                         }
                     }
                 }
-                Assert.IsTrue(isCanceled);
+                Assert.That(isCanceled, Is.True);
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
             }
             catch (Exception)
             {
@@ -133,14 +133,14 @@ namespace ISO22900.II.Test
                 _dPduApi.PduRegisterEventCallback(_moduleOne, _cll, evHandler);
                 
                 _dPduApi.PduConnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 var queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
 
-                Assert.IsTrue(queue.TryDequeue(out var item));
-                if (item.PduItemType == PduIt.PDU_IT_STATUS)
+                Assert.That(queue.TryDequeue(out var item), Is.True);
+                if (item?.PduItemType == PduIt.PDU_IT_STATUS)
                 {
-                    Assert.AreEqual(((PduEventItemStatus) item).PduStatus, PduStatus.PDU_CLLST_ONLINE);
+                    Assert.That(((PduEventItemStatus)item).PduStatus, Is.EqualTo(PduStatus.PDU_CLLST_ONLINE));
                 }
 
                 uint delay = 500;
@@ -151,7 +151,7 @@ namespace ISO22900.II.Test
                     copControlDelay,
                     0);
 
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(delay + 200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(delay + 200)), Is.True);
                 //Remove all Items from event queue to enable a new callback
                 queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
                 bool isFinished = false;
@@ -166,10 +166,10 @@ namespace ISO22900.II.Test
                     }
                 }
 
-                Assert.IsTrue(isFinished);
+                Assert.That(isFinished, Is.True);
 
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
-                Assert.IsTrue(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)));
+                Assert.That(autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200)), Is.True);
 
             }
             catch

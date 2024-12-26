@@ -58,7 +58,7 @@ namespace ISO22900.II.Test
                                 .RunContinuationsAsynchronously);
                         var pseudoCallbackTask = tcsCallback.Task;
 
-                        pseudoCallbackTask.ContinueWith(async cbTask =>
+                        pseudoCallbackTask.ContinueWith(cbTask => 
                             {
                                 if (_ct.IsCancellationRequested) return;
 
@@ -100,7 +100,7 @@ namespace ISO22900.II.Test
                     copControl, 0);
                 var result = await tcsResult.Task;
 
-                Assert.GreaterOrEqual(result.Length,20);
+                Assert.That(result.Length, Is.GreaterThanOrEqualTo(20));
 
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
             }

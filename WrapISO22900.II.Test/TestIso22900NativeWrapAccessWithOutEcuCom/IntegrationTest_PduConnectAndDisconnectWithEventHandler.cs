@@ -32,10 +32,10 @@ namespace ISO22900.II.Test
                 //Remove all Items from event queue to enable a new callback
                 var queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
 
-                Assert.IsTrue(queue.TryDequeue(out var item));
-                if (item.PduItemType == PduIt.PDU_IT_STATUS)
+                Assert.That(queue.TryDequeue(out var item), Is.True);
+                if (item?.PduItemType == PduIt.PDU_IT_STATUS)
                 {
-                    Assert.AreEqual(((PduEventItemStatus)item).PduStatus, PduStatus.PDU_CLLST_ONLINE);
+                    Assert.That(((PduEventItemStatus)item).PduStatus, Is.EqualTo(PduStatus.PDU_CLLST_ONLINE));
                 }
 
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
@@ -44,14 +44,14 @@ namespace ISO22900.II.Test
                 //Remove all Items from event queue to enable a new callback
                 queue = _dPduApi.PduGetEventItem(moduleHandleFromCallback, comLogicalLinkHandleFromCallback);
 
-                Assert.IsTrue(queue.TryDequeue(out item));
-                if (item.PduItemType == PduIt.PDU_IT_STATUS)
+                Assert.That(queue.TryDequeue(out item), Is.True);
+                if (item?.PduItemType == PduIt.PDU_IT_STATUS)
                 {
-                    Assert.AreEqual(((PduEventItemStatus)item).PduStatus, PduStatus.PDU_CLLST_OFFLINE);
+                    Assert.That(((PduEventItemStatus)item).PduStatus, Is.EqualTo(PduStatus.PDU_CLLST_OFFLINE));
                 }
-                
 
-                Assert.IsTrue(firstCheckPoint && secondCheckPoint);
+
+                Assert.That(firstCheckPoint && secondCheckPoint, Is.True);
             }
             catch
             {
@@ -91,7 +91,7 @@ namespace ISO22900.II.Test
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
                 var secondCheckPoint = autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200));
 
-                Assert.IsTrue(firstCheckPoint && secondCheckPoint);
+                Assert.That(firstCheckPoint && secondCheckPoint, Is.True);
             }
             catch
             {
@@ -132,7 +132,7 @@ namespace ISO22900.II.Test
                 _dPduApi.PduDisconnect(_moduleOne, _cll);
                 var secondCheckPoint = autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(200));
 
-                Assert.IsTrue(firstCheckPoint && secondCheckPoint);
+                Assert.That(firstCheckPoint && secondCheckPoint, Is.True);
             }
             catch
             {

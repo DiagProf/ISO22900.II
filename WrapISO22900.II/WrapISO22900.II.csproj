@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-	 <ImplicitUsings>disable</ImplicitUsings>
+    <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>warnings</Nullable>
     <RootNamespace>$(MSBuildProjectName.Replace("Wrap", "").Replace(" ", "_"))</RootNamespace>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -20,11 +20,11 @@
 	<PackageProjectUrl>https://github.com/DiagProf/ISO22900.II</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/DiagProf/ISO22900.II/tree/master/WrapISO22900.II</RepositoryUrl>
 	<PackageReadmeFile>READMEForNuGet.md</PackageReadmeFile>
-	<PackageReleaseNotes>beta (works and will be expanded with additional functions soon)</PackageReleaseNotes>
+	<PackageReleaseNotes>Beta (still in beta as I'm waiting for more feedback from users. Once most are satisfied and share their feedback, the beta label will be removed). osoipositiveBeta (still in beta as I'm waiting for more positive feedback from users. Once most are happy and share their feedback, the beta label will be removed).</PackageReleaseNotes>
    </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

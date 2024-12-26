@@ -85,8 +85,8 @@ namespace ISO22900.II.Test
                 _moduleOne = module.ModuleHandle;
                 break;
             }
-            
-            Assert.AreNotEqual(_moduleOne, PduConst.PDU_HANDLE_UNDEF);
+
+            Assert.That(_moduleOne, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
 
             _dPduApi.PduModuleConnect(_moduleOne);
 
@@ -100,7 +100,7 @@ namespace ISO22900.II.Test
             _cll = _dPduApi.PduCreateComLogicalLink(_moduleOne, pduRscData, PduConst.PDU_ID_UNDEF, 0,
                 new PduFlagDataCllCreateFlag());
 
-            Assert.AreNotEqual(_cll, PduConst.PDU_HANDLE_UNDEF);
+            Assert.That(_cll, Is.Not.EqualTo(PduConst.PDU_HANDLE_UNDEF));
 
         }
 

@@ -23,7 +23,7 @@ namespace ISO22900.II.Test
             //Read it back
             var cpP2MaxNewBack = (PduComParamOfTypeUint) _dPduApi.PduGetComParam(_moduleOne, _cll, cpP2MaxId);
 
-            Assert.AreEqual(testValue, cpP2MaxNewBack.ComParamData);
+            Assert.That(cpP2MaxNewBack.ComParamData, Is.EqualTo(testValue));
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace ISO22900.II.Test
                 var cpTesterPresentMessageNewBack =
                     (PduComParamOfTypeByteField) _dPduApi.PduGetComParam(_moduleOne, _cll, cpTesterPresentMessageId);
 
-                Assert.AreEqual(testValue, cpTesterPresentMessageNewBack.ComParamData.DataArray);
+                Assert.That(cpTesterPresentMessageNewBack.ComParamData.DataArray, Is.EqualTo(testValue));
             }
             else
             {
@@ -91,7 +91,7 @@ namespace ISO22900.II.Test
                 var cpCanBaudrateRecordNewBack =
                     (PduComParamOfTypeUintField) _dPduApi.PduGetComParam(_moduleOne, _cll, cpCanBaudrateRecordId);
 
-                Assert.AreEqual(testValue, cpCanBaudrateRecordNewBack.ComParamData.DataArray);
+                Assert.That(cpCanBaudrateRecordNewBack.ComParamData.DataArray, Is.EqualTo(testValue));
             }
             else
             {
@@ -130,15 +130,15 @@ namespace ISO22900.II.Test
                 var cpSessionTimingOverrideNewBack =
                     (PduComParamOfTypeStructField) _dPduApi.PduGetComParam(_moduleOne, _cll, cpSessionTimingOverrideId);
 
-                var result = cpSessionTimingOverrideNewBack.ComParamData.StructArray as PduParamStructSessionTiming[];
-                Assert.AreEqual(testValue.Length, result.Length);
+                var result = (PduParamStructSessionTiming[])cpSessionTimingOverrideNewBack.ComParamData.StructArray;// as PduParamStructSessionTiming[];
+                Assert.That(result.Length, Is.EqualTo(testValue.Length));
                 for (var index = 0; index < testValue.Length; index++)
                 {
-                    Assert.AreEqual(testValue[index].Session, result[index].Session);
-                    Assert.AreEqual(testValue[index].P2MaxHigh, result[index].P2MaxHigh);
-                    Assert.AreEqual(testValue[index].P2MaxLow, result[index].P2MaxLow);
-                    Assert.AreEqual(testValue[index].P2StarHigh, result[index].P2StarHigh);
-                    Assert.AreEqual(testValue[index].P2StarLow, result[index].P2StarLow);
+                    Assert.That(result[index].Session, Is.EqualTo(testValue[index].Session));
+                    Assert.That(result[index].P2MaxHigh, Is.EqualTo(testValue[index].P2MaxHigh));
+                    Assert.That(result[index].P2MaxLow, Is.EqualTo(testValue[index].P2MaxLow));
+                    Assert.That(result[index].P2StarHigh, Is.EqualTo(testValue[index].P2StarHigh));
+                    Assert.That(result[index].P2StarLow, Is.EqualTo(testValue[index].P2StarLow));
                 }
             }
             else

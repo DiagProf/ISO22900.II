@@ -59,7 +59,7 @@ namespace ISO22900.II.Demo
 
            
             var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders().LeftAligned()
-                .AddRow(new FigletText("Running").LeftAligned().Color(Color.Green));
+                .AddRow(new FigletText("Running").LeftJustified().Color(Color.Green));
             infoGrid.AddRow(tableInfo);
      
 
@@ -96,7 +96,7 @@ namespace ISO22900.II.Demo
                                      e.PduError == PduError.PDU_ERR_FCT_FAILED )
                                 {
                                     tableInfo.Rows.Clear();
-                                    tableInfo.AddRow(new FigletText("Error VCI lost").LeftAligned().Color(Color.Red));
+                                    tableInfo.AddRow(new FigletText("Error VCI lost").LeftJustified().Color(Color.Red));
                                     tableInfo.AddRow("Once you fix the cause of vci lost...");
                                     tableInfo.AddRow("Press [Red][[Enter]][/] to start TryToRecover function or [Red][[any]][/] other key to exit");
                                     ctx.Refresh();
@@ -104,12 +104,12 @@ namespace ISO22900.II.Demo
                                     if (Console.ReadKey(true).Key != ConsoleKey.Enter)
                                     {
                                         tableInfo.Rows.Clear();
-                                        tableInfo.AddRow(new FigletText("Exit").LeftAligned().Color(Color.Yellow));
+                                        tableInfo.AddRow(new FigletText("Exit").LeftJustified().Color(Color.Yellow));
                                         ctx.Refresh();
                                         break;
                                     }
                                     tableInfo.Rows.Clear();
-                                    tableInfo.AddRow(new FigletText("Start TryToRecover VCI").LeftAligned().Color(Color.Yellow));
+                                    tableInfo.AddRow(new FigletText("Start TryToRecover VCI").LeftJustified().Color(Color.Yellow));
                                     ctx.Refresh();
 
                                     //this sleep only makes sense if the user presses enter very quickly
@@ -119,7 +119,7 @@ namespace ISO22900.II.Demo
                                     if (!vci.TryToRecover(out var msg))
                                     {
                                         tableInfo.Rows.Clear();
-                                        tableInfo.AddRow(new FigletText("Recovering failed").LeftAligned().Color(Color.Yellow));
+                                        tableInfo.AddRow(new FigletText("Recovering failed").LeftJustified().Color(Color.Yellow));
                                         tableInfo.AddRow(new Text(msg));
                                         ctx.Refresh();
 
@@ -129,7 +129,7 @@ namespace ISO22900.II.Demo
                                     }
 
                                     tableInfo.Rows.Clear();
-                                    tableInfo.AddRow(new FigletText("It's running again").LeftAligned().Color(Color.Green));
+                                    tableInfo.AddRow(new FigletText("It's running again").LeftJustified().Color(Color.Green));
                                     ctx.Refresh();
                                 }
 

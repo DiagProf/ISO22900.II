@@ -29,8 +29,8 @@ namespace ISO22900.II.Demo
             //is too slow here if we get tree sting from hardware devices otherwise the menu will get stuck
             //var tree = new Tree(Title);
             //AdditionalInformation(tree);
-            var simpleRenderContext = new RenderContext(new SimpleCapabilities(), Justify.Left);
             var width = Console.WindowWidth;
+            var simpleRenderContext = new RenderOptions(new SimpleCapabilities(), new Size(AnsiConsole.Profile.Width, AnsiConsole.Profile.Height));
             var sb = new StringBuilder();
             var segments = ( (IRenderable) _tree ).Render(simpleRenderContext, width);
             foreach ( var segment in segments )

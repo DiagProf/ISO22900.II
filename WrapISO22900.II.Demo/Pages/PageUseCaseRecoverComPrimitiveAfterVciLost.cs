@@ -63,7 +63,7 @@ namespace ISO22900.II.Demo
             {
                 using ( var vci = api.ConnectVci(AbstractPageControl.Preferences.GetSection("ApiVci:Vci").Value) )
                 {
-                    AnsiConsole.Write(new FigletText("Running").LeftAligned().Color(Color.Green));
+                    AnsiConsole.Write(new FigletText("Running").LeftJustified().Color(Color.Green));
                     //Define the protocol behavior
                     //These names (the strings) come from ODX or ISO 22900-2
                     var dlcPinData = new Dictionary<uint, string> { { 6, "HI" }, { 14, "LOW" } };
@@ -202,7 +202,7 @@ namespace ISO22900.II.Demo
                         }
                         catch ( Iso22900IIException )
                         {
-                            AnsiConsole.Write(new FigletText("Error VCI lost").LeftAligned().Color(Color.Red));
+                            AnsiConsole.Write(new FigletText("Error VCI lost").LeftJustified().Color(Color.Red));
                             AnsiConsole.WriteLine("Fix the cause of vci lost...");
                             AnsiConsole.MarkupLine("Reboot in 10 seconds");
 
@@ -220,18 +220,18 @@ namespace ISO22900.II.Demo
                                     }
                                 });
 
-                            AnsiConsole.Write(new FigletText("Start TryToRecover VCI").LeftAligned().Color(Color.Yellow));
+                            AnsiConsole.Write(new FigletText("Start TryToRecover VCI").LeftJustified().Color(Color.Yellow));
                             if ( !receiveCop.TryToRecover(out var msg) )
                             {
                                 //here a real app should return to a point where VCI connection is not needed
                                 //or can be restarted from there
-                                AnsiConsole.Write(new FigletText("Recovering failed").LeftAligned().Color(Color.Yellow));
+                                AnsiConsole.Write(new FigletText("Recovering failed").LeftJustified().Color(Color.Yellow));
                                 AnsiConsole.WriteLine(msg);
                                 cts.Cancel();
                                 break;
                             }
 
-                            AnsiConsole.Write(new FigletText("It's running again").LeftAligned().Color(Color.Green));
+                            AnsiConsole.Write(new FigletText("It's running again").LeftJustified().Color(Color.Green));
                         }
                     }
                 }

@@ -103,7 +103,7 @@ namespace ISO22900.II
                 var comPrimitiveHandle = Vci.SysLevel.Nwa.PduStartComPrimitive(ModuleHandle, ComLogicalLinkHandle,
                     pduCopType, copData, copCtrlData, copTag);
 
-                CopChannels.GetOrAdd(comPrimitiveHandle,channel.Writer);
+                CopChannels.AddOrUpdate(comPrimitiveHandle, u =>  channel.Writer, (u, writer) => channel.Writer);
                 
                 var comPrimitive = new ComPrimitiveLevel(this, comPrimitiveHandle, channel.Reader, pduCopType, copData, copCtrlData, copTag);
                 Disposing += comPrimitive.Dispose;

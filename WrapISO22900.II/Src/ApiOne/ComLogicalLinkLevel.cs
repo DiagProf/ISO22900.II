@@ -673,6 +673,8 @@ namespace ISO22900.II
                         if (status.PduStatus == PduStatus.PDU_COPST_FINISHED || status.PduStatus == PduStatus.PDU_COPST_CANCELLED)
                         {
                             channel.TryComplete();
+                            // Remove the key (old handle) from the dictionary
+                            CopChannels.TryRemove(item.CopHandle, out _);
                         }
                     }
                     return true;

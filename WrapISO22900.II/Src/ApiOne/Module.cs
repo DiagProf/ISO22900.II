@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using ISO22900.II.Interface;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
@@ -37,7 +38,7 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public sealed class Module : IDisposable
+    public sealed class Module : IDisposable, IModule
     {
         private readonly ILogger _logger = ApiLibLogging.CreateLogger<Module>();
 

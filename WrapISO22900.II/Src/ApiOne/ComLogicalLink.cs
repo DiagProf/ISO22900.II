@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using ISO22900.II.Interface;
 using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
@@ -40,7 +41,7 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public class ComLogicalLink : IDisposable
+    public class ComLogicalLink : IDisposable, IComLogicalLink
     {
         private readonly ILogger _logger = ApiLibLogging.CreateLogger<ComLogicalLink>();
         private readonly string _busTypeName;

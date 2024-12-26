@@ -20,7 +20,7 @@
 	<PackageProjectUrl>https://github.com/DiagProf/ISO22900.II</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/DiagProf/ISO22900.II/tree/master/WrapISO22900.II</RepositoryUrl>
 	<PackageReadmeFile>READMEForNuGet.md</PackageReadmeFile>
-	<PackageReleaseNotes>Beta (still in beta as I'm waiting for more feedback from users. Once most are satisfied and share their feedback, the beta label will be removed). osoipositiveBeta (still in beta as I'm waiting for more positive feedback from users. Once most are happy and share their feedback, the beta label will be removed).</PackageReleaseNotes>
+	<PackageReleaseNotes>Beta (still in beta as I'm waiting for more feedback from users. Once most are satisfied and share their feedback, the beta label will be removed). I would say it is no longer a beta :-)</PackageReleaseNotes>
    </PropertyGroup>
 
 	<ItemGroup>

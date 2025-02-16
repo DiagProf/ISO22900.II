@@ -68,6 +68,26 @@ namespace ISO22900.II
         }
 
         /// <summary>
+        /// Counts the number of MVCI_PDU_API nodes in the XML file.
+        /// Can be used, for example, to create a meaningful progress bar (this is the MaxValue) when iterating over all APIs
+        /// and displaying all VCIs (modules) behind each API.
+        /// </summary>
+        /// <returns>The count of API nodes, or 0 if the file is not a valid XML file.</returns>
+        public static int CountInstalledMvciPduApis()
+        {
+            var path = FullyQualifiedRootFilePath();
+            if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                return 0;
+
+            var xPathDocument = new XPathDocument(path);
+            var navigator = xPathDocument.CreateNavigator();
+
+            // Select all MVCI_PDU_API nodes
+            var nodes = navigator.Select("/MVCI_PDU_API_ROOT/MVCI_PDU_API");
+            return nodes.Count;
+        }
+
+        /// <summary>
         /// API Shortnames
         /// </summary>
         /// <returns>List of Shortnames</returns>
@@ -222,6 +242,58 @@ namespace ISO22900.II
                     CableDescriptionFile = new Uri(node.SelectSingleNode("./CABLE_DESCRIPTION_FILE/@URI")?.Value ?? string.Empty).LocalPath
                 };
             }
+        }
+
+
+        /// <summary>
+        /// Retrieves the MVCI PDU API detail for the specified API short name.
+        /// </summary>
+        /// <param name="apiShortName">The short name of the API to search for in the XML file.</param>
+        /// <returns>
+        /// An instance of <see cref="MvciPduApiDetail"/> with populated values if found;
+        /// otherwise, a default with all fields set to string.Empty.
+        /// </returns>
+        /// <remarks>
+        /// The application only needs to remember the API's short name for normal operations.
+        /// However, it can be useful to retrieve the complete details (e.g. the supplier name <see cref="MvciPduApiDetail.SupplierName "/>)
+        /// to display additional information to the user.
+        /// Caller can compare <paramref name="apiShortName"/> with <see cref="MvciPduApiDetail.ShortName"/>
+        /// to verify result validity.
+        /// </remarks>
+        public static MvciPduApiDetail MvciPduApiDetailFormApiShortName(string apiShortName)
+        {
+            // Create a default detail with empty strings
+            var detail = new MvciPduApiDetail
+            {
+                ShortName = string.Empty,  // Caller can compare apiShortName with ShortName to verify result validity.
+                Description = string.Empty,
+                SupplierName = string.Empty,
+                LibraryFile = string.Empty,
+                ModuleDescriptionFile = string.Empty,
+                CableDescriptionFile = string.Empty
+            };
+
+            var path = FullyQualifiedRootFilePath();
+            if (!path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                return detail;
+
+            var xPath = new XPathDocument(path);
+            var navigator = xPath.CreateNavigator();
+
+            string xpathExpr = $"/MVCI_PDU_API_ROOT/MVCI_PDU_API[SHORT_NAME = '{apiShortName}']";
+            var node = navigator.SelectSingleNode(xpathExpr);
+            if (node == null)
+                return detail;
+
+            // Update the detail properties from the XML node
+            detail.ShortName = node.SelectSingleNode("./SHORT_NAME")?.Value ?? string.Empty;
+            detail.Description = node.SelectSingleNode("./DESCRIPTION")?.Value ?? string.Empty;
+            detail.SupplierName = node.SelectSingleNode("./SUPPLIER_NAME")?.Value ?? string.Empty;
+            detail.LibraryFile = new Uri(node.SelectSingleNode("./LIBRARY_FILE/@URI")?.Value ?? string.Empty).LocalPath;
+            detail.ModuleDescriptionFile = new Uri(node.SelectSingleNode("./MODULE_DESCRIPTION_FILE/@URI")?.Value ?? string.Empty).LocalPath;
+            detail.CableDescriptionFile = new Uri(node.SelectSingleNode("./CABLE_DESCRIPTION_FILE/@URI")?.Value ?? string.Empty).LocalPath;
+
+            return detail;
         }
 
     }

@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 
 // MIT License
 // 
@@ -27,8 +27,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using ISO22900.II.Interface;
 using Microsoft.Extensions.Logging;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ISO22900.II
 {
@@ -203,6 +205,59 @@ namespace ISO22900.II
         }
 
         #region PduIoControlsOnModule
+        /* from ISO22900-2 : 2022
+        | IOCTL Short Name                      | Target | Input Data Type               | Output Data Type            | Purpose                                                             
+        |---------------------------------------|--------|-------------------------------|-----------------------------|--------------------------------------------------------------------------------
+        | PDU_IOCTL_RESET                       | M      | —                             | —                           | Reset specific MVCI protocol module.                                
+        | PDU_IOCTL_CLEAR_TX_QUEUE              | L      | —                             | —                           | Clear transmit queue of specific ComLogicalLink.                    
+        | PDU_IOCTL_SUSPEND_TX_QUEUE            | L      | —                             | —                           | Suspend transmit queue of specific ComLogicalLink.                  
+        | PDU_IOCTL_RESUME_TX_QUEUE             | L      | —                             | —                           | Resume transmit queue of specific ComLogicalLink.                   
+        | PDU_IOCTL_CLEAR_RX_QUEUE              | L      | —                             | —                           | Clear event queue of specific ComLogicalLink.                       
+        | PDU_IOCTL_READ_VBATT                  | M      | —                             | PDU_IT_IO_UNUM32            | Read voltage on pin 16 of MVCI protocol module.                     
+        | PDU_IOCTL_SET_PROG_VOLTAGE            | M      | PDU_IT_IO_PROG_VOLTAGE        | —                           | Set programmable voltage on DLC connector pin/resource.             
+        | PDU_IOCTL_READ_PROG_VOLTAGE           | M      | —                             | PDU_IT_IO_UNUM32            | Read feedback of programmable voltage.                              
+        | PDU_IOCTL_GENERIC                     | M      | PDU_IT_IO_BYTE_ARRAY          | —                           | Send a generic message to MVCI protocol module drivers.             
+        | PDU_IOCTL_SET_BUFFER_SIZE             | L      | PDU_IT_IO_UNUM32              | —                           | Set buffer size limit of item.                                      
+        | PDU_IOCTL_START_MSG_FILTER            | L      | PDU_IT_IO_FILTER              | —                           | Start filtering incoming messages for specified ComLogicalLink.     
+        | PDU_IOCTL_CLEAR_MSG_FILTER            | L      | —                             | —                           | Clear all message filters for the ComLogicalLink.                   
+        | PDU_IOCTL_STOP_MSG_FILTER             | L      | PDU_IT_IO_UNUM32              | —                           | Stop specified filter based on filter number.                       
+        | PDU_IOCTL_SET_EVENT_QUEUE_PROPERTIES  | L      | PDU_IT_IO_EVENT_QUEUE_PROPERTY| —                           | Set size and mode of ComLogicalLink event queue.                    
+        | PDU_IOCTL_GET_CABLE_ID                | M      | —                             | PDU_IT_IO_UNUM32            | Get cable ID connected to MVCI protocol module.                     
+        | PDU_IOCTL_SEND_BREAK                  | L      | —                             | —                           | Send UART Break Signal on ComLogicalLink.                           
+        | PDU_IOCTL_READ_IGNITION_SENSE_STATE   | M      | PDU_IT_IO_UNUM32              | PDU_IT_IO_UNUM32            | Read ignition sense state from vehicle connector pin.               
+        | PDU_IOCTL_VEHICLE_ID_REQUEST          | S, M   | PDU_IT_IO_VEHICLE_ID_REQUEST  | —                           | Send vehicle identification request (DoIP).                         
+        | PDU_IOCTL_SET_ETH_SWITCH_STATE        | M      | PDU_IT_IO_ETH_SWITCH_STATE    | —                           | Switch Ethernet activation PIN on DLC.                              
+        | PDU_IOCTL_GET_ENTITY_STATUS           | M      | PDU_IT_IO_ENTITY_ADDRESS      | PDU_IT_IO_ENTITY_STATUS     | Retrieve status of a DoIP entity.                                   
+        | PDU_IOCTL_GET_DIAGNOSTIC_POWER_MODE   | M      | PDU_IT_IO_ENTITY_ADDRESS      | PDU_IT_IO_UNUM32            | Retrieve diagnostic power mode of a DoIP entity.                    
+        | PDU_IOCTL_GET_ETH_PIN_OPTION          | M      | PDU_IT_IO_UNUM32              | PDU_IT_IO_UNUM32            | Determine Ethernet pinout option from Ethernet activation PIN (DLC).
+        | PDU_IOCTL_TLS_SET_CERTIFICATE         | M      | PDU_IT_IO_TLS_CERTIFICATE     | —                           | Set X.509 certificate(s) used for ECU verification during TLS handshake.      
+        | PDU_IOCTL_TLS_GET_CURRENT_SESSION_MODE| L      | —                             | PDU_IT_IO_UNUM32            | Get current DoIP connection mode (unsecure or secured via TLS).               
+        | PDU_IOCTL_ISOBUS_GET_DETECTED_CFS     | L      | —                             | PDU_IT_IO_BYTEARRAY         | Get list of ISOBUS CF-NAMEs detected on CAN bus (8-byte NAME + 1-byte address).
+
+        S	=	Command	at	the	D‐PDU	API	System	Level
+        M	=	command	for	MVCI	protocol	modules		
+        L	=	command	for	ComLogicalLinks
+
+        */
+
+        // The table lists all I/O Controls specified in ISO 22900-2:2022.
+        // Note that it includes I/O Controls typically associated with ComLogicalLinks, although shown here at the module level.
+        // Important: Do not assume every D-PDU API manufacturer implements all listed I/O Controls.
+        // Many standard I/O Controls defined by ISO 22900-2 are often unused in practice.
+        // Instead, manufacturer-specific I/O Controls, necessary for certain enhancements, exist but are not standardized.
+        // Although acceptable, ISO 22900-2 unfortunately does not define a naming convention for manufacturer-specific I/O Controls as it does for ComParams.
+        // Thus, without referencing the ISO 22900-2 standard or the table above, it's impossible to distinguish standard from manufacturer-specific I/O Controls in MDF files.
+
+        // For comparison, ISO 22900-2 clearly defines manufacturer-specific ComParams naming:
+        // "The format for a manufacturer-specific ComParam shall be CPM_xxxx_yyyy, where xxxx is the manufacturer's acronym and yyyy is the parameter name."
+
+        // Good manufacturers nevertheless use prefixes for their specific I/O Controls,
+        // such as "PDU_IOCTL_MS_VIR_V1" for older Daimler DoIP vehicles,
+        // where "MS" stands for "Manufacturer Specific."
+        // The input data structure for this specific example exactly matches that of "PDU_IOCTL_VEHICLE_ID_REQUEST."
+        // Since manufacturer-specific I/O Controls often reuse known input or output data structures,
+        // this code attempts to provide generic versions for these common structures (generic in terms of I/O Control naming).
+        // To avoid confusion, do not mistake provided overloaded functions like "TryIoCtlGeneral" with the standardized I/O Control "PDU_IOCTL_GENERIC." :-)
 
         public uint MeasureBatteryVoltage()
         {
@@ -341,6 +396,25 @@ namespace ISO22900.II
         /// <returns>true or false</returns>
         public bool TryIoCtlReadIgnitionSenseState(uint valueIn, out uint valueOut) =>
             TryIoCtlGeneral("PDU_IOCTL_READ_IGNITION_SENSE_STATE", valueIn, out valueOut);
+
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl which takes the name and a uint as parameters
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="valueIn"></param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn)
+        {
+            lock (_sync)
+            {
+                return _vci.TryIoCtlGeneral(ioCtlShortName, valueIn);
+            }
+        }
+
 
 
         /// <summary>

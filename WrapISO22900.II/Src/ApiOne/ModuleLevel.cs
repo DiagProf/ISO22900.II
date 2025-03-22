@@ -230,25 +230,6 @@ namespace ISO22900.II
 
 
         #region PduIoControlsOnModuleLevel
-
-        /// <summary>
-        ///     For IoCtl which takes only the name and as parameter
-        /// </summary>
-        /// <param name="ioCtlShortName"></param>
-        /// <returns>true or false</returns>
-        /// 
-        //internal bool IoCtlGeneral(string ioCtlShortName)
-        //{
-        //    var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
-        //    if ( ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF) )
-        //    {
-        //        return false;
-        //    }
-
-        //    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null);
-        //    return true;
-        //}
-
         /// <summary>
         ///     For IoCtl which takes only the name and as parameter
         /// </summary>
@@ -274,7 +255,7 @@ namespace ISO22900.II
         }
 
         /// <summary>
-        ///     For IoCtl which takes the name and a uint as parameters
+        ///     For IoCtl which takes the name and a uint as parameters and uint as out
         /// </summary>
         /// <param name="ioCtlShortName"></param>
         /// <param name="valueIn"></param>
@@ -302,8 +283,36 @@ namespace ISO22900.II
         }
 
 
+
+
         /// <summary>
-        ///     For IoCtl which takes the name and a uint as in parameters and uint as out
+        ///     For IoCtl which takes the name and a uint as parameters 
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="valueIn"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, uint valueIn)
+        {
+            try
+            {
+                var ioCtlCommandId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeUint(valueIn));
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        ///     For IoCtl which takes the name and uint as out
         /// </summary>
         /// <param name="ioCtlShortName"></param>
         /// <param name="value">a uint</param>

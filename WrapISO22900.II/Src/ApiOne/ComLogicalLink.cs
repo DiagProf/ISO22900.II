@@ -531,6 +531,8 @@ namespace ISO22900.II
             }
         }
 
+        #region PduIoControlsOnComLogicalLink
+
         /// <summary>
         ///     You can use this method if you want to try something
         ///     For IoCtl where the name is the only one parameter
@@ -633,6 +635,64 @@ namespace ISO22900.II
             }
         }
 
+
+        /// <summary>
+        /// Get current DoIP connection mode (unsecure or secured via TLS).
+        /// </summary>
+        /// <param name="value">??never seen an example until now To-Do</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlTlsGetCurrentSessionMode(out uint value) => TryIoCtlGeneral("PDU_IOCTL_TLS_GET_CURRENT_SESSION_MODE", out value);
+
+
+        /// <summary>
+        ///     You can use this method if you want to try something
+        ///     For IoCtl where the name is the only one parameter and you get uint result
+        ///     E.g. API for manufacturer specific things
+        ///     For real application prefer to use the methods that call this method with the appropriate parameter
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, out uint value)
+        {
+            lock (_sync)
+            {
+                return _cll.TryIoCtlGeneral(ioCtlShortName, out value);
+            }
+        }
+
+
+
+
+        /// <summary>
+        /// Get list of ISOBUS CF-NAMEs detected on the CAN bus.
+        /// Each CF-NAME consists of an 8-byte NAME followed by a 1-byte address.
+        /// The total length of the byte array is always a multiple of 9.
+        /// </summary>
+        /// <param name="value">Byte array containing detected ISOBUS CF-NAMEs (8-byte NAME + 1-byte address).</param>
+        /// <returns>true if successful; otherwise, false.</returns>
+        public bool TryIoCtlIsoBusGetDetectedCfs(out byte[] value)  => TryIoCtlGeneral("PDU_IOCTL_ISOBUS_GET_DETECTED_CFS", out value);
+
+
+        /// <summary>
+        /// You can use this method if you want to try something.
+        /// For IoCtl commands where the name is the only parameter and you receive a byte array as a result.
+        /// Typically used for manufacturer-specific API calls.
+        /// For real applications, prefer using methods that internally call this method with appropriate parameters.
+        /// </summary>
+        /// <param name="ioCtlShortName">The short name of the IoCtl command.</param>
+        /// <param name="value">When the method returns, contains the output byte array if successful; otherwise, an empty array.</param>
+        /// <returns>true if successful; otherwise, false.</returns>
+        public bool TryIoCtlGeneral(string ioCtlShortName, out byte[] value)
+        {
+            lock (_sync)
+            {
+                return _cll.TryIoCtlGeneral(ioCtlShortName, out value);
+            }
+        }
+
+
+        #endregion
 
         /// <summary>
         ///     Attempts to restore the status of the ComLogicalLink

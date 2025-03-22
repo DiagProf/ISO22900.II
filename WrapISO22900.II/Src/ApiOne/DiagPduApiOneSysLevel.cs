@@ -286,6 +286,8 @@ namespace ISO22900.II
         }
 
 
+        #region PduIoControlsOnSysLevel
+
         /// <summary>
         /// PDU_IOCTL_VEHICLE_ID_REQUEST 
         /// </summary>
@@ -320,6 +322,62 @@ namespace ISO22900.II
 
             return false;
         }
+
+        /// <summary>
+        ///     For IoCtl which takes the name and byteField as parameters and byteField as out
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, byte[] valueIn, out byte[] valueOut)
+        {
+            try
+            {
+                var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    valueOut = ((PduIoCtlOfTypeByteField)Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeByteField(valueIn))).Value;
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            valueOut = [];
+            return false;
+        }
+
+        /// <summary>
+        ///     For IoCtl which takes the name and byteField as parameters
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value"></param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, byte[] value)
+        {
+            try
+            {
+                var ioCtlCommandId = Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, new PduIoCtlOfTypeByteField(value));
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            return false;
+        }
+
+
+
+
+        #endregion
 
         protected void OnDataLost(CallbackEventArgs eventArgs)
         {

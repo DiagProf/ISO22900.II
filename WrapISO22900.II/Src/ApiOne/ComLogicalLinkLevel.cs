@@ -513,7 +513,7 @@ namespace ISO22900.II
 
         }
 
-
+        #region PduIoControlsOnComLogicalLinkLevel
 
         /// <summary>
         /// MeasureBatteryVoltage is a convenience function on cll
@@ -611,7 +611,61 @@ namespace ISO22900.II
             return false;
         }
 
+        /// <summary>
+        ///     For IoCtl which takes the name and uint as out
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">a uint</param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, out uint value)
+        {
+            try
+            {
+                var ioCtlCommandId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    value = ((PduIoCtlOfTypeUint)Vci.SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null)).Value;
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
 
+            value = default;
+            return false;
+        }
+
+
+
+        /// <summary>
+        ///     For IoCtl which takes the name as parameters and byteField as out
+        /// </summary>
+        /// <param name="ioCtlShortName"></param>
+        /// <param name="value">When the method returns, contains the output byte array if successful; otherwise, an empty array.</param>
+        /// <returns>true or false</returns>
+        internal bool TryIoCtlGeneral(string ioCtlShortName, out byte[] value)
+        {
+            try
+            {
+                var ioCtlCommandId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_IO_CTRL, ioCtlShortName);
+                if (!ioCtlCommandId.Equals(PduConst.PDU_ID_UNDEF))
+                {
+                    value = ((PduIoCtlOfTypeByteField)Vci.SysLevel.Nwa.PduIoCtl(ModuleHandle, ComLogicalLinkHandle, ioCtlCommandId, null)).Value;
+                    return true;
+                }
+            }
+            catch (Iso22900IIException e)
+            {
+                _logger.LogWarning(e, ioCtlShortName);
+            }
+
+            value = [];
+            return false;
+        }
+
+        #endregion
 
         public PduExStatusData Status()
         {

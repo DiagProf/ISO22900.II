@@ -148,7 +148,7 @@ namespace ISO22900.II.OdxLikeComParamSets
             App.CP_RC21RequestTime = 200000;         //0-100000000us negative response 21: repetition period
             App.CP_RC23Handling = 1;                 //Switches Neg.Resp23 Repetition mode (0 = off, 1 = until TimeOut, 2 = infinite)
             App.CP_RC23CompletionTimeout = 15000000; //0-999999999us Time to cancellation, not number of repetitions
-            App.CP_RC23RequestTime = 200000;        //0-100000000us nnegative response 23: repetition period
+            App.CP_RC23RequestTime = 200000;        //0-100000000us negative response 23: repetition period
 
 
             // Baudrate switch (mostly only used for flashing)

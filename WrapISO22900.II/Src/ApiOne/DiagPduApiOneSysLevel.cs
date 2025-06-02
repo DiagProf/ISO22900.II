@@ -58,7 +58,7 @@ namespace ISO22900.II
         public event EventHandler<PduEventItem> EventFired;
 
 
-        internal DiagPduApiOneSysLevel(Iso22900NativeWrapAccess nwa, string optionStr, ApiModifications apiModFlags)
+        internal DiagPduApiOneSysLevel(Iso22900NativeWrapAccess nwa, string optionStr, ApiModifications apiModFlags, Action<DiagPduApiOneSysLevel> postPduConstructHook)
         {
             Nwa = nwa;
             ApiModBitField = apiModFlags;
@@ -73,6 +73,8 @@ namespace ISO22900.II
                 _logger.LogInformation("OptionStr: {optionStr}", optionStr);
                 Nwa.PduConstruct(optionStr);
             }
+
+            postPduConstructHook?.Invoke(this);
 
             EventItemProvider = new PduEventItemCallbackProvider(Nwa);
             EventItemProvider.RegisterEventDataCallback(ModuleHandle, ComLogicalLinkHandle, CallbackPduEventItemReceived, CallbackDataLost);
@@ -250,7 +252,20 @@ namespace ISO22900.II
 
             var dlcPinToTypeIdPairs = DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
 
-            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
+            // This check was added because, for example, the D-PDU API from Softing does NOT return 0 resources 
+            // when calling PduResourceData with PduConst.PDU_ID_UNDEF values. 
+            // Instead, it returns X resources, which is a bug in the API. 
+            // We need to handle this case to avoid incorrect results.
+            if (busTypId == PduConst.PDU_ID_UNDEF
+                || protocolTypId == PduConst.PDU_ID_UNDEF
+                || dlcPinToTypeIdPairs.Any(pair => pair.Value == PduConst.PDU_ID_UNDEF))
+            {
+                // One or more IDs are undefined, return empty list
+                return [];
+            }
+
+
+            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs);
             var pduRscIdItemDatas = Nwa.PduGetResourceIds(ModuleHandle, pduResourceData);
 
             if ( pduRscIdItemDatas.Any() )

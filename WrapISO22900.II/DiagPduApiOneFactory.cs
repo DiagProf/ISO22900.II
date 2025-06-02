@@ -41,14 +41,51 @@ namespace ISO22900.II
         private static readonly Dictionary<string, DiagPduApiOneSysLevel> Cache = new();
 
         /// <summary>
-        ///     Constructs the api
+        /// Creates or returns a cached DiagPduApiOneSysLevel instance for the given API library path.
         /// </summary>
-        /// <param name="dPduApiLibraryPath"></param>
-        /// <param name="apiModFlags"></param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="optionStr"></param>
+        /// <param name="dPduApiLibraryPath">Full path to the D-PDU API library DLL.</param>
+        /// <param name="loggerFactory">Logger factory for logging. Can be null for default logging.</param>
+        /// <param name="optionStr">Optional string for D-PDU API options. Can be null or empty.</param>
+        /// <param name="apiModFlags">API modification flags. Use ApiModifications.NONE for default behavior.</param>
+        /// <param name="postPduConstructHook">
+        /// Optional hook, called after PDU construct. Use for custom actions or debugging preferably not for production use yet.
+        /// e.g.
+        /// public void ObdEthernetCableAsVciPostConstructHook(DiagPduApiOneSysLevel apiSysLevel)
+        /// {
+        ///     // Example for a hook
+        ///     // Make OBD Ethernet cable visible as VCI at vehicle connection
+        ///     // The cable will then behave like a real VCI and can be selected normally.
+        ///     // NOTE: A connection to the vehicle must already exist!
+
+        ///     // For playful/testing purposes only. Do not use in production!
+        ///     var ioCtlVehicleIdRequestData = new PduIoCtlVehicleIdRequestData(PduExPreselectionMode.NoPreselection, "", PduExCombinationMode.VinCombination, 5000);
+
+        ///     if ( apiSysLevel.TryIoCtlVehicleIdRequest(ioCtlVehicleIdRequestData) )
+        ///     {
+        ///         //Some debug output if desired
+        ///     }
+        /// }
+        /// </param>
+
         /// <returns></returns>
-        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ILoggerFactory loggerFactory, string optionStr, ApiModifications apiModFlags = ApiModifications.UNSAFE_API)
+        ///
+        public void ObdEthernetCableAsVciPostConstructHook(DiagPduApiOneSysLevel apiSysLevel)
+        {
+            // Example for a hook
+            // Make OBD Ethernet cable visible as VCI at vehicle connection
+            // The cable will then behave like a real VCI and can be selected normally.
+            // NOTE: A connection to the vehicle must already exist!
+
+            // For playful/testing purposes only. Do not use in production!
+            var ioCtlVehicleIdRequestData = new PduIoCtlVehicleIdRequestData(PduExPreselectionMode.NoPreselection, "", PduExCombinationMode.VinCombination, 5000);
+
+            if ( apiSysLevel.TryIoCtlVehicleIdRequest(ioCtlVehicleIdRequestData) )
+            {
+                //Some debug output if desired
+            }
+        }
+
+        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ILoggerFactory loggerFactory, string optionStr, ApiModifications apiModFlags = ApiModifications.NONE, Action<DiagPduApiOneSysLevel> postPduConstructHook = null)
         {
             lock ( Cache )
             {
@@ -66,7 +103,7 @@ namespace ISO22900.II
 
 
                     var nwa = new Iso22900NativeWrapAccess(dPduApiLibraryPath, apiModFlags);
-                    var sys = new DiagPduApiOneSysLevel(nwa, optionStr, apiModFlags);
+                    var sys = new DiagPduApiOneSysLevel(nwa, optionStr, apiModFlags, postPduConstructHook);
 
                     sys.Disposing += () =>
                     {
@@ -83,19 +120,19 @@ namespace ISO22900.II
             }
         }
 
-        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, string optionStr, ApiModifications apiModFlags = ApiModifications.UNSAFE_API)
+        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, string optionStr, ApiModifications apiModFlags = ApiModifications.UNSAFE_API, Action<DiagPduApiOneSysLevel> postPduConstructHook = null)
         {
-            return GetApi(dPduApiLibraryPath, null, optionStr, apiModFlags);
+            return GetApi(dPduApiLibraryPath, null, optionStr, apiModFlags, postPduConstructHook);
         }
 
-        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ILoggerFactory loggerFactory, ApiModifications apiModFlags = ApiModifications.UNSAFE_API)
+        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ILoggerFactory loggerFactory, ApiModifications apiModFlags = ApiModifications.UNSAFE_API, Action<DiagPduApiOneSysLevel> postPduConstructHook = null)
         {
-            return GetApi(dPduApiLibraryPath, loggerFactory, null, apiModFlags);
+            return GetApi(dPduApiLibraryPath, loggerFactory, null, apiModFlags, postPduConstructHook);
         }
 
-        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ApiModifications apiModFlags = ApiModifications.UNSAFE_API)
+        public static DiagPduApiOneSysLevel GetApi(string dPduApiLibraryPath, ApiModifications apiModFlags = ApiModifications.UNSAFE_API, Action<DiagPduApiOneSysLevel> postPduConstructHook = null)
         {
-            return GetApi(dPduApiLibraryPath, null, null, apiModFlags);
+            return GetApi(dPduApiLibraryPath, null, null, apiModFlags, postPduConstructHook);
         }
 
         /// <summary>

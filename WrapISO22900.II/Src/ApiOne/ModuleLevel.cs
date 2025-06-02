@@ -63,7 +63,7 @@ namespace ISO22900.II
             var protocolTypId = SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_PROTOCOL, protocolName);
             var dlcPinToTypeIdPairs = SysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
 
-            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
+            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs);
             var comLogicalLinkHandle = SysLevel.Nwa.PduCreateComLogicalLink(ModuleHandle, pduResourceData,
                 PduConst.PDU_ID_UNDEF,
                 0, cllCreateFlag);
@@ -211,7 +211,19 @@ namespace ISO22900.II
 
             var dlcPinToTypeIdPairs = SysLevel.DlcTypeNameToTypeId(dlcPinToTypeNamePairs);
 
-            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs.ToList());
+            // This check was added because, for example, the D-PDU API from Softing does NOT return 0 resources 
+            // when calling PduResourceData with PduConst.PDU_ID_UNDEF values. 
+            // Instead, it returns X resources, which is a bug in the API. 
+            // We need to handle this case to avoid incorrect results.
+            if (busTypId == PduConst.PDU_ID_UNDEF
+                || protocolTypId == PduConst.PDU_ID_UNDEF
+                || dlcPinToTypeIdPairs.Any(pair => pair.Value == PduConst.PDU_ID_UNDEF))
+            {
+                // One or more IDs are undefined, return empty list
+                return [];
+            }
+
+            var pduResourceData = new PduResourceData(busTypId, protocolTypId, dlcPinToTypeIdPairs);
             var pduRscIdItemDatas = SysLevel.Nwa.PduGetResourceIds(ModuleHandle, pduResourceData);
 
             var resourceIds = new List<uint>();

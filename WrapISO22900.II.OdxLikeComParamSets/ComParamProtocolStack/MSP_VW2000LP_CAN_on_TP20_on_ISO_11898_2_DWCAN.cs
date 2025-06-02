@@ -135,7 +135,7 @@ namespace ISO22900.II.OdxLikeComParamSets
             App.CP_RC21RequestTime = 800000;         //0-100000000us negative response 21: repetition period
             App.CP_RC23Handling = 1;                 //Switches Neg.Resp23 Repetition mode (0 = off, 1 = until TimeOut, 2 = infinite)
             App.CP_RC23CompletionTimeout = 30000000; //0-999999999us Time to cancellation, not number of repetitions
-            App.CP_RC23RequestTime = 500000;        //0-100000000us nnegative response 23: repetition period
+            App.CP_RC23RequestTime = 500000;         //0-100000000us negative response 23: repetition period
 
             //Application Layer and Transport/DataLink Layer less useful or never seen for this protocol
             App.CP_CyclicRespTimeout = 0;   //0-4294967295us This ComParam is used for ComPrimitives that have a NumRecvCycles set to IS-CYCLIC (-1, infinite). The timer is enabled after the first positive response is received from an ECU.

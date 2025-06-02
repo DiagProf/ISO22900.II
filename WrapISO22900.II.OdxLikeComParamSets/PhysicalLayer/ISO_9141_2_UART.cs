@@ -63,7 +63,7 @@ namespace ISO22900.II.OdxLikeComParamSets.PhysicalLayer
         {
             _cpBaudrate = (PduComParamOfTypeUint)CreateCp("CP_Baudrate", 10400, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_BUSTYPE);
             _cpK_L_LineInit = (PduComParamOfTypeUint)CreateCp("CP_K_L_LineInit", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_BUSTYPE);
-            _cpK_LinePullup = (PduComParamOfTypeUint)CreateCp("CP_K_LinePullup", 0, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_BUSTYPE);
+            _cpK_LinePullup = (PduComParamOfTypeUint)CreateCp("CP_K_LinePullup", 1, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_BUSTYPE);
             _cpUartConfig = (PduComParamOfTypeUint)CreateCp("CP_UartConfig", 6, PduPt.PDU_PT_UNUM32, PduPc.PDU_PC_BUSTYPE);
             
             CpList = new List<PduComParam>

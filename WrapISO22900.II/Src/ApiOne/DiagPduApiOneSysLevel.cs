@@ -254,7 +254,8 @@ namespace ISO22900.II
 
             // This check was added because, for example, the D-PDU API from Softing does NOT return 0 resources 
             // when calling PduResourceData with PduConst.PDU_ID_UNDEF values. 
-            // Instead, it returns X resources, which is a bug in the API. 
+            // Softing treat PduConst.PDU_ID_UNDE as a wildcard and return all matching resources instead of none.
+            // This intentional behaviour causes unpredictable results for us, so we filter it out to keep the resource count accurate.
             // We need to handle this case to avoid incorrect results.
             if (busTypId == PduConst.PDU_ID_UNDEF
                 || protocolTypId == PduConst.PDU_ID_UNDEF

@@ -345,7 +345,7 @@ namespace ISO22900.II
         /// <param name="ioCtlShortName"></param>
         /// <param name="value"></param>
         /// <returns>true or false</returns>
-        internal bool TryIoCtlGeneral(string ioCtlShortName, byte[] valueIn, out byte[] valueOut)
+        public bool TryIoCtlGeneral(string ioCtlShortName, byte[] valueIn, out byte[] valueOut)
         {
             try
             {
@@ -371,7 +371,7 @@ namespace ISO22900.II
         /// <param name="ioCtlShortName"></param>
         /// <param name="value"></param>
         /// <returns>true or false</returns>
-        internal bool TryIoCtlGeneral(string ioCtlShortName, byte[] value)
+        public bool TryIoCtlGeneral(string ioCtlShortName, byte[] value)
         {
             try
             {

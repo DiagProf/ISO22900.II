@@ -64,10 +64,10 @@ namespace ISO22900.II
         protected override unsafe PduIoCtlOfTypeByteField CreatePduIoCtlByteArray()
         {
             var byteArrayData = *(PDU_IO_BYTEARRAY_DATA*)PointerToStartOfData();
-            int len = (int)byteArrayData.DataSize;
+            var len = (int)byteArrayData.DataSize;
             
             var data = new byte[len];
-            Marshal.Copy((IntPtr)(0x10 + ptr), data, 0, len);
+            Marshal.Copy((IntPtr)byteArrayData.pData, data, 0, len);
             return new PduIoCtlOfTypeByteField(data);
         }
     }

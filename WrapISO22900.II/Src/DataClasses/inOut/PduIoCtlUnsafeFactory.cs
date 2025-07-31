@@ -61,11 +61,11 @@ namespace ISO22900.II
                 tcpClientsMax: eStatusData.TcpClientsMax, maxDataSize: eStatusData.MaxDataSize));
         }
 
-        protected override unsafe PduIoCtl CreatePduIoCtlByteArray()
+        protected override unsafe PduIoCtlOfTypeByteField CreatePduIoCtlByteArray()
         {
-            byte* ptr = (byte*)PointerToStartOfData();
-            int len = ptr[0] | (ptr[1] << 8) | (ptr[2] << 16) | (ptr[3] << 24);
-
+            var byteArrayData = *(PDU_IO_BYTEARRAY_DATA*)PointerToStartOfData();
+            int len = (int)byteArrayData.DataSize;
+            
             var data = new byte[len];
             Marshal.Copy((IntPtr)(0x10 + ptr), data, 0, len);
             return new PduIoCtlOfTypeByteField(data);

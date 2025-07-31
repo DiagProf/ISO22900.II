@@ -28,6 +28,8 @@
 #endregion
 
 using ISO22900.II.UnSafeCStructs;
+using System;
+using System.Runtime.InteropServices;
 
 namespace ISO22900.II
 {
@@ -57,6 +59,16 @@ namespace ISO22900.II
             var eStatusData = *(PDU_IO_ENTITY_STATUS_DATA*)PointerToStartOfData();
             return new PduIoCtlOfTypeEntityStatus(new PduIoCtlEntityStatusData(entityType: eStatusData.EntityType, tcpClients: eStatusData.TcpClients,
                 tcpClientsMax: eStatusData.TcpClientsMax, maxDataSize: eStatusData.MaxDataSize));
+        }
+
+        protected override unsafe PduIoCtl CreatePduIoCtlByteArray()
+        {
+            byte* ptr = (byte*)PointerToStartOfData();
+            int len = ptr[0] | (ptr[1] << 8) | (ptr[2] << 16) | (ptr[3] << 24);
+
+            var data = new byte[len];
+            Marshal.Copy((IntPtr)(0x10 + ptr), data, 0, len);
+            return new PduIoCtlOfTypeByteField(data);
         }
     }
 }

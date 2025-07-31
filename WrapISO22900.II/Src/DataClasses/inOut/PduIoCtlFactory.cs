@@ -42,9 +42,12 @@ namespace ISO22900.II
             {
                 PduIt.PDU_IT_IO_UNUM32 => CreatePduIoCtlUint(),
                 PduIt.PDU_IT_IO_ENTITY_STATUS => CreatePduIoCtlEntityStatus(),
+                PduIt.PDU_IT_IO_BYTEARRAY => CreatePduIoCtlByteArray(),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
+
+        protected abstract PduIoCtl CreatePduIoCtlByteArray();
 
         protected abstract PduIoCtl CreatePduIoCtlUint();
 

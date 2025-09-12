@@ -97,8 +97,9 @@ namespace ISO22900.II
             {
                 throw new ArgumentOutOfRangeException();
             }
-            ;
-            var fieldData = ((*(PDU_PARAM_BYTEFIELD_DATA*)pPduParamItem->pComParamData));
+
+            // Get a *reference* to the struct at the pointed memory (no copy!)
+            ref var fieldData = ref *(PDU_PARAM_BYTEFIELD_DATA*)pPduParamItem->pComParamData;
 
             //I pray that every supplier has read this sentence under
             //e.g. B.3.3.1 ComParam BYTEFIELD data type to ParamMaxLen "This is also the amount of memory the D-PDU API allocates prior to a call of PDUGetComParam."
@@ -135,7 +136,8 @@ namespace ISO22900.II
                 throw new ArgumentOutOfRangeException();
             }
 
-            var fieldData = ((*(PDU_PARAM_LONGFIELD_DATA*)pPduParamItem->pComParamData));
+            // Get a *reference* to the struct at the pointed memory (no copy!)
+            ref var fieldData = ref *(PDU_PARAM_LONGFIELD_DATA*)pPduParamItem->pComParamData;
 
             //I pray that every supplier has read this sentence under
             //e.g. B.3.3.3 ComParam LONGFIELD data type to ParamMaxLen "This is also the amount of memory the D-PDU API allocates prior to a call of PDUGetComParam."
@@ -161,8 +163,7 @@ namespace ISO22900.II
             return returnPduComParam;
         }
 
-        internal override unsafe PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId,
-            PduParamStructFieldData data)
+        internal override unsafe PduComParam PduSetViaGetComParam(uint moduleHandle, uint comLogicalLinkHandle, uint objectId, PduParamStructFieldData data)
         {
             PDU_PARAM_ITEM* pPduParamItem;
             CheckResultThrowException(PDUGetComParam(moduleHandle, comLogicalLinkHandle, objectId, &pPduParamItem));
@@ -171,7 +172,9 @@ namespace ISO22900.II
             {
                 throw new ArgumentOutOfRangeException();
             }
-            var fieldData = ((*(PDU_PARAM_STRUCTFIELD_DATA*)pPduParamItem->pComParamData));
+
+            // Get a *reference* to the struct at the pointed memory (no copy!)
+            ref var fieldData = ref *(PDU_PARAM_STRUCTFIELD_DATA*)pPduParamItem->pComParamData;
 
             //I pray that every supplier has read this sentence under
             //e.g. B.3.3.2 ComParam STRUCTFIELD data type to ParamMaxEntries "The D-PDU-API allocates this amount of memory based on the size of the structure type prior to a call of PDUGetComParam."

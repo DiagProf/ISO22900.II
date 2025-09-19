@@ -150,7 +150,7 @@ namespace ISO22900.II
             catch (StackOverflowException e)
             {
                 // NOTE: This catch is mostly illustrative because a severe stack overflow will normally bypass managed recovery.
-                _logger.LogCritical(e, "Unusually large control data size. Possibly 'stackAllocThresholdBytes' was chosen too large; consider lowering the threshold so large payloads use pinned heap memory earlier to reduce stack pressure.\"\n");
+                _logger.LogCritical(e, "Unusually large control data size. Possibly 'stackAllocThresholdBytes' was chosen too large; consider lowering the threshold so large payloads use pinned heap memory earlier to reduce stack pressure.");
             }
 
             return comPrimitiveHandle;

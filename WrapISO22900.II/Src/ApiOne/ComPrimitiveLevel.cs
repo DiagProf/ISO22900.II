@@ -34,13 +34,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    public class ComPrimitiveLevel : ManagedDisposable
+    public partial class ComPrimitiveLevel : ManagedDisposable
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ComPrimitiveLevel>();
         private readonly ChannelReader<PduEventItem> _channelReader;
         private readonly ComLogicalLinkLevel _cll;
         private bool _needsToBeCanceled;
@@ -118,7 +116,7 @@ namespace ISO22900.II
             }
             catch ( OperationCanceledException e)
             {
-                _logger.LogError(e,"ComPrimitiveQueue reading was canceled.");
+                LogComPrimitiveQueueReadingCanceled(e);
             }
             
             return copResult;

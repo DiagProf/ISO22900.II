@@ -8,8 +8,8 @@ namespace ISO22900.II.Demo
         public ColorSystem ColorSystem { get; } = ColorSystem.Standard;
         public bool Ansi { get; } = true;
         public bool Links { get; } = true;
+        public bool AlternateBuffer { get; } = false;
         public bool Legacy { get; } = false;
-        public bool IsTerminal { get; } = true;
         public bool Interactive { get; } = false;
         public bool Unicode { get; } = true;
     }

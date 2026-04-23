@@ -77,13 +77,13 @@ namespace ISO22900.II
         /// Transmit Flag used to indicate protocol specific elements for the ComPrimitiveLevel's
         /// execution. (See section D.2.1 TxFlag definition.)
         /// </summary>
-        public PduFlagDataTxFlag TxFlag;
+        public PduFlagDataTxFlag TxFlag = new();
 
         /// <summary>
         /// number of entries in pExpectedResponseArray
         /// </summary>
         // internal uint NumPossibleExpectedResponses;
-        public PduExpectedResponseData[] PduExpectedResponseDatas;
+        public PduExpectedResponseData[] PduExpectedResponseDatas = [];
         
 
         internal void Accept(IVisitorPduComPrimitiveControlData visitorPduComPrimitiveControlData)
@@ -101,8 +101,6 @@ namespace ISO22900.II
             NumSendCycles = 0;
             NumReceiveCycles = 0;
             TempParamUpdate = 0;
-            TxFlag = new PduFlagDataTxFlag();
-            PduExpectedResponseDatas = Array.Empty<PduExpectedResponseData>();
         }
 
         /// <summary>
@@ -115,7 +113,6 @@ namespace ISO22900.II
             NumReceiveCycles = 1;
             TempParamUpdate = 0;
             Time = 0;
-            TxFlag = new PduFlagDataTxFlag();
             PduExpectedResponseDatas = expectedResponseDatas;
         }
 

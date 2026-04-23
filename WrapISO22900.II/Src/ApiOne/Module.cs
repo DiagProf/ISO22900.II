@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using ISO22900.II.Interface;
-using Microsoft.Extensions.Logging;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ISO22900.II
@@ -40,10 +39,8 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public sealed class Module : IDisposable, IModule
+    public sealed partial class Module : IDisposable, IModule
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<Module>();
-
         /// <summary>
         ///     the main reason of sync is that e.g. not 2 ComLogicalLink try to recover the module
         ///     if the 1st ComLogicalLink has the recover module, the 2nd can use it immediately
@@ -568,10 +565,10 @@ namespace ISO22900.II
                             }
                         }
 
-                        _logger.Log(LogLevel.Information, "VCI recovering done for VCI: {_vciModuleName}", _vciModuleName);
+                        LogVciRecoveringDone(_vciModuleName);
                     }
 
-                    _logger.Log(LogLevel.Information, "VCI is back or no reason to recover for VCI: {_vciModuleName}", _vciModuleName);
+                    LogVciIsBack(_vciModuleName);
                 }
                 catch (Iso22900IIExceptionBase ex )
                 {

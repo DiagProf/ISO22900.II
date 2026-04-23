@@ -40,10 +40,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    internal class ComLogicalLinkLevel : ManagedDisposable
+    internal partial class ComLogicalLinkLevel : ManagedDisposable
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ComLogicalLinkLevel>();
- 
         private readonly object _syncStartCop = new();//_syncStartCop to prevent an event from having to be handled by a COP before class creation is complete
 
         internal readonly ModuleLevel Vci;
@@ -104,7 +102,10 @@ namespace ISO22900.II
                     pduCopType, copData, copCtrlData, copTag);
 
                 CopChannels.GetOrAdd(comPrimitiveHandle, channel.Writer);
-                
+
+                LogStartComPrimitive(ModuleHandle, ComLogicalLinkHandle, comPrimitiveHandle, pduCopType, copData, copCtrlData, copTag);
+
+
                 var comPrimitive = new ComPrimitiveLevel(this, comPrimitiveHandle, channel.Reader, pduCopType, copData, copCtrlData, copTag);
                 Disposing += comPrimitive.Dispose;
                 return comPrimitive;
@@ -162,7 +163,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException)
             {
-                _logger.LogWarning("The ComLogicalLink can no longer be reached.This could be normal if a VCI was lost previously.");
+                LogComLogicalLinkUnreachable();
             }
 
             if (linkStatus == PduStatus.PDU_CLLST_ONLINE || linkStatus == PduStatus.PDU_CLLST_COMM_STARTED)
@@ -258,7 +259,7 @@ namespace ISO22900.II
                 var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, cp.ComParamShortName);
                 if ( cpId == PduConst.PDU_ID_UNDEF )
                 {
-                    _logger.LogInformation("Object-Id for ComParam {ComParamShortName} not defined in the API used", cp.ComParamShortName);
+                    LogComParamObjectIdUndefined(cp.ComParamShortName);
                     return;
                 }
 
@@ -271,13 +272,13 @@ namespace ISO22900.II
                 {
                     //Unfortunately, Actia, for example, uses this method if the Object ID cannot be determined
                     //It would be better to return //cpId = PduConst.PDU_ID_UNDEF
-                    _logger.LogWarning(e, "Trouble with ComParam {ComParamShortName} not supported Object-Id", cp.ComParamShortName);
+                    LogComParamObjectIdNotSupported(e, cp.ComParamShortName);
                     return;
                 }
 
                 if ( e.PduError == PduError.PDU_ERR_COMPARAM_NOT_SUPPORTED )
                 {
-                    _logger.LogWarning("ComParam {ComParamShortName} not supported (doesn't have to be bad)", cp.ComParamShortName);
+                    LogComParamNotSupported(cp.ComParamShortName);
                     return;
                 }
 
@@ -298,7 +299,7 @@ namespace ISO22900.II
                 var cpId = Vci.SysLevel.Nwa.PduGetObjectId(PduObjt.PDU_OBJT_COMPARAM, cp.ComParamShortName);
                 if (cpId == PduConst.PDU_ID_UNDEF)
                 {
-                    _logger.LogInformation("Object-Id for ComParam {ComParamShortName} not defined in the API used", cp.ComParamShortName);
+                    LogComParamObjectIdUndefined(cp.ComParamShortName);
                     return false;
                 }
 
@@ -307,7 +308,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException ex)
             {
-                _logger.LogWarning(ex,"Trouble with ComParam {ComParamShortName} ", cp.ComParamShortName);
+                LogComParamTrouble(ex, cp.ComParamShortName);
                 return false;
             }
             return true;
@@ -507,7 +508,7 @@ namespace ISO22900.II
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                _logger.LogCritical(ex, "Page with index {pageIndex} does not exist!", pageIndex);
+                LogPageIndexOutOfRange(ex, pageIndex);
                 throw new DiagPduApiException($"Page with index {pageIndex} does not exist!");
             }
 
@@ -554,7 +555,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -579,7 +580,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -605,7 +606,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -630,7 +631,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             value = default;
@@ -658,7 +659,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             value = [];
@@ -716,7 +717,14 @@ namespace ISO22900.II
                 OnPduEventItemReceived(item);
             }
 
-            //Local function
+            // Local function
+            // AddItemToMatchingChannel — originally named for its core job: routing each incoming PduEventItem
+            // to the channel of the matching ComPrimitive (looked up by CopHandle).
+            // Over time it turned out to be the ideal place for ComPrimitive-level logging as well,
+            // because every event passes through here exactly once and the CopHandle context is
+            // already resolved.
+            //
+            // If you mentally strip out all the Log* calls, the true heart of the function is seen :-). 
             bool AddItemToMatchingChannel(PduEventItem item)
             {
                 if (CopChannels.TryGetValue(item.CopHandle, out var channel))
@@ -724,12 +732,25 @@ namespace ISO22900.II
                     channel.TryWrite(item);
                     if (item is PduEventItemStatus status)
                     {
+                        LogComPrimitiveStatus(ModuleHandle, ComLogicalLinkHandle, item.CopHandle, status.PduStatus, item.Timestamp, item.CopTag);
                         if (status.PduStatus == PduStatus.PDU_COPST_FINISHED || status.PduStatus == PduStatus.PDU_COPST_CANCELLED)
                         {
                             channel.TryComplete();
                             // Remove the key (old handle) from the dictionary
                             CopChannels.TryRemove(item.CopHandle, out _);
                         }
+                    }
+                    else if (item is PduEventItemResult result)
+                    {
+                        LogComPrimitiveResult(ModuleHandle, ComLogicalLinkHandle, item.CopHandle, result.ResultData.DataBytes, result.ResultData.RxFlag, result.ResultData.UniqueRespIdentifier, item.Timestamp, item.CopTag);
+                    }
+                    else if (item is PduEventItemError error)
+                    {
+                        LogComPrimitiveError(ModuleHandle, ComLogicalLinkHandle, item.CopHandle, error.ErrorCodeId, error.ExtraErrorInfoId, item.Timestamp, item.CopTag);
+                    }
+                    else if (item is PduEventItemInfo info)
+                    {
+                        LogComPrimitiveInfo(ModuleHandle, ComLogicalLinkHandle, item.CopHandle, info.InfoCode, info.ExtraInfoData, item.Timestamp, item.CopTag);
                     }
                     return true;
                 }
@@ -762,7 +783,7 @@ namespace ISO22900.II
             {
                 //bad:
                 //- Actia
-                _logger.LogWarning("Can't read the State of ComLogicalLink: {error}", ex.Message);
+                LogCllStateReadFailed(ex.Message);
             }
 
 
@@ -780,7 +801,7 @@ namespace ISO22900.II
             {
                 //the the com logical link is left without performing a disconnect
                 //(may have been forgotten or due to an exception within the com logical link using block)
-                _logger.LogError("Forgot to put the ComLogicLink in the offline state with Disconnect()?");
+                LogCllNotDisconnected();
                 Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
 
                 //First the event because we need valid handles for native PduRegisterEventCallback function
@@ -806,7 +827,7 @@ namespace ISO22900.II
                 {
                     //bad:
                     //- Actia
-                    _logger.LogWarning("Can't UnRegisterEventDataCallback: {error}", ex.Message);
+                    LogUnRegisterEventDataCallbackFailed(ex.Message);
                 }
 
                 try
@@ -821,7 +842,7 @@ namespace ISO22900.II
                     //- Actia
                     //- Bosch
                     //- Samtec
-                    _logger.LogWarning("Can't PduDestroyComLogicalLink: {error}", ex.Message);
+                    LogDestroyComLogicalLinkFailed(ex.Message);
                 }
             }
             else if ( (statusVci == PduStatus.PDU_MODST_NOT_AVAIL || statusVci == PduStatus.PDU_MODST_NOT_READY) &&
@@ -832,12 +853,12 @@ namespace ISO22900.II
                 //the whole if block is for Vector
                 try
                 {
-                    _logger.LogError("Forgot to put the ComLogicLink in the offline state with Disconnect() (Vector workaround)");
+                    LogCllNotDisconnectedVectorWorkaround();
                     Vci.SysLevel.Nwa.PduDisconnect(ModuleHandle, ComLogicalLinkHandle);
                 }
                 catch ( Iso22900IIException ex )
                 {
-                    _logger.LogWarning("Can't PduDisconnect (Vector workaround): {error}", ex.Message);
+                    LogPduDisconnectVectorWorkaroundFailed(ex.Message);
                 }
 
                 try
@@ -847,7 +868,7 @@ namespace ISO22900.II
                 }
                 catch (Iso22900IIException ex)
                 {
-                    _logger.LogWarning("Can't UnRegisterEventDataCallback (Vector workaround): {error}", ex.Message);
+                    LogUnRegisterEventDataCallbackVectorWorkaroundFailed(ex.Message);
                 }
 
                 try
@@ -856,7 +877,7 @@ namespace ISO22900.II
                 }
                 catch (Iso22900IIException ex)
                 {
-                    _logger.LogWarning("Can't UnRegisterEventDataCallback (Vector workaround): {error}", ex.Message);
+                    LogUnRegisterEventDataCallbackVectorWorkaroundFailed(ex.Message);
                 }
                 
             }

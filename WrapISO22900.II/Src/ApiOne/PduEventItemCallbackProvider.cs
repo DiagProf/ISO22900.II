@@ -34,14 +34,12 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    internal class PduEventItemCallbackProvider
+    internal partial class PduEventItemCallbackProvider
     {
         private readonly Iso22900NativeWrapAccess _nativeAccess;
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<PduEventItemCallbackProvider>();
 
         private readonly CancellationTokenSource _cts;
         private readonly CancellationToken _ct;
@@ -109,7 +107,7 @@ namespace ISO22900.II
                             catch (Exception ex)
                             {
                                 Debug.WriteLine("Continuation in progress... swallow all exception for now");
-                                _logger.LogCritical(ex, "Attention an unhandled exception was thrown. This could be due to incorrect use.");
+                                LogUnhandledException(ex);
                             }
                         else
                             try
@@ -119,7 +117,7 @@ namespace ISO22900.II
                             catch (Exception ex)
                             {
                                 Debug.WriteLine("Continuation in progress... swallow all exception for now");
-                                _logger.LogCritical(ex, "Attention an unhandled exception was thrown. This could be due to incorrect use.");
+                                LogUnhandledException(ex);
                             }
                     },_ct, TaskContinuationOptions.PreferFairness | TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default
                 );
@@ -145,9 +143,7 @@ namespace ISO22900.II
                     {
                         //you get there when exceptions are thrown in the consumer chain.
                         //at the moment i have no better solution
-                        _logger.LogCritical(ex,
-                            "Attention an unhandled exception was thrown in the forwarding of data lost callback from hMod: {ModuleHandle} hCll: {ComLogicalLinkHandle}",
-                            args.ModuleHandle, args.ComLogicalLinkHandle);
+                        LogDataLostCallbackException(ex, args.ModuleHandle, args.ComLogicalLinkHandle);
                         tcs.SetException(ex);
                     }
             }
@@ -231,8 +227,7 @@ namespace ISO22900.II
                         {
                             //you get there when exceptions are thrown in the consumer chain.
                             //at the moment i have no better solution
-                            _logger.LogCritical(ex, "Attention an unhandled exception was thrown in the forwarding of callback from hMod: {ModuleHandle} hCll: {ComLogicalLinkHandle}",
-                                item.EventArgs.ModuleHandle, item.EventArgs.ComLogicalLinkHandle);
+                            LogEventDataConsumerCallbackException(ex, item.EventArgs.ModuleHandle, item.EventArgs.ComLogicalLinkHandle);
                             if (isOkay)
                             {
                                 tcs.SetException(ex);
@@ -244,7 +239,7 @@ namespace ISO22900.II
                     else
                     {
                         // Actia Core XS VCIs shows this behavior
-                        _logger.LogWarning("Unusual behavior... native API calls the callback. E.g. while calling PduModulConnect. Forwarding of callback from hMod: {ModuleHandle} hCll: {ComLogicalLinkHandle}", item.EventArgs.ModuleHandle, item.EventArgs.ComLogicalLinkHandle);
+                        LogUnusualCallbackBehavior(item.EventArgs.ModuleHandle, item.EventArgs.ComLogicalLinkHandle);
                     }
                 }
 

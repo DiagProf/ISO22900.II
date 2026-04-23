@@ -32,14 +32,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    internal class ModuleLevel : ManagedDisposable
+    internal partial class ModuleLevel : ManagedDisposable
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ModuleLevel>();
-
         internal readonly DiagPduApiOneSysLevel SysLevel;
 
         protected internal uint ModuleHandle { get; }
@@ -261,7 +258,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -288,7 +285,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             valueOut = default;
@@ -317,7 +314,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -343,7 +340,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             value = default;
@@ -370,7 +367,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -395,7 +392,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -422,7 +419,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -449,7 +446,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -478,7 +475,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             value = default;
@@ -507,7 +504,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             value = default;
@@ -576,7 +573,7 @@ namespace ISO22900.II
                 {
                     //bad:
                     //- Actia
-                    _logger.LogWarning("Can't UnRegisterEventDataCallback: {error}", ex.Message);
+                    LogUnRegisterEventDataCallbackFailed(ex.Message);
                 }
 
                 try
@@ -592,7 +589,7 @@ namespace ISO22900.II
                 {
                     //bad:
                     //-
-                    _logger.LogWarning("Can't PduModuleDisconnect: {error}", ex.Message);
+                    LogPduModuleDisconnectFailed(ex.Message);
                 }
             }
             else

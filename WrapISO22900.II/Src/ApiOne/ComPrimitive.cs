@@ -28,7 +28,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
@@ -39,9 +38,8 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public class ComPrimitive : IDisposable
+    public partial class ComPrimitive : IDisposable
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ComPrimitive>();
         private readonly ComLogicalLink _comLogicalLink;
         private readonly PduCopt _pduCopType;
         private readonly byte[] _copData;
@@ -139,7 +137,7 @@ namespace ISO22900.II
                         return false;
                     }
                     _cop = _comLogicalLink.StartCop(_pduCopType, _copData, _copCtrlData, _copTag)._cop;
-                    _logger.Log(LogLevel.Information, "ComPrimitive recovering done for ComPrimitive Req: { _copData}", _copData);
+                    LogComPrimitiveRecoveringDone(_copData);
                 }
             }
             catch (Iso22900IIException ex)

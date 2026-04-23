@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
 
 
 
@@ -10,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    internal class Iso22900NativeWrapAccess : IDisposable
+    internal partial class Iso22900NativeWrapAccess : IDisposable
     {
 
 
@@ -50,7 +49,6 @@ namespace ISO22900.II
         private bool disposedValue;
         private IntPtr _handleNativeLibrary;
 
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<Iso22900NativeWrapAccess>();
         private string LibraryPath { get; }
 
         public Iso22900NativeWrapAccess(string libraryPath) : this(libraryPath, ApiModifications.UNSAFE_API)
@@ -60,7 +58,7 @@ namespace ISO22900.II
         public Iso22900NativeWrapAccess(string libraryPath, ApiModifications ApiModFlags)
         {
             LibraryPath = libraryPath;
-            _logger.LogInformation("Loading: {LibraryPath}", LibraryPath);
+            LogLibraryLoading(libraryPath);
             _handleNativeLibrary = NativeLibrary.Load(libraryPath);
 
             _apiCallPduConstruct = new ApiCallFactoryPduConstruct(ApiModFlags, _handleNativeLibrary).GetApiCall();
@@ -435,7 +433,7 @@ namespace ISO22900.II
                 // free unmanaged resources (unmanaged objects) and override finalizer
                 if ( _handleNativeLibrary != IntPtr.Zero )
                 {
-                    _logger.LogInformation("Unloading: {LibraryPath}", LibraryPath);
+                    LogLibraryUnloading(LibraryPath);
                     NativeLibrary.Free(_handleNativeLibrary);
                     _handleNativeLibrary = IntPtr.Zero;
                 }

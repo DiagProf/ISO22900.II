@@ -52,7 +52,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow("Or break the loop with a keystroke");
 
 
-            var tableReqResp = new Table().AddColumns("[b]Request[/]", "[b]Response[/]", "[b]Time(µs)[/]").LeftAligned();
+            var tableReqResp = new Table().AddColumns("[b]Request[/]", "[b]Response[/]", "[b]Time(µs)[/]");
             tableReqResp.AddRow(string.Empty, string.Empty);
 
             infoGrid.AddEmptyRow();
@@ -60,7 +60,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddEmptyRow();
 
 
-            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders().LeftAligned()
+            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders()
                 .AddRow(new FigletText("Running").LeftJustified().Color(Color.Green));
             infoGrid.AddRow(tableInfo);
 

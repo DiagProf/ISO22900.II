@@ -41,9 +41,8 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public class ComLogicalLink : IDisposable, IComLogicalLink
+    public partial class ComLogicalLink : IDisposable, IComLogicalLink
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ComLogicalLink>();
         private readonly string _busTypeName;
         private readonly string _protocolName;
         private readonly Dictionary<string, PduComParam> _cpParamBackupDic = new();
@@ -158,7 +157,7 @@ namespace ISO22900.II
                 _readyToUseCopControl.PduExpectedResponseDatas = Array.Empty<PduExpectedResponseData>();
                 try
                 {
-                    return StartCop(pduCopType, new byte[] {}, _readyToUseCopControl, copTag);
+                    return StartCop(pduCopType, [], _readyToUseCopControl, copTag);
                 }
                 finally
                 {
@@ -726,7 +725,7 @@ namespace ISO22900.II
                 {
                     //bad:
                     //- Actia
-                    _logger.LogWarning("Can't read the State of ComLogicalLink: {error}", ex.Message);
+                    LogReadComLogicalLinkStateFailed(ex.Message);
                 }
 
                 if ( (statusVci == PduStatus.PDU_MODST_NOT_AVAIL || statusVci == PduStatus.PDU_MODST_NOT_READY) &&
@@ -794,24 +793,22 @@ namespace ISO22900.II
 
                         if ( _resourceId == PduConst.PDU_ID_UNDEF )
                         {
-                            _logger.Log(LogLevel.Information, "ComLogicalLink recovering done for ComLogicalLink: {_stackName}",
-                                _protocolName + "_on_" + _busTypeName);
+                            LogComLogicalLinkRecoveringDoneByStackName(_protocolName + "_on_" + _busTypeName);
                         }
                         else
                         {
-                            _logger.Log(LogLevel.Information, "ComLogicalLink recovering done for ComLogicalLink: {_resourceId}", _resourceId);
+                            LogComLogicalLinkRecoveringDoneByResourceId(_resourceId);
                         }
                     }
 
 
                     if ( _resourceId == PduConst.PDU_ID_UNDEF )
                     {
-                        _logger.Log(LogLevel.Information, "ComLogicalLink is back or no reason to recover for ComLogicalLink: {_stackName}",
-                            _protocolName + "_on_" + _busTypeName);
+                        LogComLogicalLinkIsBackByStackName(_protocolName + "_on_" + _busTypeName);
                     }
                     else
                     {
-                        _logger.Log(LogLevel.Information, "ComLogicalLink is back or no reason to recover for ComLogicalLink: {_resourceId}", _resourceId);
+                        LogComLogicalLinkIsBackByResourceId(_resourceId);
                     }
                 }
 

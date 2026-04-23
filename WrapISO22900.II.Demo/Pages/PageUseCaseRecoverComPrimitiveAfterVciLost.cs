@@ -52,7 +52,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow("Or break the loop with a keystroke");
 
 
-            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders().LeftAligned();
+            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders();
             infoGrid.AddRow(tableInfo);
 
             AnsiConsole.Write(infoGrid);

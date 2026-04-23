@@ -44,7 +44,7 @@ namespace ISO22900.II.Demo
             : base("Use case event on all API Levels", program)
         {
             _logger = program.LoggerFactory.CreateLogger<PageUseCaseEventAllOver>();
-            tableEvent = new Table().AddColumns("[b]Class[/]", "[b]EventItemType[/]", "[b]Data1[/]", "[b]Data2[/]", "[b]CopTag[/]", "[b]Time(µs)[/]").LeftAligned();
+            tableEvent = new Table().AddColumns("[b]Class[/]", "[b]EventItemType[/]", "[b]Data1[/]", "[b]Data2[/]", "[b]CopTag[/]", "[b]Time(µs)[/]");
             tableEvent.AddRow("System", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
             tableEvent.AddRow("Module", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
             tableEvent.AddRow("ComLink", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
@@ -61,7 +61,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow("Or break the loop with a keystroke");
 
 
-            var tableReqResp = new Table().AddColumns("[b]Request[/]", "[b]          Response          [/]", "[b]Time(µs)[/]").LeftAligned();
+            var tableReqResp = new Table().AddColumns("[b]Request[/]", "[b]          Response          [/]", "[b]Time(µs)[/]");
             tableReqResp.AddRow(string.Empty, string.Empty, string.Empty);
 
             infoGrid.AddEmptyRow();
@@ -69,7 +69,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddEmptyRow();
 
 
-            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders().LeftAligned()
+            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders()
                 .AddRow(new FigletText("Running").LeftJustified().Color(Color.Green));
             infoGrid.AddRow(tableInfo);
             infoGrid.AddEmptyRow();

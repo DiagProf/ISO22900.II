@@ -29,7 +29,6 @@
 
 using System;
 using ISO22900.II.UnSafeCStructs;
-using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
@@ -43,9 +42,8 @@ namespace ISO22900.II
     //using SNUM32 = System.Int32;    //typedef signed long SNUM32;       // Signed numeric 32 bits
     //using CHAR8 = System.Byte;      //typedef char CHAR8;               // ASCII-coded 8-bit character value (ISO8859-1 (Latin 1))
 
-    internal class ApiCallPduStartComPrimitiveUnsafe : ApiCallPduStartComPrimitive
+    internal partial class ApiCallPduStartComPrimitiveUnsafe : ApiCallPduStartComPrimitive
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<ApiCallPduStartComPrimitiveUnsafe>();
         private readonly VisitorPduComPrimitiveControlDataMemorySizeUnsafe _memorySizeVisitor;
         private readonly VisitorPduComPrimitiveControlDataToUnmanagedMemoryUnsafe _visitorPduComPrimitiveControlData;
 
@@ -150,7 +148,7 @@ namespace ISO22900.II
             catch (StackOverflowException e)
             {
                 // NOTE: This catch is mostly illustrative because a severe stack overflow will normally bypass managed recovery.
-                _logger.LogCritical(e, "Unusually large control data size. Possibly 'stackAllocThresholdBytes' was chosen too large; consider lowering the threshold so large payloads use pinned heap memory earlier to reduce stack pressure.");
+                LogUnusuallyLargeControlDataSize(e);
             }
 
             return comPrimitiveHandle;

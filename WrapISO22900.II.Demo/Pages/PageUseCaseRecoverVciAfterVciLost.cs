@@ -50,7 +50,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddRow("Or break the loop with a keystroke");
 
 
-            var tableBattIgn = new Table().AddColumns("[b]Battery voltage[/]", "[b]Ignition state[/]").LeftAligned();
+            var tableBattIgn = new Table().AddColumns("[b]Battery voltage[/]", "[b]Ignition state[/]");
             tableBattIgn.AddRow(string.Empty, string.Empty);
 
             infoGrid.AddEmptyRow();
@@ -58,7 +58,7 @@ namespace ISO22900.II.Demo
             infoGrid.AddEmptyRow();
 
            
-            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders().LeftAligned()
+            var tableInfo = new Table().Border(TableBorder.None).AddColumn(string.Empty).HideHeaders()
                 .AddRow(new FigletText("Running").LeftJustified().Color(Color.Green));
             infoGrid.AddRow(tableInfo);
      

@@ -38,9 +38,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ISO22900.II
 {
-    public class DiagPduApiOneSysLevel : ManagedDisposable
+    public partial class DiagPduApiOneSysLevel : ManagedDisposable
     {
-        private readonly ILogger _logger = ApiLibLogging.CreateLogger<DiagPduApiOneSysLevel>();
         private readonly Dictionary<uint, Module> _vciCache = new();
         private readonly string _optionStrBackUp;
 
@@ -70,7 +69,7 @@ namespace ISO22900.II
             }
             else
             {
-                _logger.LogInformation("OptionStr: {optionStr}", optionStr);
+                LogOptionStr(optionStr);
                 Nwa.PduConstruct(optionStr);
             }
 
@@ -127,7 +126,7 @@ namespace ISO22900.II
                         if ( !_vciCache.Remove(moduleData.ModuleHandle) )
                         {
                             //that should never happen
-                            _logger.LogWarning("Remove ModuleHandle {ModuleHandle} more than once", moduleData.ModuleHandle);
+                            LogRemoveModuleHandleMoreThanOnce(moduleData.ModuleHandle);
                         }
                     };
                     _vciCache.Add(moduleData.ModuleHandle, new Module(this, vci, moduleData.VendorModuleName));
@@ -160,7 +159,7 @@ namespace ISO22900.II
             }
             catch ( InvalidOperationException ex )
             {
-                _logger.LogCritical(ex, "VCI with name {vciModuleName} not found", vciModuleName);
+                LogVciNotFound(ex, vciModuleName);
                 throw new DiagPduApiException($"VCI with name {vciModuleName} not found!");
             }
 
@@ -190,7 +189,7 @@ namespace ISO22900.II
                         if ( !_vciCache.Remove(moduleData.ModuleHandle) )
                         {
                             //that should never happen
-                            _logger.LogWarning("Remove ModuleHandle {ModuleHandle} more than once", moduleData.ModuleHandle);
+                            LogRemoveModuleHandleMoreThanOnce(moduleData.ModuleHandle);
                         }
                     };
                     existingModule.ModuleLevel = vci;
@@ -217,7 +216,7 @@ namespace ISO22900.II
                 }
                 else
                 {
-                    _logger.LogInformation("OptionStr: {optionStr}", _optionStrBackUp);
+                    LogOptionStr(_optionStrBackUp);
                     Nwa.PduConstruct(_optionStrBackUp);
                 }
 
@@ -333,7 +332,7 @@ namespace ISO22900.II
             }
             catch ( Iso22900IIException e )
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;
@@ -358,7 +357,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             valueOut = [];
@@ -384,7 +383,7 @@ namespace ISO22900.II
             }
             catch (Iso22900IIException e)
             {
-                _logger.LogWarning(e, ioCtlShortName);
+                LogIoCtlFailed(e, ioCtlShortName);
             }
 
             return false;

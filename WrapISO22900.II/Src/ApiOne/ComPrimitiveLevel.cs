@@ -59,22 +59,9 @@ namespace ISO22900.II
 
         public ComPrimitiveResult WaitForCopResult(CancellationToken ct)
         {
-            try
-            {
-                return WaitForCopResultAsync(ct).Result;
-            }
-            catch ( AggregateException e )
-            {
-                foreach ( var ex in e.InnerExceptions )
-                {
-                    if ( ex is not OperationCanceledException )
-                    {
-                        throw ex;
-                    }
-                }
-            }
-
-            return new ComPrimitiveResult(new Queue<PduEventItem>());
+            // GetAwaiter().GetResult() rethrows the original exception (no AggregateException, stack trace preserved),
+            // so cancellation and LEGACY_SWALLOW_COP_CANCELLATION behave exactly like in WaitForCopResultAsync.
+            return WaitForCopResultAsync(ct).GetAwaiter().GetResult();
         }
 
         public async Task<ComPrimitiveResult> WaitForCopResultAsync(CancellationToken ct)
@@ -117,8 +104,13 @@ namespace ISO22900.II
             catch ( OperationCanceledException e)
             {
                 LogComPrimitiveQueueReadingCanceled(e);
+                // Null-safe so that missing link state can never replace the cancellation with a NullReferenceException.
+                if ( _cll.Vci?.SysLevel?.ApiModBitField.HasFlag(ApiModifications.LEGACY_SWALLOW_COP_CANCELLATION) != true )
+                {
+                    throw;
+                }
             }
-            
+
             return copResult;
         }
 

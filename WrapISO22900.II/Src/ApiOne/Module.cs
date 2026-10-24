@@ -154,6 +154,18 @@ namespace ISO22900.II
             }
         }
 
+        IComLogicalLink IModule.OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs) =>
+            OpenComLogicalLink(busTypeName, protocolName, dlcPinToTypeNamePairs);
+
+        IComLogicalLink IModule.OpenComLogicalLink(string busTypeName, string protocolName, List<KeyValuePair<uint, string>> dlcPinToTypeNamePairs, PduFlagDataCllCreateFlag cllCreateFlag) =>
+            OpenComLogicalLink(busTypeName, protocolName, dlcPinToTypeNamePairs, cllCreateFlag);
+
+        IComLogicalLink IModule.OpenComLogicalLink(uint resourceId) =>
+            OpenComLogicalLink(resourceId);
+
+        IComLogicalLink IModule.OpenComLogicalLink(uint resourceId, PduFlagDataCllCreateFlag cllCreateFlag) =>
+            OpenComLogicalLink(resourceId, cllCreateFlag);
+
         public uint Timestamp()
         {
             lock ( _sync )

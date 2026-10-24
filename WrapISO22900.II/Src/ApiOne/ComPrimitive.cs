@@ -28,6 +28,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ISO22900.II.Interface;
 
 namespace ISO22900.II
 {
@@ -38,7 +39,7 @@ namespace ISO22900.II
     ///     I am able to replace the real VCI connection (which I wrap) with a new instance.
     ///     The application has an instance of me that doesn't change from the application point of view.
     /// </summary>
-    public partial class ComPrimitive : IDisposable
+    public partial class ComPrimitive : IComPrimitive
     {
         private readonly ComLogicalLink _comLogicalLink;
         private readonly PduCopt _pduCopType;
@@ -78,6 +79,8 @@ namespace ISO22900.II
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
+        /// <exception cref="OperationCanceledException"><paramref name="ct"/> was cancelled
+        /// (not thrown if <see cref="ApiModifications.LEGACY_SWALLOW_COP_CANCELLATION"/> is set).</exception>
         public ComPrimitiveResult WaitForCopResult(CancellationToken ct = default)
         {
             return _cop.WaitForCopResult(ct);

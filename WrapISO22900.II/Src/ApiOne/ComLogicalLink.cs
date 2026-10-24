@@ -212,6 +212,18 @@ namespace ISO22900.II
             }
         }
 
+        IComPrimitive IComLogicalLink.StartCop(PduCopt pduCopType, TimeSpan delayTimeMs, uint copTag) =>
+            StartCop(pduCopType, delayTimeMs, copTag);
+
+        IComPrimitive IComLogicalLink.StartCop(PduCopt pduCopType, byte[] copData, uint copTag) =>
+            StartCop(pduCopType, copData, copTag);
+
+        IComPrimitive IComLogicalLink.StartCop(PduCopt pduCopType, int sendCycles, int receiveCycles, byte[] copData, uint copTag) =>
+            StartCop(pduCopType, sendCycles, receiveCycles, copData, copTag);
+
+        IComPrimitive IComLogicalLink.StartCop(PduCopt pduCopType, byte[] copData, PduCopCtrlData copCtrlData, uint copTag) =>
+            StartCop(pduCopType, copData, copCtrlData, copTag);
+
         public void Connect()
         {
             lock ( _sync )

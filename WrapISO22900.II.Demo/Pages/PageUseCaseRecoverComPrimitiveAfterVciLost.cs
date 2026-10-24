@@ -143,6 +143,18 @@ namespace ISO22900.II.Demo
 
         public static void ReceiveThreadFunction(ComLogicalLink link, CancellationTokenSource cts)
         {
+            try
+            {
+                ReceiveLoop(link, cts);
+            }
+            catch ( OperationCanceledException )
+            {
+                AnsiConsole.WriteLine("ReceiveThread: Canceled.");
+            }
+        }
+
+        private static void ReceiveLoop(ComLogicalLink link, CancellationTokenSource cts)
+        {
             // Start receiving ComPrimitive...
             AnsiConsole.WriteLine("ReceiveThread: Start receiving ComPrimitive.");
 
@@ -156,7 +168,7 @@ namespace ISO22900.II.Demo
                 while ( !cts.Token.IsCancellationRequested )
                 {
                     // Thread.Sleep(1000);
-                    var result = receiveCop.WaitForCopResultAsync(cts.Token).Result;
+                    var result = receiveCop.WaitForCopResult(cts.Token);
 
                     if ( result.DataMsgQueue().Count > 0 )
                     {
@@ -181,7 +193,7 @@ namespace ISO22900.II.Demo
                         AnsiConsole.WriteLine($"Response: {BitConverter.ToString(response)}");
                         using ( var responseCop = link.StartCop(PduCopt.PDU_COPT_SENDRECV, 1, 0, response) )
                         {
-                            var resultResponse = responseCop.WaitForCopResultAsync(cts.Token).Result;
+                            var resultResponse = responseCop.WaitForCopResult(cts.Token);
 
                             //for the information quite good... but breaks the order of how the events were fired
                             resultResponse.PduEventItemResults().ForEach(result =>

@@ -32,13 +32,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ISO22900.II.Interface;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable InconsistentlySynchronizedField
 
 namespace ISO22900.II
 {
-    public partial class DiagPduApiOneSysLevel : ManagedDisposable
+    public partial class DiagPduApiOneSysLevel : ManagedDisposable, IDiagPduApiOneSysLevel
     {
         private readonly Dictionary<uint, Module> _vciCache = new();
         private readonly string _optionStrBackUp;
@@ -102,6 +103,8 @@ namespace ISO22900.II
 
             return vciShortNameList;
         }
+
+        IModule IDiagPduApiOneSysLevel.ConnectVci(string vciModuleName) => ConnectVci(vciModuleName);
 
         /// <summary>
         ///     ConnectVci

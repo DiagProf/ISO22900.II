@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WrapISO22900.II.Demo", "Wra
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WrapISO22900.II.OdxLikeComParamSets", "WrapISO22900.II.OdxLikeComParamSets\WrapISO22900.II.OdxLikeComParamSets.csproj", "{3A006CE9-D8D7-4A01-84F1-9440D0E0C22F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WrapISO22900.II.Abstractions", "WrapISO22900.II.Abstractions\WrapISO22900.II.Abstractions.csproj", "{A12D0029-25D3-4DD9-A13F-FBED37E936FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{3A006CE9-D8D7-4A01-84F1-9440D0E0C22F}.Release|x64.Build.0 = Release|Any CPU
 		{3A006CE9-D8D7-4A01-84F1-9440D0E0C22F}.Release|x86.ActiveCfg = Release|Any CPU
 		{3A006CE9-D8D7-4A01-84F1-9440D0E0C22F}.Release|x86.Build.0 = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|x64.Build.0 = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Debug|x86.Build.0 = Debug|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|x64.ActiveCfg = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|x64.Build.0 = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|x86.ActiveCfg = Release|Any CPU
+		{A12D0029-25D3-4DD9-A13F-FBED37E936FE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

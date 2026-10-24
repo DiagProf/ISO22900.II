@@ -278,6 +278,10 @@ namespace ISO22900.II.Demo
                         {
                             break;
                         }
+                        catch ( OperationCanceledException )
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -433,7 +437,14 @@ namespace ISO22900.II.Demo
                     //Within this using statement there is nothing that the tracing setup needs.
                     using ( var Msg = canRawSendlink.StartCop(PduCopt.PDU_COPT_SENDRECV, msg, copCtrlData) )
                     {
-                        Msg.WaitForCopResult(ct);
+                        try
+                        {
+                            Msg.WaitForCopResult(ct);
+                        }
+                        catch ( OperationCanceledException )
+                        {
+                            break;
+                        }
 
                         //ComPrimitive of type delay doesn't seem to work everywhere (for every protocol and every API)
                         //that's why we use Thread.Sleep

@@ -6,6 +6,16 @@ The [ISO 22900-2](https://www.iso.org/standard/62490.html) friendly name is D-PD
 
 Extract from 22900-2: *"The purpose of ISO 22900-2 is to ensure that diagnostic and reprogramming applications from any vehicle or tool manufacturer can operate on a common software interface and can easily exchange MVCI protocol module implementations."*
 
+## Packages
+
+| Package | Content |
+|---|---|
+| `ISO22900.II-Sharp` | Native implementation on top of an installed D-PDU API (this package). |
+| `ISO22900.II-Sharp.Abstractions` | Interfaces (`IDiagPduApiOneSysLevel`, `IModule`, `IComLogicalLink`, `IComPrimitive`), data classes, enums and exceptions. Referenced automatically by this package. |
+
+Program your application against the interfaces from `ISO22900.II.Interface` and you can replace the native implementation by your own one
+(simulator, test double, bridge to a non ISO 22900-2 VCI). Always use the same version of both packages.
+
 ## Usage
 
 ```csharp

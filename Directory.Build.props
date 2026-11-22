@@ -1,8 +1,7 @@
 <Project>
 
-    <!-- Shared by ISO22900.II-Sharp and ISO22900.II-Sharp.Abstractions: both packages are always released together with the same version. -->
     <PropertyGroup>
-        <VersionPrefix>1.4.0</VersionPrefix>
+        <VersionPrefix>1.4.1</VersionPrefix>
         <VersionSuffix>beta</VersionSuffix>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Copyright>Copyright (c) Joerg Frank 2022</Copyright>
